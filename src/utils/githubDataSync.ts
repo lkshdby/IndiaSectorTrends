@@ -66,19 +66,28 @@ export async function fetchSnapshotsFromGitHub(
   const endpoints = [
     {
       url: `https://raw.githubusercontent.com/${cleanRepo}/data-storage/public/data/snapshots.json?v=${timestamp}`,
-      name: 'GitHub Raw (public/data)',
+      name: 'GitHub Raw (data-storage branch)',
+      branch: 'data-storage',
     },
     {
       url: `https://raw.githubusercontent.com/${cleanRepo}/data-storage/snapshots.json?v=${timestamp}`,
-      name: 'GitHub Raw (root)',
+      name: 'GitHub Raw (data-storage root)',
+      branch: 'data-storage',
     },
     {
       url: `https://cdn.jsdelivr.net/gh/${cleanRepo}@data-storage/public/data/snapshots.json?v=${timestamp}`,
-      name: 'jsDelivr Edge CDN',
+      name: 'jsDelivr CDN (data-storage)',
+      branch: 'data-storage',
     },
     {
-      url: `https://cdn.jsdelivr.net/gh/${cleanRepo}@data-storage/snapshots.json?v=${timestamp}`,
-      name: 'jsDelivr (root)',
+      url: `https://raw.githubusercontent.com/${cleanRepo}/main/public/data/snapshots.json?v=${timestamp}`,
+      name: 'GitHub Raw (main branch)',
+      branch: 'main',
+    },
+    {
+      url: `https://cdn.jsdelivr.net/gh/${cleanRepo}@main/public/data/snapshots.json?v=${timestamp}`,
+      name: 'jsDelivr CDN (main)',
+      branch: 'main',
     },
   ];
 
@@ -94,11 +103,11 @@ export async function fetchSnapshotsFromGitHub(
         const unpacked = unpackSnapshots(rawJson);
         if (unpacked && unpacked.length > 0) {
           const updatedAt = rawJson.updatedAt || new Date().toISOString();
-          setDataSourceBadge(true, `GitHub Actions (${cleanRepo}@data-storage)`, updatedAt);
+          setDataSourceBadge(true, `GitHub Actions (${cleanRepo}@${endpoint.branch})`, updatedAt);
           return {
             success: true,
             data: unpacked,
-            source: `${endpoint.name} (${cleanRepo}@data-storage)`,
+            source: `${endpoint.name}`,
             updatedAt,
           };
         }
@@ -110,7 +119,7 @@ export async function fetchSnapshotsFromGitHub(
 
   return {
     success: false,
-    error: `Could not fetch from data-storage branch on ${cleanRepo}. Ensure the GitHub Action has run once.`,
+    error: `Could not fetch live data from ${cleanRepo}. Ensure your GitHub Action has run successfully in your GitHub repo, and that the repository is Public.`,
   };
 }
 
