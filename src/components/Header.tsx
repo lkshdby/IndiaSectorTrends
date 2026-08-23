@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => onSelectDate(e.target.value)}
               className="bg-transparent text-zinc-900 font-semibold focus:outline-none cursor-pointer pr-1"
             >
-              {snapshots.slice().reverse().map((s) => {
+              {snapshots.slice().reverse().map((s, idx) => {
                 const d = new Date(s.date);
                 const formatted = d.toLocaleDateString('en-IN', {
                   weekday: 'short',
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
                 });
                 return (
                   <option key={s.date} value={s.date}>
-                    {formatted} ({s.date})
+                    {idx === 0 ? '🟢 ' : ''}{formatted} ({s.date}){idx === 0 ? ' — LATEST LIVE' : ''}
                   </option>
                 );
               })}
