@@ -295,7 +295,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
 
           {/* Full Page Horizontal Bar Chart (Y = Sector, X = Value) */}
           <div
-            className="w-full overflow-x-auto pb-3 touch-pan-x overscroll-x-contain"
+            className="w-full overflow-x-auto pb-3"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <div style={{ height: calculatedHeight, minWidth: '620px' }} className="w-full">

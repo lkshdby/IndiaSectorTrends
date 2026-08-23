@@ -542,7 +542,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
 
         {/* SVG Multi-Line Chart Scrollable Container */}
         <div
-          className="w-full relative overflow-x-auto pb-3 touch-pan-x overscroll-x-contain"
+          className="w-full relative overflow-x-auto pb-3"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <svg

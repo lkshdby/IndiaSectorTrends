@@ -197,7 +197,7 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
           {/* Main Area Chart */}
           <div className="bg-white p-4 rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
             <div
-              className="w-full overflow-x-auto pb-2 touch-pan-x overscroll-x-contain"
+              className="w-full overflow-x-auto pb-2"
               style={{ WebkitOverflowScrolling: 'touch' }}
             >
               <div style={{ minWidth: '480px', height: '288px' }} className="w-full pt-2">
