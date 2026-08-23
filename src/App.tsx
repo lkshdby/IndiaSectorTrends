@@ -74,44 +74,52 @@ export default function App() {
     }
   };
 
-  // Load from backend server or static CDN
+  // Load from GitHub data-storage branch, static files, or Express server
   const loadDataFromServer = async () => {
     let loadedData: DailySnapshot[] | null = null;
+    let sourceName = '';
 
-    // 1. Try Express backend API
+    // 1. Primary: Direct fetch from GitHub data-storage branch (real live data from GitHub Actions)
     try {
-      const res = await fetch('/api/data');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data) {
-          const unpacked = unpackSnapshots(json.data);
-          if (unpacked.length > 0) loadedData = unpacked;
-        }
+      const ghResult = await fetchSnapshotsFromGitHub();
+      if (ghResult.success && ghResult.data && ghResult.data.length > 0) {
+        loadedData = ghResult.data;
+        sourceName = ghResult.source || 'GitHub Actions (data-storage)';
       }
     } catch {
       // ignore
     }
 
-    // 2. Try static public/data/snapshots.json (for Vercel / GitHub Pages)
+    // 2. Try static public/data/snapshots.json
     if (!loadedData || loadedData.length === 0) {
       try {
         const staticRes = await fetch(`/data/snapshots.json?v=${Date.now()}`);
         if (staticRes.ok) {
           const staticJson = await staticRes.json();
           const unpacked = unpackSnapshots(staticJson);
-          if (unpacked.length > 0) loadedData = unpacked;
+          if (unpacked.length > 0) {
+            loadedData = unpacked;
+            sourceName = 'Local Repository File';
+          }
         }
       } catch {
         // ignore
       }
     }
 
-    // 3. Fallback to GitHub live branch if configured
+    // 3. Try Express backend API (if running full-stack mode)
     if (!loadedData || loadedData.length === 0) {
       try {
-        const ghResult = await fetchSnapshotsFromGitHub();
-        if (ghResult.success && ghResult.data && ghResult.data.length > 0) {
-          loadedData = ghResult.data;
+        const res = await fetch('/api/data');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            const unpacked = unpackSnapshots(json.data);
+            if (unpacked.length > 0) {
+              loadedData = unpacked;
+              sourceName = 'Express Server API';
+            }
+          }
         }
       } catch {
         // ignore
@@ -123,6 +131,9 @@ export default function App() {
       saveSnapshotsLocally(loadedData);
       const latest = loadedData[loadedData.length - 1].date;
       setSelectedDate(latest);
+      if (sourceName) {
+        showToast(`Loaded ${loadedData.length} daily snapshots from ${sourceName}`, 'success');
+      }
     }
 
     // Load scheduler status if running on Node server
@@ -262,6 +273,8 @@ export default function App() {
         schedulerInfo={schedulerInfo}
         onRefreshFetch={handleTriggerFetch}
         isFetching={isFetching}
+        onSyncGitHub={() => handleSyncGitHub()}
+        isSyncingGitHub={isSyncingGitHub}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenSchedulerModal={() => setIsSchedulerModalOpen(true)}
       />

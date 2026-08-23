@@ -4,9 +4,8 @@ import {
   Calendar,
   Clock,
   Download,
-  Play,
+  GitBranch,
   RefreshCw,
-  SlidersHorizontal,
 } from 'lucide-react';
 import { DailySnapshot, SchedulerInfo } from '../types';
 
@@ -17,6 +16,8 @@ interface HeaderProps {
   schedulerInfo: SchedulerInfo | null;
   onRefreshFetch: () => void;
   isFetching: boolean;
+  onSyncGitHub: () => void;
+  isSyncingGitHub: boolean;
   onOpenExportModal: () => void;
   onOpenSchedulerModal: () => void;
 }
@@ -28,6 +29,8 @@ export const Header: React.FC<HeaderProps> = ({
   schedulerInfo,
   onRefreshFetch,
   isFetching,
+  onSyncGitHub,
+  isSyncingGitHub,
   onOpenExportModal,
   onOpenSchedulerModal,
 }) => {
@@ -47,6 +50,11 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[11px] font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                 7:00 PM IST Auto-Fetch (Mon–Fri)
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-zinc-600 font-mono text-[11px]">
+                <GitBranch className="w-3 h-3 text-emerald-600" />
+                data-storage
               </span>
               <span>•</span>
               <span>{snapshots[snapshots.length - 1]?.sectors?.length || 0} Sectors Tracked</span>
@@ -82,27 +90,27 @@ export const Header: React.FC<HeaderProps> = ({
             </select>
           </div>
 
+          {/* Sync Live GitHub data-storage */}
+          <button
+            id="sync-github-live-button"
+            onClick={onSyncGitHub}
+            disabled={isSyncingGitHub}
+            title="Fetch latest scraped snapshot directly from GitHub data-storage branch"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors shadow-2xs disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncingGitHub ? 'animate-spin text-emerald-700' : 'text-emerald-700'}`} />
+            <span>{isSyncingGitHub ? 'Syncing GitHub...' : 'Sync Live'}</span>
+          </button>
+
           {/* 7 PM Cron Status Button */}
           <button
             id="scheduler-status-button"
             onClick={onOpenSchedulerModal}
-            title="Inspect 7:00 PM Daily Auto-Fetch Scheduler"
+            title="Inspect 7:00 PM Daily Auto-Fetch Scheduler & Repo Configuration"
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-lg transition-colors shadow-2xs"
           >
             <Clock className="w-3.5 h-3.5 text-zinc-600" />
             <span>7 PM Cron</span>
-          </button>
-
-          {/* Trigger Immediate 7 PM Fetch */}
-          <button
-            id="fetch-now-button"
-            onClick={onRefreshFetch}
-            disabled={isFetching}
-            title="Execute Screener 7 PM Fetch Script Now"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors shadow-2xs disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-emerald-700' : 'text-emerald-700'}`} />
-            <span>{isFetching ? 'Fetching 7 PM...' : 'Fetch Now'}</span>
           </button>
 
           {/* Export & Backup */}
@@ -119,3 +127,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
