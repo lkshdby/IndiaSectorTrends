@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Source Code
+      - name: Checkout Source Code from main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -43,6 +44,8 @@ jobs:
         run: npm run fetch:daily
 
       - name: Deploy Snapshots to data-storage Branch (Leaves main untouched)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -51,12 +54,18 @@ jobs:
           mkdir -p /tmp/data-export
           cp public/data/snapshots.json /tmp/data-export/snapshots.json
 
-          # Switch to or create isolated data-storage branch
-          git fetch origin data-storage:data-storage 2>/dev/null || true
-          git checkout data-storage 2>/dev/null || git checkout --orphan data-storage
+          # Reset workspace to prepare for data-storage branch
+          git stash --include-untracked 2>/dev/null || true
+          
+          # Check if data-storage exists on remote
+          if git ls-remote --heads origin data-storage | grep -q data-storage; then
+            git fetch origin data-storage
+            git checkout -B data-storage origin/data-storage
+          else
+            git checkout --orphan data-storage
+            git rm -rf . --ignore-unmatch 2>/dev/null || true
+          fi
 
-          # Keep data-storage clean with only the data artifacts
-          git rm -rf . --ignore-unmatch 2>/dev/null || true
           mkdir -p public/data
           cp /tmp/data-export/snapshots.json public/data/snapshots.json
           cp /tmp/data-export/snapshots.json snapshots.json
@@ -66,6 +75,6 @@ jobs:
             echo "No new changes to commit to data-storage."
           else
             git commit -m "Auto-fetch: Screener industry trends $(date -u +'%Y-%m-%d')"
-            git push origin data-storage --force
+            git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data-storage
             echo "Successfully pushed latest snapshot to data-storage branch!"
           fi
