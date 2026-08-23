@@ -198,12 +198,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             {/* Download JSON */}
             <button
               onClick={handleDownloadJSON}
-              className="p-4 rounded-[18px] border border-[#b1ada1]/30 hover:border-[#c15f3c] hover:bg-[#c15f3c]/5 transition-all flex flex-col items-start text-left group bg-white shadow-xs cursor-pointer"
+              className="p-4 rounded-[18px] border border-[#b1ada1]/30 hover:border-[#A2AB73] hover:bg-[#A2AB73]/10 transition-all flex flex-col items-start text-left group bg-white shadow-xs cursor-pointer"
             >
-              <div className="p-2.5 rounded-xl bg-[#c15f3c]/15 text-[#c15f3c] mb-3 group-hover:scale-105 transition-transform">
+              <div className="p-2.5 rounded-xl bg-[#A2AB73]/15 text-[#A2AB73] mb-3 group-hover:scale-105 transition-transform">
                 <FileJson className="w-5 h-5 stroke-[2]" />
               </div>
-              <div className="font-extrabold text-sm text-[#08090a] group-hover:text-[#c15f3c] font-display">
+              <div className="font-extrabold text-sm text-[#08090a] group-hover:text-[#A2AB73] font-display">
                 Export Raw JSON (.json)
               </div>
               <div className="text-xs text-[#08090a]/60 mt-1 font-medium leading-relaxed">
@@ -227,7 +227,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               Restore / Import Backup:
             </span>
             <label className="flex items-center justify-center gap-2 px-4 py-3.5 border-2 border-dashed border-[#b1ada1]/60 rounded-xl cursor-pointer hover:bg-white transition-colors text-xs font-bold text-[#08090a] font-display">
-              <Upload className="w-4 h-4 text-[#c15f3c] stroke-[2]" />
+              <Upload className="w-4 h-4 text-[#A2AB73] stroke-[2]" />
               <span>Select previously exported .JSON backup file</span>
               <input
                 type="file"
@@ -254,7 +254,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   onClose();
                 }
               }}
-              className="flex items-center gap-1 text-[#c15f3c] hover:underline font-bold cursor-pointer font-display"
+              className="flex items-center gap-1 text-[#A2AB73] hover:underline font-bold cursor-pointer font-display"
             >
               <RotateCcw className="w-3.5 h-3.5 stroke-[2]" />
               <span>Purge Mock History</span>

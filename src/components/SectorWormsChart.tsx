@@ -448,7 +448,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 setPinnedSectors([]);
                 setFilterPreset('all');
               }}
-              className="text-[11px] text-[#c15f3c] hover:underline font-bold ml-1 cursor-pointer font-display"
+              className="text-[11px] text-[#A2AB73] hover:underline font-bold ml-1 cursor-pointer font-display"
             >
               Clear Pins
             </button>
@@ -463,7 +463,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
             placeholder="Search & highlight industry..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-7 py-1.5 text-xs bg-white border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#c15f3c]/40 w-44 sm:w-56 font-medium text-[#08090a]"
+            className="pl-8 pr-7 py-1.5 text-xs bg-white border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#A2AB73]/40 w-44 sm:w-56 font-medium text-[#08090a]"
           />
           {searchQuery && (
             <button
@@ -508,7 +508,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 <div className="text-[10px] text-[#f4f3ee]/60 font-semibold">Period Change</div>
                 <div
                   className={`font-bold flex items-center gap-0.5 text-xs font-display ${
-                    activeWorm.changeValue >= 0 ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                    activeWorm.changeValue >= 0 ? 'text-[#10b981]' : 'text-[#A2AB73]'
                   }`}
                 >
                   {activeWorm.changeValue >= 0 ? (
@@ -597,7 +597,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 y1={plotDimensions.getY(0)}
                 x2={plotDimensions.chartWidth - plotDimensions.paddingRight}
                 y2={plotDimensions.getY(0)}
-                stroke="#c15f3c"
+                stroke="#A2AB73"
                 strokeWidth="1.2"
                 strokeDasharray="3 3"
               />
@@ -804,7 +804,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                     ? 'bg-[#08090a] text-white border-[#08090a] shadow-md scale-105 z-10'
                     : isPinned
                     ? 'bg-[#10b981]/15 border-[#10b981]/40 text-[#08090a] font-bold'
-                    : 'bg-white border-[#b1ada1]/30 text-[#08090a] hover:border-[#c15f3c] hover:bg-[#f4f3ee]'
+                    : 'bg-white border-[#b1ada1]/30 text-[#08090a] hover:border-[#A2AB73] hover:bg-[#f4f3ee]'
                 }`}
               >
                 {/* Sector Color Dot */}
@@ -826,7 +826,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 {/* Delta Arrow */}
                 <span
                   className={`text-[9px] font-bold font-display ${
-                    isGainer ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                    isGainer ? 'text-[#10b981]' : 'text-[#A2AB73]'
                   }`}
                 >
                   {isGainer ? '+' : ''}

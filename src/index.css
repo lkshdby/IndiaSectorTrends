@@ -2,19 +2,19 @@
 
 @layer base {
   :root {
-    --bg-terracotta: #c15f3c;
+    --bg-canvas: #A2AB73;
     --bg-paper: #f4f3ee;
     --ink-charcoal: #08090a;
     --border-soft: #b1ada1;
     --color-emerald: #10b981;
     --color-amber: #f59e0b;
-    --color-terracotta: #c15f3c;
+    --color-sage: #A2AB73;
   }
 
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     color: #08090a;
-    background-color: #c15f3c;
+    background-color: #A2AB73;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

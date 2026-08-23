@@ -67,7 +67,7 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
               </span>
 
               {isSelected && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-[#c15f3c] rounded-full" />
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-[#A2AB73] rounded-full" />
               )}
             </button>
           );

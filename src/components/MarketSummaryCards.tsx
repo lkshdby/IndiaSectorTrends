@@ -43,7 +43,7 @@ export const MarketSummaryCards: React.FC<MarketSummaryCardsProps> = ({
             <span className="text-[11px] font-bold uppercase tracking-wider font-display">
               Total Market Cap
             </span>
-            <div className="w-7 h-7 rounded-lg bg-[#c15f3c]/10 text-[#c15f3c] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#A2AB73]/15 text-[#A2AB73] flex items-center justify-center">
               <Coins className="w-3.5 h-3.5 stroke-[2]" />
             </div>
           </div>
@@ -59,7 +59,7 @@ export const MarketSummaryCards: React.FC<MarketSummaryCardsProps> = ({
             <span className="font-mono text-[#08090a]">{overview.totalCompanies} Companies</span>
           </div>
           <div className="w-full h-2 rounded-full bg-[#f4f3ee] overflow-hidden p-0.5 flex gap-0.5">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#c15f3c] to-[#f59e0b]" style={{ width: '65%' }} />
+            <div className="h-full rounded-full bg-gradient-to-r from-[#A2AB73] to-[#f59e0b]" style={{ width: '65%' }} />
             <div className="h-full rounded-full bg-[#10b981]" style={{ width: '35%' }} />
           </div>
         </div>
@@ -87,7 +87,7 @@ export const MarketSummaryCards: React.FC<MarketSummaryCardsProps> = ({
                   cx="18"
                   cy="18"
                   r={radius}
-                  stroke="#c15f3c"
+                  stroke="#A2AB73"
                   strokeWidth="3.5"
                   strokeDasharray={circumference}
                   strokeDashoffset={peStrokeDashoffset}
@@ -95,7 +95,7 @@ export const MarketSummaryCards: React.FC<MarketSummaryCardsProps> = ({
                   fill="transparent"
                 />
               </svg>
-              <Percent className="w-3 h-3 text-[#c15f3c] absolute stroke-[2.5]" />
+              <Percent className="w-3 h-3 text-[#A2AB73] absolute stroke-[2.5]" />
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-[#08090a] font-display tracking-tight">

@@ -122,7 +122,7 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
                 <span className="text-[#08090a]/60 font-semibold">Net Period Shift:</span>
                 <div
                   className={`text-base font-extrabold flex items-center gap-0.5 mt-0.5 font-display ${
-                    isPositive ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                    isPositive ? 'text-[#10b981]' : 'text-[#A2AB73]'
                   }`}
                 >
                   {isPositive ? <ArrowUpRight className="w-4 h-4 stroke-[2.5]" /> : <ArrowDownRight className="w-4 h-4 stroke-[2.5]" />}
@@ -138,7 +138,7 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
                 <span className="text-[#08090a]/60 font-semibold">1Y Return:</span>
                 <div
                   className={`text-base font-extrabold mt-0.5 font-display ${
-                    latestPoint.return1Y >= 0 ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                    latestPoint.return1Y >= 0 ? 'text-[#10b981]' : 'text-[#A2AB73]'
                   }`}
                 >
                   {latestPoint.return1Y >= 0 ? '+' : ''}

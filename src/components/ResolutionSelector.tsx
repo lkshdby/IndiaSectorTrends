@@ -28,7 +28,7 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
       {/* Zoom Level Button Group */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold text-[#08090a]/70 mr-1 flex items-center gap-1.5 font-display">
-          <CalendarDays className="w-4 h-4 text-[#c15f3c] stroke-[2]" />
+          <CalendarDays className="w-4 h-4 text-[#A2AB73] stroke-[2]" />
           Resolution:
         </span>
         <div className="inline-flex p-1 bg-white/80 border border-[#b1ada1]/30 rounded-xl gap-1">
@@ -56,7 +56,7 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
       {/* Sorting & Order */}
       <div className="flex items-center gap-2">
         <div className="flex items-center text-xs text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl px-3 py-2 shadow-2xs min-h-[40px]">
-          <ArrowDownUp className="w-4 h-4 text-[#c15f3c] mr-2 shrink-0 stroke-[2]" />
+          <ArrowDownUp className="w-4 h-4 text-[#A2AB73] mr-2 shrink-0 stroke-[2]" />
           <span className="text-[#08090a]/60 font-semibold mr-1.5">Sort:</span>
           <select
             id="resolution-sort-select"

@@ -261,7 +261,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-[#c15f3c] py-0 sm:py-6 px-0 sm:px-4 flex flex-col items-center justify-start selection:bg-[#10b981]/20 selection:text-[#08090a]">
+    <div className="min-h-screen bg-[#A2AB73] py-0 sm:py-6 px-0 sm:px-4 flex flex-col items-center justify-start selection:bg-[#10b981]/20 selection:text-[#08090a]">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-5 duration-200">
@@ -270,14 +270,14 @@ export default function App() {
               toastMessage.type === 'success'
                 ? 'bg-[#08090a] text-[#10b981] border-[#10b981]/30'
                 : toastMessage.type === 'error'
-                ? 'bg-[#08090a] text-[#c15f3c] border-[#c15f3c]/30'
+                ? 'bg-[#08090a] text-[#A2AB73] border-[#A2AB73]/30'
                 : 'bg-[#08090a] text-[#f4f3ee] border-white/20'
             }`}
           >
             {toastMessage.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-[#10b981] stroke-[2.5]" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-[#c15f3c] stroke-[2.5]" />
+              <AlertCircle className="w-4 h-4 text-[#A2AB73] stroke-[2.5]" />
             )}
             <span>{toastMessage.text}</span>
           </div>

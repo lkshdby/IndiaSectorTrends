@@ -113,7 +113,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                 <span className="text-[#f4f3ee]/70">Change ({resolutionLabels[resolution]}):</span>
                 <span
                   className={`font-bold flex items-center gap-0.5 ${
-                    isPositiveChange ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                    isPositiveChange ? 'text-[#10b981]' : 'text-[#A2AB73]'
                   }`}
                 >
                   {isPositiveChange ? (
@@ -136,7 +136,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
               <span className="text-[#f4f3ee]/50">1Y Return: </span>
               <span
                 className={`font-bold ${
-                  data.allMetrics.median1YReturn >= 0 ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                  data.allMetrics.median1YReturn >= 0 ? 'text-[#10b981]' : 'text-[#A2AB73]'
                 }`}
               >
                 {data.allMetrics.median1YReturn >= 0 ? '+' : ''}
@@ -197,7 +197,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
               placeholder={`Search ${items.length} sectors...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-7 py-2 text-xs bg-white border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#c15f3c]/40 w-44 sm:w-56 font-medium text-[#08090a]"
+              className="pl-9 pr-7 py-2 text-xs bg-white border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#A2AB73]/40 w-44 sm:w-56 font-medium text-[#08090a]"
             />
             {searchQuery && (
               <button
@@ -329,12 +329,12 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f3ee' }} />
                   <ReferenceLine
                     x={avgValue}
-                    stroke="#c15f3c"
+                    stroke="#A2AB73"
                     strokeDasharray="3 3"
                     label={{
                       value: `Avg: ${metricDef.format(avgValue)}`,
                       position: 'top',
-                      fill: '#c15f3c',
+                      fill: '#A2AB73',
                       fontSize: 10,
                       fontWeight: 700,
                     }}
@@ -353,7 +353,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                             selectedMetric === 'median1YReturn' || selectedMetric === 'wtdAvgSalesGrowth'
                               ? entry.currentValue >= 0
                                 ? '#10b981' // emerald
-                                : '#c15f3c' // terracotta
+                                : '#A2AB73' // sage accent
                               : '#08090a' // deep charcoal
                           }
                           className="hover:opacity-85 transition-opacity"
@@ -384,10 +384,10 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                   <button
                     key={item.sector}
                     onClick={() => onSelectSector(item.sector)}
-                    className="flex items-center justify-between p-3 rounded-[14px] border border-[#b1ada1]/30 hover:border-[#c15f3c] hover:bg-[#f4f3ee]/60 transition-all text-left group bg-white shadow-2xs cursor-pointer min-h-[56px]"
+                    className="flex items-center justify-between p-3 rounded-[14px] border border-[#b1ada1]/30 hover:border-[#A2AB73] hover:bg-[#f4f3ee]/60 transition-all text-left group bg-white shadow-2xs cursor-pointer min-h-[56px]"
                   >
                     <div className="min-w-0 pr-2">
-                      <div className="text-xs font-extrabold text-[#08090a] group-hover:text-[#c15f3c] truncate font-display">
+                      <div className="text-xs font-extrabold text-[#08090a] group-hover:text-[#A2AB73] truncate font-display">
                         {item.sector}
                       </div>
                       <div className="text-[10px] text-[#08090a]/60 font-medium">
@@ -402,7 +402,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                       {item.previousValue !== null ? (
                         <div
                           className={`text-[10px] font-bold flex items-center justify-end gap-0.5 ${
-                            isPositive ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                            isPositive ? 'text-[#10b981]' : 'text-[#A2AB73]'
                           }`}
                         >
                           {isPositive ? (
@@ -466,14 +466,14 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                     <td className="py-3 px-3 text-right font-medium text-[#08090a]/80">{s.wtdAvgROCE}%</td>
                     <td
                       className={`py-3 px-3 text-right font-bold font-display ${
-                        s.median1YReturn >= 0 ? 'text-[#10b981]' : 'text-[#c15f3c]'
+                        s.median1YReturn >= 0 ? 'text-[#10b981]' : 'text-[#A2AB73]'
                       }`}
                     >
                       {s.median1YReturn >= 0 ? '+' : ''}
                       {s.median1YReturn}%
                     </td>
                     <td className="py-3 px-3 text-center">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-[#c15f3c] hover:text-[#a94f30] font-bold font-display">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-[#A2AB73] hover:text-[#8f9862] font-bold font-display">
                         Drilldown <ExternalLink className="w-3 h-3 stroke-[2]" />
                       </span>
                     </td>
