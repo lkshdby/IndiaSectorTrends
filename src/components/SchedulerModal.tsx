@@ -107,7 +107,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 type="text"
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
-                placeholder="owner/repository (e.g. lkshdby/screenersectorytrends)"
+                placeholder="owner/repository (e.g. lkshdby/IndiaSectorTrends)"
                 className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500"
               />
               <button

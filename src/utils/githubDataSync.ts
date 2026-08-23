@@ -2,7 +2,7 @@ import { DailySnapshot } from '../types';
 import { unpackSnapshots } from './compactData';
 
 const GITHUB_REPO_STORAGE_KEY = 'screener_github_repo_target';
-const DEFAULT_REPO = 'lkshdby/screenersectorytrends';
+const DEFAULT_REPO = 'lkshdby/IndiaSectorTrends';
 
 /**
  * Get user configured GitHub repo target (e.g. 'lkshdby/screenersectorytrends')
