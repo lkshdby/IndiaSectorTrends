@@ -32,7 +32,13 @@ export default function App() {
 
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('totalMarketCap');
   const [resolution, setResolution] = useState<TimeResolution>('daily');
-  const [selectedDate, setSelectedDate] = useState<string>('2026-08-21');
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const saved = loadSnapshotsLocally();
+    if (saved && saved.length > 0) {
+      return saved[saved.length - 1].date;
+    }
+    return '2026-08-22';
+  });
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<
     'value-desc' | 'value-asc' | 'change-desc' | 'change-asc' | 'alphabetical'
