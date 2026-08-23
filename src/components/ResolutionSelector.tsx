@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDownUp, BarChart2, CalendarDays, Clock, Sparkles } from 'lucide-react';
+import { ArrowDownUp, CalendarDays } from 'lucide-react';
 import { TimeResolution } from '../types';
 
 interface ResolutionSelectorProps {
@@ -24,14 +24,14 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50 border border-zinc-200 rounded-xl p-2.5">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-[16px] p-3 shadow-2xs">
       {/* Zoom Level Button Group */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-xs font-semibold text-zinc-500 mr-1 flex items-center gap-1">
-          <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />
-          Zoom Resolution:
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-bold text-[#08090a]/70 mr-1 flex items-center gap-1.5 font-display">
+          <CalendarDays className="w-4 h-4 text-[#c15f3c] stroke-[2]" />
+          Resolution:
         </span>
-        <div className="inline-flex p-1 bg-zinc-200/70 rounded-lg gap-1">
+        <div className="inline-flex p-1 bg-white/80 border border-[#b1ada1]/30 rounded-xl gap-1">
           {resolutions.map((r) => {
             const isActive = resolution === r.id;
             return (
@@ -39,10 +39,10 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
                 key={r.id}
                 id={`res-btn-${r.id}`}
                 onClick={() => onSelectResolution(r.id)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all min-h-[36px] cursor-pointer font-display ${
                   isActive
-                    ? 'bg-white text-zinc-900 shadow-xs border border-zinc-200/80 font-bold'
-                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-white/50'
+                    ? 'bg-[#08090a] text-white shadow-xs'
+                    : 'text-[#08090a]/70 hover:text-[#08090a] hover:bg-[#f4f3ee]'
                 }`}
                 title={r.sub}
               >
@@ -55,14 +55,14 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
 
       {/* Sorting & Order */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center text-xs text-zinc-600 bg-white border border-zinc-200 rounded-lg px-2.5 py-1 shadow-2xs">
-          <ArrowDownUp className="w-3.5 h-3.5 text-zinc-400 mr-1.5 shrink-0" />
-          <span className="text-zinc-500 font-medium mr-1.5">Sort:</span>
+        <div className="flex items-center text-xs text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl px-3 py-2 shadow-2xs min-h-[40px]">
+          <ArrowDownUp className="w-4 h-4 text-[#c15f3c] mr-2 shrink-0 stroke-[2]" />
+          <span className="text-[#08090a]/60 font-semibold mr-1.5">Sort:</span>
           <select
             id="resolution-sort-select"
             value={sortBy}
             onChange={(e) => onSelectSortBy(e.target.value as any)}
-            className="bg-transparent text-xs font-bold text-zinc-800 focus:outline-hidden cursor-pointer"
+            className="bg-transparent text-xs font-extrabold text-[#08090a] focus:outline-hidden cursor-pointer font-display"
           >
             <option value="value-desc">Highest Value First</option>
             <option value="value-asc">Lowest Value First</option>
@@ -75,3 +75,4 @@ export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
     </div>
   );
 };
+

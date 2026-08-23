@@ -81,64 +81,64 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-zinc-200 overflow-hidden">
+      <div className="bg-[#f4f3ee] rounded-[24px] shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-[#b1ada1]/40 overflow-hidden">
         {/* Modal Header */}
-        <div className="p-5 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
+        <div className="p-5 border-b border-[#b1ada1]/30 flex items-center justify-between bg-white">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-zinc-900 text-white">
-                <Building2 className="w-4 h-4" />
+              <span className="p-2 rounded-xl bg-[#08090a] text-white">
+                <Building2 className="w-4 h-4 stroke-[2]" />
               </span>
-              <h3 className="text-lg font-bold text-zinc-900">{sectorName}</h3>
-              <span className="text-xs bg-zinc-200 text-zinc-700 px-2 py-0.5 rounded-md font-medium">
+              <h3 className="text-lg font-extrabold text-[#08090a] font-display">{sectorName}</h3>
+              <span className="text-xs bg-[#10b981]/15 text-[#10b981] px-2.5 py-0.5 rounded-full font-bold font-display">
                 {latestPoint?.noOfCompanies || 0} Listed Companies
               </span>
             </div>
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-xs text-[#08090a]/60 mt-1 font-medium">
               Historical performance evolution across {chartData.length} records ({firstPoint?.date} to {latestPoint?.date})
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-zinc-200/80 hover:bg-zinc-300 flex items-center justify-center text-zinc-700 transition-colors"
+            className="w-9 h-9 rounded-xl bg-[#f4f3ee] hover:bg-[#b1ada1]/20 flex items-center justify-center text-[#08090a] transition-colors cursor-pointer border border-[#b1ada1]/30"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto space-y-5">
+        <div className="p-5 overflow-y-auto space-y-5 bg-[#f4f3ee]">
           {/* Quick Metrics Bar for this Sector */}
           {latestPoint && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-zinc-50 p-3.5 rounded-xl border border-zinc-200 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white p-4 rounded-[18px] border border-[#b1ada1]/30 text-xs shadow-xs">
               <div>
-                <span className="text-zinc-500">Current {metricDef.label}:</span>
-                <div className="text-sm font-bold text-zinc-900 mt-0.5">
+                <span className="text-[#08090a]/60 font-semibold">Current {metricDef.label}:</span>
+                <div className="text-base font-extrabold text-[#08090a] mt-0.5 font-display">
                   {metricDef.format(latestPoint.value)}
                 </div>
               </div>
               <div>
-                <span className="text-zinc-500">Net Period Shift:</span>
+                <span className="text-[#08090a]/60 font-semibold">Net Period Shift:</span>
                 <div
-                  className={`text-sm font-bold flex items-center gap-0.5 mt-0.5 ${
-                    isPositive ? 'text-emerald-700' : 'text-rose-600'
+                  className={`text-base font-extrabold flex items-center gap-0.5 mt-0.5 font-display ${
+                    isPositive ? 'text-[#10b981]' : 'text-[#c15f3c]'
                   }`}
                 >
-                  {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                  {isPositive ? <ArrowUpRight className="w-4 h-4 stroke-[2.5]" /> : <ArrowDownRight className="w-4 h-4 stroke-[2.5]" />}
                   {isPositive ? '+' : ''}
                   {totalPct.toFixed(1)}% ({metricDef.formatDelta(totalChange, totalPct)})
                 </div>
               </div>
               <div>
-                <span className="text-zinc-500">Median P/E:</span>
-                <div className="text-sm font-bold text-zinc-900 mt-0.5">{latestPoint.pe}x</div>
+                <span className="text-[#08090a]/60 font-semibold">Median P/E:</span>
+                <div className="text-base font-extrabold text-[#08090a] mt-0.5 font-display">{latestPoint.pe}x</div>
               </div>
               <div>
-                <span className="text-zinc-500">1Y Return:</span>
+                <span className="text-[#08090a]/60 font-semibold">1Y Return:</span>
                 <div
-                  className={`text-sm font-bold mt-0.5 ${
-                    latestPoint.return1Y >= 0 ? 'text-emerald-700' : 'text-rose-600'
+                  className={`text-base font-extrabold mt-0.5 font-display ${
+                    latestPoint.return1Y >= 0 ? 'text-[#10b981]' : 'text-[#c15f3c]'
                   }`}
                 >
                   {latestPoint.return1Y >= 0 ? '+' : ''}
@@ -149,8 +149,8 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
           )}
 
           {/* Metric Selector Pills inside modal */}
-          <div>
-            <div className="text-xs font-semibold text-zinc-500 mb-2 uppercase tracking-wider">
+          <div className="bg-white p-4 rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
+            <div className="text-xs font-bold text-[#08090a] mb-2 uppercase tracking-wider font-display">
               Change Active Metric:
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -161,10 +161,10 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
                   <button
                     key={key}
                     onClick={() => setActiveMetric(key)}
-                    className={`px-2.5 py-1 text-xs rounded-lg font-semibold transition-colors ${
+                    className={`px-3 py-1.5 text-xs rounded-xl font-bold transition-all font-display cursor-pointer ${
                       isSel
-                        ? 'bg-zinc-900 text-white'
-                        : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                        ? 'bg-[#08090a] text-white shadow-2xs'
+                        : 'bg-[#f4f3ee] text-[#08090a]/70 hover:bg-[#b1ada1]/20 border border-[#b1ada1]/30'
                     }`}
                   >
                     {def.label}
@@ -175,17 +175,17 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
           </div>
 
           {/* Resolution Selector inside modal */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-500">Aggregation Level:</span>
-            <div className="inline-flex p-0.5 bg-zinc-100 rounded-lg gap-1">
+          <div className="flex items-center justify-between bg-white px-4 py-3 rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
+            <span className="text-xs font-bold text-[#08090a] font-display">Aggregation Level:</span>
+            <div className="inline-flex p-0.5 bg-[#f4f3ee] border border-[#b1ada1]/30 rounded-xl gap-1">
               {(['daily', 'weekly', 'monthly'] as TimeResolution[]).map((res) => (
                 <button
                   key={res}
                   onClick={() => setActiveResolution(res)}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-md capitalize transition-all ${
+                  className={`px-3 py-1 text-xs font-bold rounded-lg capitalize transition-all font-display cursor-pointer ${
                     activeResolution === res
-                      ? 'bg-white text-zinc-900 shadow-2xs font-bold'
-                      : 'text-zinc-600 hover:text-zinc-900'
+                      ? 'bg-[#08090a] text-white shadow-2xs'
+                      : 'text-[#08090a]/60 hover:text-[#08090a]'
                   }`}
                 >
                   {res}
@@ -195,63 +195,68 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
           </div>
 
           {/* Main Area Chart */}
-          <div
-            className="w-full overflow-x-auto pb-2 touch-pan-x overscroll-x-contain"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            <div style={{ minWidth: '480px', height: '288px' }} className="w-full pt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
-                  <defs>
-                    <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#047857" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#047857" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 11, fill: '#71717a' }}
-                    tickFormatter={(val) => {
-                      if (activeResolution === 'monthly') return val.substring(0, 7);
-                      return val.substring(5);
-                    }}
-                  />
-                  <YAxis
-                    tickFormatter={(val) => metricDef.format(val)}
-                    tick={{ fontSize: 11, fill: '#71717a' }}
-                    domain={['auto', 'auto']}
-                  />
-                  <Tooltip
-                    formatter={(val: any) => [metricDef.format(val), metricDef.label]}
-                    labelFormatter={(lbl) => `Date: ${lbl}`}
-                    contentStyle={{
-                      backgroundColor: '#18181b',
-                      borderColor: '#27272a',
-                      borderRadius: '10px',
-                      color: '#fff',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#047857"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#colorVal)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+          <div className="bg-white p-4 rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
+            <div
+              className="w-full overflow-x-auto pb-2 touch-pan-x overscroll-x-contain"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <div style={{ minWidth: '480px', height: '288px' }} className="w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#b1ada1" strokeOpacity={0.25} />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11, fill: '#08090a', opacity: 0.6 }}
+                      tickFormatter={(val) => {
+                        if (activeResolution === 'monthly') return val.substring(0, 7);
+                        return val.substring(5);
+                      }}
+                      axisLine={{ stroke: '#b1ada1', strokeOpacity: 0.3 }}
+                    />
+                    <YAxis
+                      tickFormatter={(val) => metricDef.format(val)}
+                      tick={{ fontSize: 11, fill: '#08090a', opacity: 0.6 }}
+                      domain={['auto', 'auto']}
+                      axisLine={{ stroke: '#b1ada1', strokeOpacity: 0.3 }}
+                    />
+                    <Tooltip
+                      formatter={(val: any) => [metricDef.format(val), metricDef.label]}
+                      labelFormatter={(lbl) => `Date: ${lbl}`}
+                      contentStyle={{
+                        backgroundColor: '#08090a',
+                        borderColor: '#b1ada1',
+                        borderRadius: '14px',
+                        color: '#f4f3ee',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorVal)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end">
+        <div className="p-4 bg-white border-t border-[#b1ada1]/30 flex items-center justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-100 transition-colors"
+            className="px-5 py-2 text-xs font-bold text-[#08090a] bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-xl hover:bg-[#b1ada1]/20 transition-colors font-display cursor-pointer"
           >
             Close
           </button>
@@ -260,3 +265,4 @@ export const SectorDrilldownModal: React.FC<SectorDrilldownModalProps> = ({
     </div>
   );
 };
+

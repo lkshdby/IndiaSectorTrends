@@ -329,27 +329,27 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`w-full bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden transition-all ${
+      className={`w-full bg-white border border-[#b1ada1]/30 rounded-[18px] shadow-xs overflow-hidden transition-all ${
         isFullscreen ? 'fixed inset-4 z-50 shadow-2xl overflow-y-auto max-h-[96vh]' : ''
       }`}
     >
       {/* Top Header Controls Bar */}
-      <div className="p-4 sm:p-5 border-b border-zinc-200 bg-zinc-50/70 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+      <div className="p-4 sm:p-5 border-b border-[#b1ada1]/30 bg-[#f4f3ee]/60 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-700 text-white text-xs font-bold shadow-2xs">
-              <Activity className="w-3.5 h-3.5" /> Multi-Line Sector Worms ({allSectorNames.length})
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#10b981]/15 text-[#10b981] text-xs font-extrabold font-display">
+              <Activity className="w-3.5 h-3.5 stroke-[2.5]" /> Multi-Line Sector Worms ({allSectorNames.length})
             </span>
-            <h2 className="text-base font-bold text-zinc-900">
+            <h2 className="text-base sm:text-lg font-extrabold text-[#08090a] font-display">
               {metricDef.label} Evolution Over Time
             </h2>
-            <span className="text-xs px-2 py-0.5 rounded-md bg-zinc-200 text-zinc-700 font-semibold">
-              {visibleWorms.length} of {allSectorNames.length} Sectors Visible
+            <span className="text-xs px-2.5 py-0.5 rounded-md bg-white border border-[#b1ada1]/30 text-[#08090a]/70 font-semibold font-display">
+              {visibleWorms.length} of {allSectorNames.length} Visible
             </span>
           </div>
-          <p className="text-xs text-zinc-500 mt-1">
-            Timeline up to <span className="font-semibold text-zinc-800">{selectedDate}</span> ({filteredSnapshots.length} {resolution} trading days) • Indicator:{' '}
-            <span className="font-semibold text-zinc-800">
+          <p className="text-xs text-[#08090a]/60 mt-1 font-medium">
+            Timeline up to <span className="font-bold text-[#08090a]">{selectedDate}</span> ({filteredSnapshots.length} {resolution} trading days) • Indicator:{' '}
+            <span className="font-bold text-[#08090a]">
               {metricDef.label} {metricDef.unit ? `(${metricDef.unit})` : ''}
             </span>{' '}
             • Hover any worm to inspect sector trajectory
@@ -357,17 +357,17 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
         </div>
 
         {/* View & Filter Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           {/* Time Span Filter (1M, 3M, 6M, 1Y) */}
-          <div className="flex items-center bg-zinc-100 border border-zinc-200 rounded-lg p-0.5 text-xs">
+          <div className="flex items-center bg-white border border-[#b1ada1]/40 rounded-xl p-0.5 text-xs">
             {(['1m', '3m', '6m', '1y'] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRangePreset(r)}
-                className={`px-2.5 py-1 rounded-md font-bold uppercase text-[11px] transition-all ${
+                className={`px-3 py-1.5 rounded-lg font-bold uppercase text-[11px] transition-all font-display ${
                   rangePreset === r
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-800'
+                    ? 'bg-[#08090a] text-white shadow-2xs'
+                    : 'text-[#08090a]/60 hover:text-[#08090a]'
                 }`}
               >
                 {r}
@@ -378,40 +378,40 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
           {/* Label Toggle */}
           <button
             onClick={() => setShowRightLabels(!showRightLabels)}
-            className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border transition-all font-display cursor-pointer ${
               showRightLabels
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-                : 'bg-white border-zinc-300 text-zinc-600'
+                ? 'bg-[#10b981]/15 border-[#10b981]/40 text-[#10b981]'
+                : 'bg-white border-[#b1ada1]/40 text-[#08090a]/70 hover:text-[#08090a]'
             }`}
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-3.5 h-3.5 stroke-[2]" />
             <span className="hidden sm:inline">End Labels</span>
           </button>
 
           {/* Fullscreen button */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1.5 text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-100"
+            className="p-2 text-[#08090a]/70 hover:text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl hover:bg-[#f4f3ee] cursor-pointer"
             title={isFullscreen ? 'Exit Fullscreen' : 'Expand Fullscreen'}
           >
-            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {isFullscreen ? <Minimize2 className="w-4 h-4 stroke-[2]" /> : <Maximize2 className="w-4 h-4 stroke-[2]" />}
           </button>
         </div>
       </div>
 
       {/* Preset Filter Chips & Search Bar */}
-      <div className="px-4 sm:px-5 py-2.5 bg-zinc-50/40 border-b border-zinc-200 flex flex-wrap items-center justify-between gap-2.5">
+      <div className="px-4 sm:px-5 py-3 bg-[#f4f3ee]/30 border-b border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-1.5 flex-wrap text-xs">
-          <span className="text-zinc-400 font-medium mr-1 flex items-center gap-1">
-            <Filter className="w-3 h-3" /> Quick Filter:
+          <span className="text-[#08090a]/50 font-bold mr-1 flex items-center gap-1 font-display">
+            <Filter className="w-3.5 h-3.5" /> Filter:
           </span>
           {[
             { key: 'all', label: `All (${allSectorNames.length})` },
             { key: 'top10', label: 'Top 10' },
             { key: 'top25', label: 'Top 25' },
             { key: 'top50', label: 'Top 50' },
-            { key: 'gainers', label: 'Top Gainers 🚀' },
-            { key: 'decliners', label: 'Top Decliners 📉' },
+            { key: 'gainers', label: 'Top Gainers' },
+            { key: 'decliners', label: 'Top Decliners' },
           ].map((item) => (
             <button
               key={item.key}
@@ -419,10 +419,10 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 setFilterPreset(item.key as any);
                 setSearchQuery('');
               }}
-              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-xl font-bold transition-all text-xs font-display cursor-pointer ${
                 filterPreset === item.key && !searchQuery
-                  ? 'bg-zinc-900 text-white shadow-2xs font-bold'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+                  ? 'bg-[#08090a] text-white shadow-2xs'
+                  : 'bg-white border border-[#b1ada1]/30 text-[#08090a]/70 hover:border-[#08090a]'
               }`}
             >
               {item.label}
@@ -432,13 +432,13 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
           {pinnedSectors.length > 0 && (
             <button
               onClick={() => setFilterPreset('custom')}
-              className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-xl font-bold transition-all text-xs font-display cursor-pointer ${
                 filterPreset === 'custom'
-                  ? 'bg-emerald-700 text-white shadow-2xs'
-                  : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                  ? 'bg-[#10b981] text-white shadow-2xs'
+                  : 'bg-[#10b981]/15 border border-[#10b981]/30 text-[#10b981]'
               }`}
             >
-              Custom Pinned ({pinnedSectors.length})
+              Pinned ({pinnedSectors.length})
             </button>
           )}
 
@@ -448,7 +448,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 setPinnedSectors([]);
                 setFilterPreset('all');
               }}
-              className="text-[11px] text-zinc-400 hover:text-zinc-700 underline ml-1"
+              className="text-[11px] text-[#c15f3c] hover:underline font-bold ml-1 cursor-pointer font-display"
             >
               Clear Pins
             </button>
@@ -457,18 +457,18 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
 
         {/* Search Input */}
         <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#08090a]/40" />
           <input
             type="text"
             placeholder="Search & highlight industry..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-7 py-1 text-xs bg-white border border-zinc-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500 w-44 sm:w-56"
+            className="pl-8 pr-7 py-1.5 text-xs bg-white border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#c15f3c]/40 w-44 sm:w-56 font-medium text-[#08090a]"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#08090a]/40 hover:text-[#08090a]"
             >
               <X className="w-3 h-3" />
             </button>
@@ -480,49 +480,49 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
       <div className="relative p-2 sm:p-4 bg-white overflow-hidden select-none">
         {/* Hovered Sector Floating Spotlight Banner */}
         {activeWorm && (
-          <div className="absolute top-4 left-4 right-4 sm:right-auto sm:max-w-md z-30 bg-zinc-900/95 text-white p-3 rounded-xl shadow-xl backdrop-blur-xs border border-zinc-700 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-1.5 mb-1.5">
+          <div className="absolute top-4 left-4 right-4 sm:right-auto sm:max-w-md z-30 bg-[#08090a] text-white p-4 rounded-[16px] shadow-2xl border border-[#b1ada1]/30 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2 mb-2">
               <div className="flex items-center gap-2">
                 <span
                   className="w-3.5 h-3.5 rounded-full ring-2 ring-white/50"
                   style={{ backgroundColor: activeWorm.color }}
                 />
-                <span className="font-bold text-sm text-white">{activeWorm.sector}</span>
+                <span className="font-extrabold text-sm text-[#f4f3ee] font-display">{activeWorm.sector}</span>
               </div>
               <button
                 onClick={() => onSelectSector(activeWorm.sector)}
-                className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5"
+                className="text-[11px] font-bold text-[#10b981] hover:text-emerald-300 flex items-center gap-0.5 cursor-pointer font-display"
               >
-                Deep Dive <ChevronRight className="w-3 h-3" />
+                Deep Dive <ChevronRight className="w-3 h-3 stroke-[2.5]" />
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="grid grid-cols-3 gap-3 text-xs">
               <div>
-                <div className="text-[10px] text-zinc-400">{metricDef.label}</div>
-                <div className="font-bold text-white text-sm">
+                <div className="text-[10px] text-[#f4f3ee]/60 font-semibold">{metricDef.label}</div>
+                <div className="font-extrabold text-[#f4f3ee] text-sm font-display">
                   {metricDef.format(activeWorm.currentValue)}
                 </div>
               </div>
               <div>
-                <div className="text-[10px] text-zinc-400">Period Change</div>
+                <div className="text-[10px] text-[#f4f3ee]/60 font-semibold">Period Change</div>
                 <div
-                  className={`font-bold flex items-center gap-0.5 text-xs ${
-                    activeWorm.changeValue >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                  className={`font-bold flex items-center gap-0.5 text-xs font-display ${
+                    activeWorm.changeValue >= 0 ? 'text-[#10b981]' : 'text-[#c15f3c]'
                   }`}
                 >
                   {activeWorm.changeValue >= 0 ? (
-                    <ArrowUpRight className="w-3 h-3" />
+                    <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
                   ) : (
-                    <ArrowDownRight className="w-3 h-3" />
+                    <ArrowDownRight className="w-3.5 h-3.5 stroke-[2.5]" />
                   )}
                   {activeWorm.changePercent >= 0 ? '+' : ''}
                   {activeWorm.changePercent.toFixed(1)}%
                 </div>
               </div>
               <div>
-                <div className="text-[10px] text-zinc-400">Companies & P/E</div>
-                <div className="font-semibold text-zinc-300 text-[11px]">
+                <div className="text-[10px] text-[#f4f3ee]/60 font-semibold">Companies & P/E</div>
+                <div className="font-semibold text-[#f4f3ee]/90 text-[11px]">
                   {activeWorm.companies} cos • {activeWorm.pe}x
                 </div>
               </div>
@@ -531,11 +531,11 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
         )}
 
         {/* Mobile Swipe Hint */}
-        <div className="sm:hidden mb-2 px-3 py-1.5 bg-emerald-50/80 border border-emerald-200/80 rounded-lg flex items-center justify-between text-[11px] text-emerald-900 font-medium">
-          <span className="flex items-center gap-1">
+        <div className="sm:hidden mb-2 px-3 py-2 bg-[#f4f3ee] border border-[#b1ada1]/30 rounded-xl flex items-center justify-between text-[11px] text-[#08090a]/80 font-semibold">
+          <span className="flex items-center gap-1.5">
             <span>↔</span> Swipe left/right to scroll through timeline
           </span>
-          <span className="text-[10px] text-emerald-700 bg-white px-1.5 py-0.5 rounded font-bold border border-emerald-200">
+          <span className="text-[10px] text-[#08090a] bg-white px-2 py-0.5 rounded-md font-bold border border-[#b1ada1]/30 font-display">
             {plotDimensions.chartWidth}px timeline
           </span>
         </div>
@@ -556,7 +556,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
           >
             <defs>
               <filter id="wormGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#000000" floodOpacity="0.4" />
+                <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#08090a" floodOpacity="0.4" />
               </filter>
             </defs>
 
@@ -570,7 +570,8 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                     y1={y}
                     x2={plotDimensions.chartWidth - plotDimensions.paddingRight}
                     y2={y}
-                    stroke="#f1f5f9"
+                    stroke="#b1ada1"
+                    strokeOpacity="0.2"
                     strokeWidth="1"
                     strokeDasharray="4 4"
                   />
@@ -579,8 +580,9 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                     y={y + 3.5}
                     textAnchor="end"
                     fontSize="10"
-                    fill="#94a3b8"
-                    fontWeight="500"
+                    fill="#08090a"
+                    opacity="0.6"
+                    fontWeight="600"
                   >
                     {metricDef.format(tickVal)}
                   </text>
@@ -595,7 +597,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 y1={plotDimensions.getY(0)}
                 x2={plotDimensions.chartWidth - plotDimensions.paddingRight}
                 y2={plotDimensions.getY(0)}
-                stroke="#94a3b8"
+                stroke="#c15f3c"
                 strokeWidth="1.2"
                 strokeDasharray="3 3"
               />
@@ -611,7 +613,8 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                     y1={plotDimensions.paddingTop}
                     x2={x}
                     y2={plotDimensions.chartHeight - plotDimensions.paddingBottom}
-                    stroke="#f8fafc"
+                    stroke="#b1ada1"
+                    strokeOpacity="0.15"
                     strokeWidth="1"
                   />
                   <text
@@ -619,8 +622,9 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                     y={plotDimensions.chartHeight - plotDimensions.paddingBottom + 16}
                     textAnchor="middle"
                     fontSize="10"
-                    fill="#64748b"
-                    fontWeight="600"
+                    fill="#08090a"
+                    opacity="0.7"
+                    fontWeight="700"
                   >
                     {xt.date}
                   </text>
@@ -734,22 +738,25 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                         y="-10"
                         width={180}
                         height="20"
-                        rx="4"
-                        fill="#18181b"
-                        stroke="#27272a"
+                        rx="6"
+                        fill="#08090a"
+                        stroke="#b1ada1"
+                        strokeOpacity="0.3"
                       />
                     )}
                     <text
                       x="0"
                       y="3.5"
                       fontSize={isHovered ? '11' : '9.5'}
-                      fontWeight={isHovered || isPinned ? '700' : '500'}
-                      fill={isHovered ? '#ffffff' : path.color}
+                      fontWeight={isHovered || isPinned ? '800' : '600'}
+                      fill={isHovered ? '#f4f3ee' : path.color}
                       opacity={opacity}
+                      fontFamily="Outfit, sans-serif"
                     >
                       {path.sector.length > 18 ? path.sector.slice(0, 16) + '..' : path.sector}{' '}
                       <tspan
-                        fill={isHovered ? '#34d399' : '#64748b'}
+                        fill={isHovered ? '#10b981' : '#08090a'}
+                        opacity={isHovered ? 1 : 0.6}
                         fontWeight="700"
                         fontSize={isHovered ? '10' : '9'}
                       >
@@ -764,23 +771,23 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
       </div>
 
       {/* Bottom Interactive Sector Rail & Legend for all Tracked Sectors */}
-      <div className="border-t border-zinc-200 bg-zinc-50/50 p-4">
-        <div className="flex items-center justify-between mb-2.5">
+      <div className="border-t border-[#b1ada1]/30 bg-[#f4f3ee]/60 p-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-zinc-800 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#08090a] uppercase tracking-wider font-display">
               {sortedWorms.length} Sector Worm Index
             </span>
-            <span className="text-[11px] text-zinc-500">
+            <span className="text-[11px] text-[#08090a]/60 font-medium">
               Hover to illuminate worm • Click to deep dive
             </span>
           </div>
-          <span className="text-xs font-semibold text-emerald-700">
+          <span className="text-xs font-bold text-[#10b981] font-display">
             {sortedWorms.length} Total Industries Tracked
           </span>
         </div>
 
         {/* Scrollable multi-color chip bar */}
-        <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1 p-1">
+        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1 p-1">
           {sortedWorms.map((w) => {
             const isHovered = hoveredSector === w.sector;
             const isPinned = pinnedSectors.includes(w.sector);
@@ -792,12 +799,12 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                 onMouseEnter={() => setHoveredSector(w.sector)}
                 onMouseLeave={() => setHoveredSector(null)}
                 onClick={() => onSelectSector(w.sector)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border transition-all text-left group ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-[12px] text-xs border transition-all text-left group cursor-pointer ${
                   isHovered
-                    ? 'bg-zinc-900 text-white border-zinc-900 shadow-md scale-105 z-10'
+                    ? 'bg-[#08090a] text-white border-[#08090a] shadow-md scale-105 z-10'
                     : isPinned
-                    ? 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold'
-                    : 'bg-white border-zinc-200/80 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-100'
+                    ? 'bg-[#10b981]/15 border-[#10b981]/40 text-[#08090a] font-bold'
+                    : 'bg-white border-[#b1ada1]/30 text-[#08090a] hover:border-[#c15f3c] hover:bg-[#f4f3ee]'
                 }`}
               >
                 {/* Sector Color Dot */}
@@ -805,12 +812,12 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
                   className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-black/10"
                   style={{ backgroundColor: w.color }}
                 />
-                <span className="font-semibold truncate max-w-[130px]">{w.sector}</span>
+                <span className="font-semibold truncate max-w-[130px] font-display">{w.sector}</span>
 
                 {/* Current Metric Value */}
                 <span
-                  className={`text-[10px] font-bold shrink-0 ${
-                    isHovered ? 'text-emerald-400' : 'text-zinc-500'
+                  className={`text-[10px] font-bold shrink-0 font-display ${
+                    isHovered ? 'text-[#10b981]' : 'text-[#08090a]/60'
                   }`}
                 >
                   {metricDef.format(w.currentValue)}
@@ -818,8 +825,8 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
 
                 {/* Delta Arrow */}
                 <span
-                  className={`text-[9px] font-bold ${
-                    isGainer ? 'text-emerald-600' : 'text-rose-500'
+                  className={`text-[9px] font-bold font-display ${
+                    isGainer ? 'text-[#10b981]' : 'text-[#c15f3c]'
                   }`}
                 >
                   {isGainer ? '+' : ''}

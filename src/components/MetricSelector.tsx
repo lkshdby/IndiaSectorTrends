@@ -13,17 +13,17 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-          Select Indicator (8 Metrics)
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-bold text-[#08090a]/60 uppercase tracking-wider font-display">
+          Select Indicator (8 Financial Metrics)
         </span>
-        <span className="text-xs text-zinc-500 hidden sm:inline">
+        <span className="text-xs text-[#08090a]/70 hidden sm:inline font-medium">
           {METRIC_DEFINITIONS[selectedMetric].description}
         </span>
       </div>
 
-      {/* The 8 Buttons on top */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+      {/* The 8 Metric Selector Buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
         {METRIC_KEYS.map((key) => {
           const def = METRIC_DEFINITIONS[key];
           const isSelected = selectedMetric === key;
@@ -33,24 +33,24 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
               key={key}
               id={`metric-btn-${key}`}
               onClick={() => onSelectMetric(key)}
-              className={`relative px-3 py-2.5 rounded-xl text-left border transition-all duration-150 flex flex-col justify-between ${
+              className={`relative px-3 py-3 rounded-[14px] text-left border transition-all duration-150 flex flex-col justify-between min-h-[64px] cursor-pointer ${
                 isSelected
-                  ? 'bg-zinc-900 text-white border-zinc-900 shadow-sm ring-2 ring-zinc-900/10'
-                  : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
+                  ? 'bg-[#08090a] text-white border-[#08090a] shadow-md ring-2 ring-[#08090a]/15 scale-[1.02]'
+                  : 'bg-white text-[#08090a] border-[#b1ada1]/30 hover:border-[#b1ada1]/70 hover:bg-[#f4f3ee]/50'
               }`}
             >
               <div className="flex items-center justify-between w-full">
                 <span
-                  className={`text-xs font-bold leading-tight ${
-                    isSelected ? 'text-white' : 'text-zinc-900'
+                  className={`text-xs font-extrabold leading-tight font-display ${
+                    isSelected ? 'text-white' : 'text-[#08090a]'
                   }`}
                 >
                   {def.label}
                 </span>
                 {def.unit && (
                   <span
-                    className={`text-[10px] font-mono px-1 rounded ${
-                      isSelected ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-600'
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
+                      isSelected ? 'bg-white/20 text-[#f4f3ee]' : 'bg-[#f4f3ee] text-[#08090a]/70'
                     }`}
                   >
                     {def.unit}
@@ -59,15 +59,15 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
               </div>
 
               <span
-                className={`text-[11px] mt-1.5 line-clamp-1 ${
-                  isSelected ? 'text-zinc-300' : 'text-zinc-500'
+                className={`text-[11px] mt-1 line-clamp-1 font-medium ${
+                  isSelected ? 'text-[#f4f3ee]/80' : 'text-[#08090a]/60'
                 }`}
               >
                 {def.shortLabel}
               </span>
 
               {isSelected && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-emerald-500 rounded-full" />
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-[#c15f3c] rounded-full" />
               )}
             </button>
           );
@@ -76,3 +76,4 @@ export const MetricSelector: React.FC<MetricSelectorProps> = ({
     </div>
   );
 };
+

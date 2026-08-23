@@ -49,57 +49,57 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full flex flex-col border border-zinc-200 overflow-hidden max-h-[90vh]">
+      <div className="bg-[#f4f3ee] rounded-[24px] shadow-2xl max-w-xl w-full flex flex-col border border-[#b1ada1]/40 overflow-hidden max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
+        <div className="p-5 border-b border-[#b1ada1]/30 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-emerald-700 text-white shadow-xs">
-              <Clock className="w-4 h-4" />
+            <div className="p-2.5 rounded-xl bg-[#08090a] text-white shadow-xs">
+              <Clock className="w-4 h-4 stroke-[2]" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-900">
+              <h3 className="text-base font-extrabold text-[#08090a] font-display">
                 7:00 PM Daily Auto-Fetch Scheduler
               </h3>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-[#08090a]/60 font-medium">
                 Automated GitHub Actions + Dual-Branch Zero Conflict Architecture
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-zinc-200/80 hover:bg-zinc-300 flex items-center justify-center text-zinc-700 transition-colors"
+            className="w-9 h-9 rounded-xl bg-[#f4f3ee] hover:bg-[#b1ada1]/20 flex items-center justify-center text-[#08090a] transition-colors cursor-pointer border border-[#b1ada1]/30"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 stroke-[2]" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-4 text-xs overflow-y-auto">
+        <div className="p-6 space-y-4 text-xs overflow-y-auto bg-[#f4f3ee]">
           {/* Status Banner */}
-          <div className="flex items-center justify-between p-3.5 bg-emerald-50 rounded-xl border border-emerald-200">
+          <div className="flex items-center justify-between p-4 bg-[#10b981]/10 rounded-[18px] border border-[#10b981]/30">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping" />
-              <span className="font-bold text-emerald-950 text-sm">GitHub Action & Cron Active</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-ping" />
+              <span className="font-extrabold text-[#08090a] text-sm font-display">GitHub Action & Cron Active</span>
             </div>
-            <span className="text-[11px] font-mono px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded font-semibold">
+            <span className="text-[11px] font-mono px-2.5 py-1 bg-[#10b981]/20 text-[#08090a] rounded-lg font-bold">
               30 13 * * 1-5 (7 PM IST)
             </span>
           </div>
 
-          {/* GitHub Dual-Branch Isolation Card (Fixes AI Studio Sync) */}
-          <div className="p-4 bg-zinc-900 text-white rounded-xl space-y-3">
+          {/* GitHub Dual-Branch Isolation Card */}
+          <div className="p-5 bg-[#08090a] text-white rounded-[18px] space-y-3 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Github className="w-4 h-4 text-zinc-300" />
-                <span className="font-bold text-sm text-zinc-100">Live GitHub Cloud Sync</span>
+                <Github className="w-4 h-4 text-[#f4f3ee]" />
+                <span className="font-extrabold text-sm text-[#f4f3ee] font-display">Live GitHub Cloud Sync</span>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-mono bg-zinc-800 text-emerald-400 px-2 py-0.5 rounded border border-zinc-700">
+              <span className="inline-flex items-center gap-1 text-[11px] font-mono bg-[#f4f3ee]/10 text-[#10b981] px-2.5 py-0.5 rounded-lg border border-white/10 font-bold">
                 <GitBranch className="w-3 h-3" /> data-storage branch
               </span>
             </div>
 
-            <p className="text-zinc-300 leading-relaxed text-[11px]">
-              <strong>Zero-Conflict Architecture:</strong> GitHub Actions commits daily snapshots directly to an isolated <code className="text-emerald-400 font-mono">data-storage</code> branch. Your <code className="text-zinc-200 font-mono">main</code> branch stays 100% clean, completely eliminating AI Studio git errors and merge conflicts.
+            <p className="text-white/70 leading-relaxed text-[11px] font-medium">
+              <strong className="text-white">Zero-Conflict Architecture:</strong> GitHub Actions commits daily snapshots directly to an isolated <code className="text-[#10b981] font-mono">data-storage</code> branch. Your <code className="text-white font-mono">main</code> branch stays 100% clean, eliminating merge conflicts.
             </p>
 
             <div className="flex items-center gap-2 pt-1">
@@ -108,40 +108,40 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
                 placeholder="owner/repository (e.g. lkshdby/IndiaSectorTrends)"
-                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500"
+                className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white font-mono placeholder:text-white/40 focus:outline-none focus:border-[#10b981]"
               />
               <button
                 onClick={handleSaveAndSync}
                 disabled={isSyncingGitHub}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#10b981] hover:bg-[#10b981]/90 text-white font-bold rounded-xl transition-all disabled:opacity-50 font-display cursor-pointer shadow-xs"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncingGitHub ? 'animate-spin' : ''}`} />
                 <span>{isSyncingGitHub ? 'Syncing...' : 'Sync Live'}</span>
               </button>
             </div>
             {saveSuccess && (
-              <div className="text-[11px] text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Connected and saved repository target!
+              <div className="text-[11px] text-[#10b981] flex items-center gap-1 font-bold font-display">
+                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" /> Connected and saved repository target!
               </div>
             )}
           </div>
 
           {/* Timing details */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-200">
-              <span className="text-zinc-500 block mb-1">Execution Schedule:</span>
-              <div className="font-bold text-zinc-900">
+            <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
+              <span className="text-[#08090a]/60 font-semibold block mb-1">Execution Schedule:</span>
+              <div className="font-extrabold text-[#08090a] font-display">
                 Every Weekday (Mon-Fri) at 19:00 IST
               </div>
-              <div className="text-[11px] text-zinc-500 mt-1 flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-700" />
+              <div className="text-[11px] text-[#08090a]/60 mt-1 flex items-center gap-1 font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#10b981] stroke-[2]" />
                 <span>Excludes Sat & Sun</span>
               </div>
             </div>
 
-            <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-200">
-              <span className="text-zinc-500 block mb-1">Next Scheduled Run:</span>
-              <div className="font-bold text-emerald-800">
+            <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
+              <span className="text-[#08090a]/60 font-semibold block mb-1">Next Scheduled Run:</span>
+              <div className="font-extrabold text-[#10b981] font-display">
                 {nextRun
                   ? nextRun.toLocaleString('en-IN', {
                       weekday: 'short',
@@ -152,58 +152,58 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                     })
                   : 'Mon-Fri @ 7:00 PM IST'}
               </div>
-              <div className="text-[11px] text-zinc-500 mt-1">
+              <div className="text-[11px] text-[#08090a]/60 mt-1 font-medium">
                 Last Run: {lastRun ? lastRun.toLocaleTimeString('en-IN') : 'Active'}
               </div>
             </div>
           </div>
 
           {/* Manual Local Scrape Button */}
-          <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-200 flex items-center justify-between">
+          <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/30 flex items-center justify-between shadow-xs">
             <div>
-              <div className="font-bold text-zinc-900 text-xs">Run Scraper Directly</div>
-              <div className="text-[11px] text-zinc-500 mt-0.5">
+              <div className="font-extrabold text-[#08090a] text-xs font-display">Run Scraper Directly</div>
+              <div className="text-[11px] text-[#08090a]/60 mt-0.5 font-medium">
                 Scrapes live Screener.in right now inside container
               </div>
             </div>
             <button
               onClick={onTriggerFetch}
               disabled={isFetching}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-lg transition-colors shadow-2xs disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#08090a] hover:bg-[#08090a]/90 text-white font-bold rounded-xl transition-all shadow-xs disabled:opacity-50 font-display cursor-pointer"
             >
-              <Zap className={`w-3.5 h-3.5 text-amber-400 ${isFetching ? 'animate-spin' : ''}`} />
+              <Zap className={`w-3.5 h-3.5 text-[#f59e0b] ${isFetching ? 'animate-spin' : ''}`} />
               <span>{isFetching ? 'Fetching...' : 'Scrape Live'}</span>
             </button>
           </div>
 
           {/* Terminal Logs */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="font-bold text-zinc-700 flex items-center gap-1">
-                <Terminal className="w-3.5 h-3.5 text-zinc-500" />
+          <div className="bg-white p-4 rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-extrabold text-[#08090a] flex items-center gap-1.5 font-display">
+                <Terminal className="w-3.5 h-3.5 text-[#08090a]/60 stroke-[2]" />
                 Execution Log:
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono">Live Engine</span>
+              <span className="text-[10px] text-[#08090a]/50 font-mono font-bold">Live Engine</span>
             </div>
-            <div className="bg-zinc-950 text-zinc-300 font-mono text-[11px] p-3 rounded-xl max-h-32 overflow-y-auto space-y-1 border border-zinc-800">
+            <div className="bg-[#08090a] text-[#f4f3ee]/80 font-mono text-[11px] p-3.5 rounded-xl max-h-32 overflow-y-auto space-y-1 border border-white/10">
               {schedulerInfo?.log && schedulerInfo.log.length > 0 ? (
                 schedulerInfo.log.map((line, i) => (
                   <div key={i} className="leading-relaxed">
-                    <span className="text-emerald-500">➜</span> {line}
+                    <span className="text-[#10b981]">➜</span> {line}
                   </div>
                 ))
               ) : (
-                <div className="text-zinc-500 italic">Cron initialized and monitoring 19:00 IST weekday slots...</div>
+                <div className="text-white/40 italic">Cron initialized and monitoring 19:00 IST weekday slots...</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex justify-end">
+        <div className="p-4 bg-white border-t border-[#b1ada1]/30 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-100 transition-colors"
+            className="px-5 py-2 text-xs font-bold text-[#08090a] bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-xl hover:bg-[#b1ada1]/20 transition-colors font-display cursor-pointer"
           >
             Close
           </button>
@@ -212,3 +212,4 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
     </div>
   );
 };
+

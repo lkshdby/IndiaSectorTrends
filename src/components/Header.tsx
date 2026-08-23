@@ -6,6 +6,7 @@ import {
   Download,
   GitBranch,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 import { DailySnapshot, SchedulerInfo } from '../types';
 
@@ -35,29 +36,37 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSchedulerModal,
 }) => {
   return (
-    <header className="border-b border-zinc-200 bg-white/90 backdrop-blur-md sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        {/* Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-700 flex items-center justify-center text-white shadow-xs">
-            <Activity className="w-5 h-5" />
+    <header className="border-b border-[#b1ada1]/30 bg-white/95 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-6 py-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        {/* Title & Status */}
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-[14px] bg-[#c15f3c] flex items-center justify-center text-white shadow-sm ring-2 ring-[#c15f3c]/20 shrink-0">
+            <Activity className="w-6 h-6 stroke-[2.2]" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-zinc-900 leading-none">
-              Screener.in Industry Trends
-            </h1>
-            <p className="text-xs text-zinc-500 font-medium mt-1 flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[11px] font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                7:00 PM IST Auto-Fetch (Mon–Fri)
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#08090a] font-display">
+                Industry Trends
+              </h1>
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#10b981]/15 text-[#10b981]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
+                Live Screener
               </span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-1 text-zinc-600 font-mono text-[11px]">
-                <GitBranch className="w-3 h-3 text-emerald-600" />
+            </div>
+            <p className="text-xs text-[#08090a]/70 font-medium mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="inline-flex items-center gap-1 text-[#c15f3c] bg-[#c15f3c]/10 px-2 py-0.5 rounded-md text-[11px] font-semibold">
+                <Clock className="w-3 h-3 stroke-[2]" />
+                7:00 PM IST Scraper
+              </span>
+              <span className="text-[#b1ada1]">•</span>
+              <span className="inline-flex items-center gap-1 text-[#08090a]/70 font-mono text-[11px]">
+                <GitBranch className="w-3 h-3 text-[#10b981] stroke-[2]" />
                 data-storage
               </span>
-              <span>•</span>
-              <span>{snapshots[snapshots.length - 1]?.sectors?.length || 0} Sectors Tracked</span>
+              <span className="text-[#b1ada1]">•</span>
+              <span className="font-semibold text-[#08090a]/80">
+                {snapshots[snapshots.length - 1]?.sectors?.length || 188} Sectors Tracked
+              </span>
             </p>
           </div>
         </div>
@@ -65,13 +74,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Controls & Date Scrubber */}
         <div className="flex items-center flex-wrap gap-2.5">
           {/* Date Picker Selector */}
-          <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-700 shadow-2xs">
-            <Calendar className="w-3.5 h-3.5 text-zinc-400 mr-2" />
-            <span className="font-medium text-zinc-500 mr-1.5">Snapshot:</span>
+          <div className="flex items-center bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-xl px-3 py-2 text-xs text-[#08090a] shadow-xs min-h-[44px]">
+            <Calendar className="w-4 h-4 text-[#08090a]/60 mr-2 shrink-0 stroke-[2]" />
+            <span className="font-semibold text-[#08090a]/60 mr-1.5">Date:</span>
             <select
               value={selectedDate}
               onChange={(e) => onSelectDate(e.target.value)}
-              className="bg-transparent text-zinc-900 font-semibold focus:outline-none cursor-pointer pr-1"
+              className="bg-transparent text-[#08090a] font-bold focus:outline-none cursor-pointer pr-1 font-display"
             >
               {snapshots.slice().reverse().map((s, idx) => {
                 const d = new Date(s.date);
@@ -96,10 +105,10 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onSyncGitHub}
             disabled={isSyncingGitHub}
             title="Fetch latest scraped snapshot directly from GitHub data-storage branch"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors shadow-2xs disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-[#c15f3c] hover:bg-[#a94f30] active:scale-98 rounded-xl transition-all shadow-sm min-h-[44px] cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncingGitHub ? 'animate-spin text-emerald-700' : 'text-emerald-700'}`} />
-            <span>{isSyncingGitHub ? 'Syncing GitHub...' : 'Sync Live'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 stroke-[2.2] ${isSyncingGitHub ? 'animate-spin' : ''}`} />
+            <span>{isSyncingGitHub ? 'Syncing...' : 'Sync Live'}</span>
           </button>
 
           {/* 7 PM Cron Status Button */}
@@ -107,9 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
             id="scheduler-status-button"
             onClick={onOpenSchedulerModal}
             title="Inspect 7:00 PM Daily Auto-Fetch Scheduler & Repo Configuration"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 rounded-lg transition-colors shadow-2xs"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#08090a] bg-white hover:bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-xl transition-all shadow-xs min-h-[44px] cursor-pointer"
           >
-            <Clock className="w-3.5 h-3.5 text-zinc-600" />
+            <Clock className="w-3.5 h-3.5 text-[#08090a]/70 stroke-[2]" />
             <span>7 PM Cron</span>
           </button>
 
@@ -117,14 +126,15 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="export-modal-button"
             onClick={onOpenExportModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors shadow-xs"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-[#08090a] hover:bg-[#1e2022] active:scale-98 rounded-xl transition-all shadow-xs min-h-[44px] cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export & Backup</span>
+            <Download className="w-3.5 h-3.5 stroke-[2]" />
+            <span>Export Data</span>
           </button>
         </div>
       </div>
     </header>
   );
 };
+
 

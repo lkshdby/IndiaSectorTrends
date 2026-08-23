@@ -19,6 +19,7 @@ import { SectorDrilldownModal } from './components/SectorDrilldownModal';
 import { ExportModal } from './components/ExportModal';
 import { SchedulerModal } from './components/SchedulerModal';
 import { MarketSummaryCards } from './components/MarketSummaryCards';
+import { LaunchpadDock } from './components/LaunchpadDock';
 import { Activity, AlertCircle, BarChart3, CheckCircle2, Table } from 'lucide-react';
 
 export default function App() {
@@ -260,144 +261,157 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-100/60 text-zinc-900 flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen bg-[#c15f3c] py-0 sm:py-6 px-0 sm:px-4 flex flex-col items-center justify-start selection:bg-[#10b981]/20 selection:text-[#08090a]">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-5 duration-200">
           <div
-            className={`flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold ${
+            className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold font-display ${
               toastMessage.type === 'success'
-                ? 'bg-emerald-900 text-white border-emerald-800'
+                ? 'bg-[#08090a] text-[#10b981] border-[#10b981]/30'
                 : toastMessage.type === 'error'
-                ? 'bg-rose-900 text-white border-rose-800'
-                : 'bg-zinc-900 text-white border-zinc-800'
+                ? 'bg-[#08090a] text-[#c15f3c] border-[#c15f3c]/30'
+                : 'bg-[#08090a] text-[#f4f3ee] border-white/20'
             }`}
           >
             {toastMessage.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-[#10b981] stroke-[2.5]" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-400" />
+              <AlertCircle className="w-4 h-4 text-[#c15f3c] stroke-[2.5]" />
             )}
             <span>{toastMessage.text}</span>
           </div>
         </div>
       )}
 
-      {/* Main Header */}
-      <Header
-        snapshots={snapshots}
-        selectedDate={selectedDate}
-        onSelectDate={(date) => startTransition(() => setSelectedDate(date))}
-        schedulerInfo={schedulerInfo}
-        onRefreshFetch={handleTriggerFetch}
-        isFetching={isFetching}
-        onSyncGitHub={() => handleSyncGitHub()}
-        isSyncingGitHub={isSyncingGitHub}
-        onOpenExportModal={() => setIsExportModalOpen(true)}
+      {/* Main HabitWis3 Shell */}
+      <div className="w-full max-w-6xl bg-[#f4f3ee] rounded-none sm:rounded-[36px] shadow-2xl overflow-hidden border-0 sm:border border-[#b1ada1]/40 flex flex-col grow pb-24 relative">
+        {/* Main Header */}
+        <Header
+          snapshots={snapshots}
+          selectedDate={selectedDate}
+          onSelectDate={(date) => startTransition(() => setSelectedDate(date))}
+          schedulerInfo={schedulerInfo}
+          onRefreshFetch={handleTriggerFetch}
+          isFetching={isFetching}
+          onSyncGitHub={() => handleSyncGitHub()}
+          isSyncingGitHub={isSyncingGitHub}
+          onOpenExportModal={() => setIsExportModalOpen(true)}
+          onOpenSchedulerModal={() => setIsSchedulerModalOpen(true)}
+        />
+
+        {/* App Body Container */}
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-5 space-y-5 grow">
+          {/* Top 8 Field Indicator Buttons */}
+          <section aria-label="Metric Selection" className="bg-white p-4 sm:p-5 rounded-[22px] border border-[#b1ada1]/30 shadow-xs">
+            <MetricSelector
+              selectedMetric={selectedMetric}
+              onSelectMetric={(m) => startTransition(() => setSelectedMetric(m))}
+            />
+          </section>
+
+          {/* Zoom Out Resolution Controls (Daily, Weekly, Monthly, Yearly) & Sorting */}
+          <section aria-label="Time Resolution & Zoom Controls">
+            <ResolutionSelector
+              resolution={resolution}
+              onSelectResolution={(r) => startTransition(() => setResolution(r))}
+              sortBy={sortBy}
+              onSelectSortBy={setSortBy}
+              totalSnapshots={snapshots.length}
+            />
+          </section>
+
+          {/* High-level market overview cards */}
+          <section aria-label="Market Overview Stats">
+            <MarketSummaryCards currentSnapshot={comparison.currentSnapshot} />
+          </section>
+
+          {/* Visualization Mode Switcher Tabs */}
+          <div className="flex items-center justify-between border-b border-[#b1ada1]/30 pb-3 pt-1">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMainViewMode('worms')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all font-display cursor-pointer ${
+                  mainViewMode === 'worms'
+                    ? 'bg-[#08090a] text-white shadow-xs'
+                    : 'bg-white border border-[#b1ada1]/30 text-[#08090a]/70 hover:text-[#08090a] hover:bg-[#f4f3ee]'
+                }`}
+              >
+                <Activity className="w-4 h-4 text-[#10b981] stroke-[2.2]" />
+                <span>188 Sector Worms (Multi-Line Chart)</span>
+                <span className="px-1.5 py-0.5 bg-[#10b981]/20 text-[#10b981] rounded-full text-[10px] font-mono font-bold">
+                  188 Lines
+                </span>
+              </button>
+
+              <button
+                onClick={() => setMainViewMode('bars')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all font-display cursor-pointer ${
+                  mainViewMode === 'bars'
+                    ? 'bg-[#08090a] text-white shadow-xs'
+                    : 'bg-white border border-[#b1ada1]/30 text-[#08090a]/70 hover:text-[#08090a] hover:bg-[#f4f3ee]'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4 text-[#08090a]/60 stroke-[2]" />
+                <span>Ranked Sector Bars & Table</span>
+              </button>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 text-xs text-[#08090a]/60 font-semibold font-display">
+              <span>Tracking 188 Indian Industry Sectors</span>
+            </div>
+          </div>
+
+          {/* Primary Visualization Area */}
+          {mainViewMode === 'worms' ? (
+            <section aria-label="188 Multi-Line Sector Worms Chart">
+              <SectorWormsChart
+                snapshots={snapshots}
+                selectedMetric={selectedMetric}
+                resolution={resolution}
+                selectedDate={selectedDate}
+                sortBy={sortBy}
+                onSelectSector={(sec) => setSelectedSector(sec)}
+              />
+            </section>
+          ) : (
+            <section aria-label="Sector Bar Chart Dashboard">
+              <SectorBarChart
+                items={comparison.items}
+                selectedMetric={selectedMetric}
+                resolution={resolution}
+                selectedDate={selectedDate}
+                previousDate={comparison.previousSnapshot?.date || null}
+                onSelectSector={(sec) => setSelectedSector(sec)}
+                sortBy={sortBy}
+              />
+            </section>
+          )}
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-[#b1ada1]/30 bg-white/80 backdrop-blur-xs py-4 mt-auto">
+          <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#08090a]/60 font-medium">
+            <div>
+              <span className="font-bold text-[#08090a] font-display">Industry Trends</span> •
+              Scheduled 7:00 PM IST Weekday Scraper
+            </div>
+            <div>
+              Tracking {comparison.items.length} Industries • Multi-Resolution Analysis (Daily, Weekly, Monthly)
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      {/* Fixed White Bottom Launchpad Dock */}
+      <LaunchpadDock
+        mainViewMode={mainViewMode}
+        onSelectViewMode={setMainViewMode}
         onOpenSchedulerModal={() => setIsSchedulerModalOpen(true)}
+        onOpenExportModal={() => setIsExportModalOpen(true)}
+        onTriggerFetch={handleTriggerFetch}
+        isFetching={isFetching}
       />
-
-      {/* App Body Container */}
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 space-y-4 grow">
-        {/* Top 8 Field Indicator Buttons */}
-        <section aria-label="Metric Selection" className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-2xs">
-          <MetricSelector
-            selectedMetric={selectedMetric}
-            onSelectMetric={(m) => startTransition(() => setSelectedMetric(m))}
-          />
-        </section>
-
-        {/* Zoom Out Resolution Controls (Daily, Weekly, Monthly, Yearly) & Sorting */}
-        <section aria-label="Time Resolution & Zoom Controls">
-          <ResolutionSelector
-            resolution={resolution}
-            onSelectResolution={(r) => startTransition(() => setResolution(r))}
-            sortBy={sortBy}
-            onSelectSortBy={setSortBy}
-            totalSnapshots={snapshots.length}
-          />
-        </section>
-
-        {/* High-level market overview cards */}
-        <section aria-label="Market Overview Stats">
-          <MarketSummaryCards currentSnapshot={comparison.currentSnapshot} />
-        </section>
-
-        {/* Visualization Mode Switcher Tabs */}
-        <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMainViewMode('worms')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                mainViewMode === 'worms'
-                  ? 'bg-zinc-900 text-white shadow-md'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
-              }`}
-            >
-              <Activity className="w-4 h-4 text-emerald-400" />
-              <span>188 Sector Worms (Multi-Line Chart)</span>
-              <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 rounded text-[10px] font-mono">
-                188 Lines
-              </span>
-            </button>
-
-            <button
-              onClick={() => setMainViewMode('bars')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                mainViewMode === 'bars'
-                  ? 'bg-zinc-900 text-white shadow-md'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
-              }`}
-            >
-              <BarChart3 className="w-4 h-4 text-zinc-400" />
-              <span>Ranked Sector Bars & Table</span>
-            </button>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-500 font-medium">
-            <span>Tracking 188 Indian Industry Sectors</span>
-          </div>
-        </div>
-
-        {/* Primary Visualization Area */}
-        {mainViewMode === 'worms' ? (
-          <section aria-label="188 Multi-Line Sector Worms Chart">
-            <SectorWormsChart
-              snapshots={snapshots}
-              selectedMetric={selectedMetric}
-              resolution={resolution}
-              selectedDate={selectedDate}
-              sortBy={sortBy}
-              onSelectSector={(sec) => setSelectedSector(sec)}
-            />
-          </section>
-        ) : (
-          <section aria-label="Sector Bar Chart Dashboard">
-            <SectorBarChart
-              items={comparison.items}
-              selectedMetric={selectedMetric}
-              resolution={resolution}
-              selectedDate={selectedDate}
-              previousDate={comparison.previousSnapshot?.date || null}
-              onSelectSector={(sec) => setSelectedSector(sec)}
-              sortBy={sortBy}
-            />
-          </section>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 bg-white py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-zinc-500">
-          <div>
-            <span className="font-bold text-zinc-800">Screener.in Industry Trends</span> •
-            Scheduled 7:00 PM IST Weekday Scraper
-          </div>
-          <div>
-            Tracking {comparison.items.length} Industries • Multi-Resolution Analysis (Daily, Weekly, Monthly)
-          </div>
-        </div>
-      </footer>
 
       {/* Modals */}
       <SectorDrilldownModal
