@@ -218,6 +218,8 @@ async function main() {
         const raw = fs.readFileSync(filePath, 'utf-8');
         const parsed = JSON.parse(raw);
         snapshots = unpackSnapshots(parsed);
+        // Purge any synthetic demo dates prior to the initial real scrape date (2026-08-23)
+        snapshots = snapshots.filter((snap) => snap && snap.date && snap.date >= '2026-08-23');
       } catch (err) {
         console.warn(`[SCRAPER] Failed to read ${filePath}, initializing new list`);
         snapshots = [];
@@ -227,7 +229,7 @@ async function main() {
     // Deduplicate by date
     const dateMap = new Map<string, DailySnapshot>();
     snapshots.forEach((snap) => {
-      if (snap && snap.date) {
+      if (snap && snap.date && snap.date >= '2026-08-23') {
         dateMap.set(snap.date, snap);
       }
     });

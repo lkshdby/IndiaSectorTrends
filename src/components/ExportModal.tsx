@@ -244,20 +244,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             )}
           </div>
 
-          {/* Reset Baseline Seed Data */}
+          {/* Purge Mock History Option */}
           <div className="border-t border-zinc-200 pt-3 flex items-center justify-between text-xs">
-            <span className="text-zinc-500">Need to reload standard 1-year dataset?</span>
+            <span className="text-zinc-500">Want to delete pre-generated mock data?</span>
             <button
               onClick={() => {
-                if (confirm('Reload the full 1-year historical Screener dataset?')) {
+                if (confirm('Purge all simulated pre-launch snapshots and keep only genuine live scrapes?')) {
                   onResetSeedData();
                   onClose();
                 }
               }}
-              className="flex items-center gap-1 text-zinc-600 hover:text-zinc-900 font-semibold underline"
+              className="flex items-center gap-1 text-rose-600 hover:text-rose-800 font-semibold underline cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Reset 1-Year Baseline</span>
+              <span>Purge Mock History</span>
             </button>
           </div>
         </div>

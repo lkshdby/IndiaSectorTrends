@@ -7,7 +7,7 @@ import {
 } from './types';
 import { generateHistoricalSeedSnapshots } from './data/seedData';
 import { computeSectorComparison } from './utils/dataProcessor';
-import { loadSnapshotsLocally, saveSnapshotsLocally } from './utils/storage';
+import { clearLocalStorageCache, loadSnapshotsLocally, saveSnapshotsLocally } from './utils/storage';
 import { unpackSnapshots } from './utils/compactData';
 import { fetchSnapshotsFromGitHub, getSavedGitHubRepo } from './utils/githubDataSync';
 import { Header } from './components/Header';
@@ -27,7 +27,7 @@ export default function App() {
     if (saved && saved.length > 0) {
       return saved;
     }
-    return generateHistoricalSeedSnapshots('2025-08-20', '2026-08-22');
+    return [];
   });
 
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('totalMarketCap');
@@ -37,7 +37,7 @@ export default function App() {
     if (saved && saved.length > 0) {
       return saved[saved.length - 1].date;
     }
-    return '2026-08-22';
+    return '2026-08-23';
   });
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<
@@ -102,10 +102,13 @@ export default function App() {
         const staticRes = await fetch(`/data/snapshots.json?v=${Date.now()}`);
         if (staticRes.ok) {
           const staticJson = await staticRes.json();
-          const unpacked = unpackSnapshots(staticJson);
+          let unpacked = unpackSnapshots(staticJson);
           if (unpacked.length > 0) {
-            loadedData = unpacked;
-            sourceName = 'Local Repository File';
+            unpacked = unpacked.filter((s) => s && s.date && s.date >= '2026-08-23');
+            if (unpacked.length > 0) {
+              loadedData = unpacked;
+              sourceName = 'Local Repository File';
+            }
           }
         }
       } catch {
@@ -120,10 +123,13 @@ export default function App() {
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
-            const unpacked = unpackSnapshots(json.data);
+            let unpacked = unpackSnapshots(json.data);
             if (unpacked.length > 0) {
-              loadedData = unpacked;
-              sourceName = 'Express Server API';
+              unpacked = unpacked.filter((s) => s && s.date && s.date >= '2026-08-23');
+              if (unpacked.length > 0) {
+                loadedData = unpacked;
+                sourceName = 'Express Server API';
+              }
             }
           }
         }
@@ -219,17 +225,23 @@ export default function App() {
     }
   };
 
-  // Reset to seed data
+  // Purge synthetic mock data and keep only genuine scrapes
   const handleResetSeedData = async () => {
     try {
       await fetch('/api/reset-seed', { method: 'POST' });
     } catch {
       // ignore
     }
-    const fresh = generateHistoricalSeedSnapshots('2025-08-20', '2026-08-22');
-    await syncSnapshots(fresh);
-    setSelectedDate(fresh[fresh.length - 1].date);
-    showToast('Reset database to full 1-year historical dataset.', 'success');
+    clearLocalStorageCache();
+    const realOnly = snapshots.filter((s) => s && s.date && s.date >= '2026-08-23');
+    if (realOnly.length > 0) {
+      await syncSnapshots(realOnly);
+      setSelectedDate(realOnly[realOnly.length - 1].date);
+      showToast(`Purged mock snapshots. Tracking ${realOnly.length} real live scrape days.`, 'success');
+    } else {
+      await loadDataFromServer();
+      showToast('Cache cleared. Reloaded latest live snapshots.', 'success');
+    }
   };
 
   // Import external backup dataset

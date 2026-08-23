@@ -100,7 +100,11 @@ export async function fetchSnapshotsFromGitHub(
 
       if (response.ok) {
         const rawJson = await response.json();
-        const unpacked = unpackSnapshots(rawJson);
+        let unpacked = unpackSnapshots(rawJson);
+        // Purge any legacy synthetic mock data prior to real scrape start (2026-08-23)
+        if (unpacked && unpacked.length > 0) {
+          unpacked = unpacked.filter((s) => s && s.date && s.date >= '2026-08-23');
+        }
         if (unpacked && unpacked.length > 0) {
           const updatedAt = rawJson.updatedAt || new Date().toISOString();
           setDataSourceBadge(true, `GitHub Actions (${cleanRepo}@${endpoint.branch})`, updatedAt);

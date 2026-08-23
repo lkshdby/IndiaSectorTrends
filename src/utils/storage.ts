@@ -10,7 +10,8 @@ export function loadSnapshotsLocally(): DailySnapshot[] | null {
     const savedCompact = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (savedCompact) {
       const parsed = JSON.parse(savedCompact);
-      const unpacked = unpackSnapshots(parsed);
+      let unpacked = unpackSnapshots(parsed);
+      unpacked = unpacked.filter((s) => s && s.date && s.date >= '2026-08-23');
       if (unpacked.length > 0) return unpacked;
     }
 
@@ -19,13 +20,23 @@ export function loadSnapshotsLocally(): DailySnapshot[] | null {
     if (savedLegacy) {
       const parsedLegacy = JSON.parse(savedLegacy);
       if (Array.isArray(parsedLegacy) && parsedLegacy.length > 0) {
-        return parsedLegacy;
+        const filtered = parsedLegacy.filter((s: any) => s && s.date && s.date >= '2026-08-23');
+        if (filtered.length > 0) return filtered;
       }
     }
   } catch (e) {
     console.warn('Failed to load snapshots from localStorage:', e);
   }
   return null;
+}
+
+export function clearLocalStorageCache(): void {
+  try {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export function saveSnapshotsLocally(snapshots: DailySnapshot[]): void {

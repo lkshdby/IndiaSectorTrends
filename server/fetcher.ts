@@ -177,8 +177,6 @@ export function initializeDataStore(): DailySnapshot[] {
       addLog(`Initial scrape successful: extracted ${result.industryCount} industries from https://www.screener.in/market/`);
       const today = new Date().toISOString().split('T')[0];
       
-      const history = generateHistoryFromLiveSectors(result.sectors, '2025-08-20', today);
-      // Append today's exact live snapshot
       const todaySnapshot: DailySnapshot = {
         date: today,
         timestamp: new Date(`${today}T19:00:00+05:30`).getTime(),
@@ -186,16 +184,9 @@ export function initializeDataStore(): DailySnapshot[] {
         fetchedAt: result.fetchedAt,
         source: result.url,
       };
-      
-      const existingIdx = history.findIndex((s) => s.date === today);
-      if (existingIdx >= 0) {
-        history[existingIdx] = todaySnapshot;
-      } else {
-        history.push(todaySnapshot);
-      }
 
-      persistSnapshots(history);
-      addLog(`Seeded 1-year history with all ${result.industryCount} industries from https://www.screener.in/market/`);
+      saveOrUpdateSnapshot(todaySnapshot);
+      addLog(`Initialized with real live snapshot for ${today} (${result.industryCount} industries).`);
     })
     .catch((err) => {
       console.error('Initial scrape error:', err);
