@@ -31,7 +31,7 @@ export default function App() {
     return [];
   });
 
-  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('totalMarketCap');
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('median1YReturn');
   const [resolution, setResolution] = useState<TimeResolution>('daily');
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const saved = loadSnapshotsLocally();
@@ -300,71 +300,57 @@ export default function App() {
           onOpenSchedulerModal={() => setIsSchedulerModalOpen(true)}
         />
 
-        {/* App Body Container */}
-        <main className="w-full px-4 sm:px-6 lg:px-8 py-5 space-y-5 grow">
-          {/* Top 8 Field Indicator Buttons */}
-          <section aria-label="Metric Selection" className="bg-white p-4 sm:p-5 rounded-[22px] border border-[#b1ada1]/30 shadow-xs">
-            <MetricSelector
-              selectedMetric={selectedMetric}
-              onSelectMetric={(m) => startTransition(() => setSelectedMetric(m))}
-            />
-          </section>
-
-          {/* Zoom Out Resolution Controls (Daily, Weekly, Monthly, Yearly) & Sorting */}
-          <section aria-label="Time Resolution & Zoom Controls">
-            <ResolutionSelector
-              resolution={resolution}
-              onSelectResolution={(r) => startTransition(() => setResolution(r))}
-              sortBy={sortBy}
-              onSelectSortBy={setSortBy}
-              totalSnapshots={snapshots.length}
-            />
-          </section>
-
-          {/* High-level market overview cards */}
-          <section aria-label="Market Overview Stats">
-            <MarketSummaryCards currentSnapshot={comparison.currentSnapshot} />
-          </section>
-
-          {/* Visualization Mode Switcher Tabs */}
-          <div className="flex items-center justify-between border-b border-[#b1ada1]/30 pb-3 pt-1">
-            <div className="flex items-center gap-2">
+        {/* App Body Container - Chart View Paramount */}
+        <main className="w-full px-3 sm:px-5 lg:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 grow">
+          {/* Unified Compact Control Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-[#b1ada1]/35 shadow-2xs">
+            {/* Left: View Switcher (Worms vs Ranked Bars) */}
+            <div className="flex items-center gap-1 bg-[#f4f3ee] p-0.5 rounded-xl border border-[#b1ada1]/30 self-start sm:self-auto">
               <button
+                id="view-worms-btn"
                 onClick={() => setMainViewMode('worms')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all font-display cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all font-display cursor-pointer ${
                   mainViewMode === 'worms'
-                    ? 'bg-[#08090a] text-white shadow-xs'
-                    : 'bg-white border border-[#b1ada1]/30 text-[#08090a]/70 hover:text-[#08090a] hover:bg-[#f4f3ee]'
+                    ? 'bg-[#08090a] text-white shadow-2xs'
+                    : 'text-[#08090a]/70 hover:text-[#08090a] hover:bg-white/60'
                 }`}
               >
-                <Activity className="w-4 h-4 text-[#10b981] stroke-[2.2]" />
-                <span>188 Sector Worms (Multi-Line Chart)</span>
-                <span className="px-1.5 py-0.5 bg-[#10b981]/20 text-[#10b981] rounded-full text-[10px] font-mono font-bold">
-                  188 Lines
-                </span>
+                <Activity className={`w-3.5 h-3.5 stroke-[2.2] ${mainViewMode === 'worms' ? 'text-[#10b981]' : ''}`} />
+                <span>188 Worms</span>
               </button>
 
               <button
+                id="view-bars-btn"
                 onClick={() => setMainViewMode('bars')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all font-display cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all font-display cursor-pointer ${
                   mainViewMode === 'bars'
-                    ? 'bg-[#08090a] text-white shadow-xs'
-                    : 'bg-white border border-[#b1ada1]/30 text-[#08090a]/70 hover:text-[#08090a] hover:bg-[#f4f3ee]'
+                    ? 'bg-[#08090a] text-white shadow-2xs'
+                    : 'text-[#08090a]/70 hover:text-[#08090a] hover:bg-white/60'
                 }`}
               >
-                <BarChart3 className="w-4 h-4 text-[#08090a]/60 stroke-[2]" />
-                <span>Ranked Sector Bars & Table</span>
+                <BarChart3 className="w-3.5 h-3.5 stroke-[2]" />
+                <span>Ranked Bars</span>
               </button>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 text-xs text-[#08090a]/60 font-semibold font-display">
-              <span>Tracking 188 Indian Industry Sectors</span>
+            {/* Right: Indicator Dropdown + Resolution D/W/M + Sort */}
+            <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
+              <MetricSelector
+                selectedMetric={selectedMetric}
+                onSelectMetric={(m) => startTransition(() => setSelectedMetric(m))}
+              />
+              <ResolutionSelector
+                resolution={resolution}
+                onSelectResolution={(r) => startTransition(() => setResolution(r))}
+                sortBy={sortBy}
+                onSelectSortBy={setSortBy}
+              />
             </div>
           </div>
 
-          {/* Primary Visualization Area */}
+          {/* Primary Paramount Visualization Area */}
           {mainViewMode === 'worms' ? (
-            <section aria-label="188 Multi-Line Sector Worms Chart">
+            <section aria-label="188 Multi-Line Sector Worms Chart" className="w-full">
               <SectorWormsChart
                 snapshots={snapshots}
                 selectedMetric={selectedMetric}
@@ -375,7 +361,7 @@ export default function App() {
               />
             </section>
           ) : (
-            <section aria-label="Sector Bar Chart Dashboard">
+            <section aria-label="Sector Bar Chart Dashboard" className="w-full">
               <SectorBarChart
                 items={comparison.items}
                 selectedMetric={selectedMetric}
