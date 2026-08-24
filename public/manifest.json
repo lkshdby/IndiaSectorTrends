@@ -4,13 +4,19 @@
   "description": "188 Sector Worms & Indian Market Momentum Screener",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f3ee",
+  "background_color": "#111411",
   "theme_color": "#A2AB73",
   "icons": [
     {
-      "src": "/src/assets/images/bull_ascending_icon_1787542632380.jpg",
+      "src": "/logo_pwa.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
