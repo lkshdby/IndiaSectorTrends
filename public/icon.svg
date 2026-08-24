@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <!-- Background Solid Sage Green #A2AB73 -->
-  <rect width="512" height="512" rx="105" fill="#A2AB73"/>
+  <!-- Solid Square Sage Green #A2AB73 Background (Full-Bleed No Rounded Corners for iOS Apple Touch Icon Spec) -->
+  <rect width="512" height="512" fill="#A2AB73"/>
 
-  <!-- Chart Graphic Container with Padding -->
+  <!-- Chart Graphic Container with Optical Centering & Margin -->
   <g transform="translate(68, 68) scale(0.734)">
     <!-- Axes (Thick Charcoal/Black #231F20) -->
     <!-- X-Axis Line and Arrowhead -->
