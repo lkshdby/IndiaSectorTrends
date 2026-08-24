@@ -38,8 +38,13 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center justify-between gap-3">
         {/* Left: Brand & Date Scrubber */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-[#A2AB73] flex items-center justify-center text-white shadow-xs shrink-0">
-            <Activity className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-[#A2AB73] overflow-hidden border border-[#A2AB73]/40 shadow-xs shrink-0 flex items-center justify-center">
+            <img
+              src="/src/assets/images/bull_ascending_icon_1787542632380.jpg"
+              alt="Industry Trends Icon"
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           </div>
 
           <div className="flex items-center gap-2 min-w-0">

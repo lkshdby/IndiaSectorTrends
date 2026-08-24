@@ -1,0 +1,17 @@
+{
+  "name": "Industry Trends",
+  "short_name": "IndustryTrends",
+  "description": "188 Sector Worms & Indian Market Momentum Screener",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f3ee",
+  "theme_color": "#A2AB73",
+  "icons": [
+    {
+      "src": "/src/assets/images/bull_ascending_icon_1787542632380.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
