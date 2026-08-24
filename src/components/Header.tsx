@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Activity,
   Calendar,
@@ -7,6 +7,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { DailySnapshot, SchedulerInfo } from '../types';
+import brandLogo from '../assets/logo_pwa.png';
 
 interface HeaderProps {
   snapshots: DailySnapshot[];
@@ -38,9 +39,9 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center justify-between gap-3">
         {/* Left: Brand & Date Scrubber */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-[#111411] overflow-hidden border border-[#A2AB73]/40 shadow-xs shrink-0 flex items-center justify-center">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-[#A2AB73] overflow-hidden border border-[#A2AB73]/60 shadow-xs shrink-0 flex items-center justify-center">
             <img
-              src="/logo_pwa.png"
+              src={brandLogo}
               alt="Industry Trends Icon"
               className="w-full h-full object-cover"
             />

@@ -166,6 +166,9 @@ async function startServer() {
     }
   });
 
+  // Explicitly serve static public assets (favicons, apple-touch-icons, manifests)
+  app.use(express.static(path.join(process.cwd(), 'public')));
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
