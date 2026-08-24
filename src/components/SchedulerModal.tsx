@@ -58,10 +58,10 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-extrabold text-[#08090a] font-display">
-                7:00 PM Daily Auto-Fetch Scheduler
+                Hourly Market Auto-Fetch Scheduler
               </h3>
               <p className="text-xs text-[#08090a]/60 font-medium">
-                Automated GitHub Actions + Dual-Branch Zero Conflict Architecture
+                Hourly Intra-Day Updates (9:00 AM – 7:00 PM IST) + Dual-Branch Architecture
               </p>
             </div>
           </div>
@@ -82,7 +82,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
               <span className="font-extrabold text-[#08090a] text-sm font-display">GitHub Action & Cron Active</span>
             </div>
             <span className="text-[11px] font-mono px-2.5 py-1 bg-[#10b981]/20 text-[#08090a] rounded-lg font-bold">
-              30 13 * * 1-5 (7 PM IST)
+              30 3-13 * * 1-5 (9 AM - 7 PM IST Hourly)
             </span>
           </div>
 
@@ -131,11 +131,11 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
             <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
               <span className="text-[#08090a]/60 font-semibold block mb-1">Execution Schedule:</span>
               <div className="font-extrabold text-[#08090a] font-display">
-                Every Weekday (Mon-Fri) at 19:00 IST
+                Mon-Fri Hourly (9:00 AM – 7:00 PM IST)
               </div>
               <div className="text-[11px] text-[#08090a]/60 mt-1 flex items-center gap-1 font-medium">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#10b981] stroke-[2]" />
-                <span>Excludes Sat & Sun</span>
+                <span>11 intra-day updates / day</span>
               </div>
             </div>
 
@@ -150,7 +150,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                       hour: '2-digit',
                       minute: '2-digit',
                     })
-                  : 'Mon-Fri @ 7:00 PM IST'}
+                  : 'Mon-Fri Hourly @ :30 (IST)'}
               </div>
               <div className="text-[11px] text-[#08090a]/60 mt-1 font-medium">
                 Last Run: {lastRun ? lastRun.toLocaleTimeString('en-IN') : 'Active'}

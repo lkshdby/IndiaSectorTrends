@@ -1,9 +1,9 @@
-name: Daily Screener Sector Trends Fetcher
+name: Hourly & Daily Screener Sector Trends Fetcher
 
 on:
   schedule:
-    # 13:30 UTC is 19:00 (7:00 PM) IST, Monday to Friday
-    - cron: '30 13 * * 1-5'
+    # 03:30 UTC to 13:30 UTC corresponds to 09:00 AM IST to 07:00 PM (19:00) IST, Monday to Friday (Hourly)
+    - cron: '30 3-13 * * 1-5'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 permissions:
@@ -74,7 +74,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No new changes to commit to data-storage."
           else
-            git commit -m "Auto-fetch: Screener industry trends $(date -u +'%Y-%m-%d')"
+            git commit -m "Auto-fetch: Screener industry trends $(date -u +'%Y-%m-%d %H:%M UTC')"
             git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data-storage
             echo "Successfully pushed latest snapshot to data-storage branch!"
           fi

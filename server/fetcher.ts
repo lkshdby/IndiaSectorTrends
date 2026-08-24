@@ -255,19 +255,35 @@ export async function performDaily7PMFetch(
   }
 }
 
-export function getNext7PMRunTime(): Date {
+export function getNextHourlyRunTime(): Date {
   const now = new Date();
+  
+  // Find next hourly window (9:00 AM to 7:00 PM IST, Monday to Friday)
+  const istFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  
+  const parts = istFormatter.formatToParts(now);
+  const istHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
+  const istMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+
   const next = new Date(now);
-  next.setHours(19, 0, 0, 0);
-
-  if (now >= next) {
+  if (istHour < 9) {
+    // Today at 9:00 AM IST
+    next.setMinutes(30);
+  } else if (istHour >= 19) {
+    // Tomorrow at 9:00 AM IST
     next.setDate(next.getDate() + 1);
-  }
-
-  if (next.getDay() === 6) {
-    next.setDate(next.getDate() + 2); // Skip Sat -> Mon
-  } else if (next.getDay() === 0) {
-    next.setDate(next.getDate() + 1); // Skip Sun -> Mon
+  } else {
+    // Next hour at :30
+    next.setHours(next.getHours() + (istMinute >= 30 ? 1 : 0));
+    next.setMinutes(30);
   }
 
   return next;
@@ -275,12 +291,12 @@ export function getNext7PMRunTime(): Date {
 
 export function getSchedulerInfo(): SchedulerInfo {
   const all = getAllSnapshots();
-  const nextRun = getNext7PMRunTime();
+  const nextRun = getNextHourlyRunTime();
   const industryCount = all.length > 0 ? all[all.length - 1].sectors.length : 0;
 
   return {
     isActive: true,
-    schedule: '0 19 * * 1-5 (Sharp 7:00 PM IST, Monday to Friday, excludes Sat & Sun)',
+    schedule: '30 3-13 * * 1-5 (Hourly 9:00 AM - 7:00 PM IST, Mon-Fri)',
     timezone: 'Asia/Kolkata (IST)',
     lastRunTime,
     nextRunTime: nextRun.toISOString(),
@@ -297,28 +313,39 @@ let schedulerTimer: NodeJS.Timeout | null = null;
 export function startBackgroundCron() {
   if (schedulerTimer) return;
 
-  addLog('Background 7:00 PM daily fetcher initialized. Checking trigger schedule every 30 seconds.');
+  addLog('Background hourly market fetcher initialized (9:00 AM - 7:00 PM IST). Checking trigger schedule every 60 seconds.');
 
   schedulerTimer = setInterval(() => {
     const now = new Date();
+    const istFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      weekday: 'narrow',
+      hour12: false,
+    });
+
     const day = now.getDay();
     // Monday (1) to Friday (5)
     if (day >= 1 && day <= 5) {
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
+      const parts = istFormatter.formatToParts(now);
+      const istHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
+      const istMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
 
-      // Sharp 19:00 IST
-      if (hours === 19 && minutes === 0 && seconds <= 30) {
-        const todayStr = now.toISOString().split('T')[0];
-        const existing = cachedSnapshots.find((s) => s.date === todayStr);
-        if (!existing) {
-          addLog(`[CRON TRIGGER 19:00 IST] Scraping https://www.screener.in/market/ for ${todayStr}...`);
-          performDaily7PMFetch(todayStr).catch((err) => {
-            console.error('Scheduled scrape error:', err);
-          });
-        }
+      // Hourly between 9 AM (09:00) and 7 PM (19:00) IST at :00 or :30
+      if (istHour >= 9 && istHour <= 19 && istMinute === 30) {
+        const todayStr = parts.find((p) => p.type === 'year')?.value + '-' +
+                         parts.find((p) => p.type === 'month')?.value + '-' +
+                         parts.find((p) => p.type === 'day')?.value;
+
+        addLog(`[CRON TRIGGER ${istHour}:${istMinute.toString().padStart(2, '0')} IST] Scraping live Screener.in for ${todayStr}...`);
+        performDaily7PMFetch(todayStr, true).catch((err) => {
+          console.error('Scheduled scrape error:', err);
+        });
       }
     }
-  }, 30000);
+  }, 60000);
 }
