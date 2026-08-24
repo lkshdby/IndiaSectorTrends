@@ -74,15 +74,68 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
     return sortedItems.slice(0, limit);
   }, [sortedItems, displayCount]);
 
-  // Calculate min, max, average across the full dataset
+  // Calculate min, max, average across visible items and full dataset
   const values = items.map((i) => i.currentValue);
   const avgValue = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+
+  const visibleValues = visibleItems.map((i) => i.currentValue);
+  const visibleMin = visibleValues.length > 0 ? Math.min(...visibleValues) : 0;
+  const visibleMax = visibleValues.length > 0 ? Math.max(...visibleValues) : 100;
+
+  // Determine X-axis domain based on visible items
+  const xDomain = useMemo(() => {
+    // If all visible items are >= 0, clamp left domain to 0 so there is no empty gap between Y-axis and bars
+    if (visibleMin >= 0) {
+      return [0, Math.ceil(visibleMax * 1.12)];
+    }
+    // If there are negative values, add small buffer on both sides
+    const leftPad = visibleMin < 0 ? Math.floor(visibleMin * 1.12) : 0;
+    const rightPad = Math.ceil(Math.max(0, visibleMax) * 1.12);
+    return [leftPad, rightPad];
+  }, [visibleMin, visibleMax]);
+
+  const hasNegative = visibleMin < 0;
 
   // Format resolution comparison label
   const resolutionLabels: Record<TimeResolution, string> = {
     daily: 'Day-on-Day (1 Day)',
     weekly: 'Week-on-Week (1 Wk)',
     monthly: 'Month-on-Month (1 Mo)',
+  };
+
+  // Custom SVG Badge for Average Reference Line (avoids any clipping at top)
+  const renderAvgBadge = (props: any) => {
+    const { viewBox } = props;
+    if (!viewBox || typeof viewBox.x !== 'number') return null;
+    const xPos = viewBox.x;
+    const labelText = `Avg: ${metricDef.format(avgValue)}`;
+    const badgeWidth = Math.max(76, labelText.length * 6.8);
+
+    return (
+      <g transform={`translate(${xPos}, 14)`}>
+        <rect
+          x={-badgeWidth / 2}
+          y={-12}
+          width={badgeWidth}
+          height={18}
+          rx={9}
+          fill="#8e995c"
+          stroke="#ffffff"
+          strokeWidth={1.5}
+        />
+        <text
+          x={0}
+          y={1}
+          textAnchor="middle"
+          fill="#ffffff"
+          fontSize={10}
+          fontWeight={800}
+          fontFamily="Outfit, sans-serif"
+        >
+          {labelText}
+        </text>
+      </g>
+    );
   };
 
   // Recharts custom tooltip
@@ -303,7 +356,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                 <BarChart
                   data={visibleItems}
                   layout="vertical"
-                  margin={{ top: 10, right: 90, left: 175, bottom: 25 }}
+                  margin={{ top: 32, right: 60, left: 10, bottom: 25 }}
                   onClick={(e: any) => {
                     if (e && e.activePayload && e.activePayload.length) {
                       onSelectSector(e.activePayload[0].payload.sector);
@@ -312,6 +365,7 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                 >
                   <XAxis
                     type="number"
+                    domain={xDomain}
                     tickFormatter={(v) => metricDef.format(v)}
                     tick={{ fontSize: 11, fill: '#08090a', opacity: 0.6 }}
                     axisLine={{ stroke: '#b1ada1', strokeOpacity: 0.4 }}
@@ -321,39 +375,55 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
                     type="category"
                     dataKey="sector"
                     tick={{ fontSize: 11, fill: '#08090a', fontWeight: 600 }}
-                    width={170}
+                    width={180}
                     axisLine={{ stroke: '#b1ada1', strokeOpacity: 0.4 }}
                     tickLine={false}
                     interval={0}
                   />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f3ee' }} />
+                  
+                  {/* Distinct Zero Baseline Line when data has negative values */}
+                  {hasNegative && (
+                    <ReferenceLine
+                      x={0}
+                      stroke="#08090a"
+                      strokeWidth={1.5}
+                      strokeOpacity={0.5}
+                      label={{
+                        value: '0.0',
+                        position: 'insideTop',
+                        fill: '#08090a',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        offset: 4,
+                      }}
+                    />
+                  )}
+
+                  {/* High-visibility Unclipped Average Marker */}
                   <ReferenceLine
                     x={avgValue}
-                    stroke="#A2AB73"
-                    strokeDasharray="3 3"
-                    label={{
-                      value: `Avg: ${metricDef.format(avgValue)}`,
-                      position: 'top',
-                      fill: '#A2AB73',
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
+                    stroke="#8e995c"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    label={renderAvgBadge}
                   />
                   <Bar
                     dataKey="currentValue"
-                    radius={[0, 6, 6, 0]}
+                    radius={[0, 4, 4, 0]}
                     isAnimationActive={false}
                     className="cursor-pointer"
                   >
                     {visibleItems.map((entry, index) => {
+                      const isNeg = entry.currentValue < 0;
                       return (
                         <Cell
                           key={`cell-${index}`}
                           fill={
                             selectedMetric === 'median1YReturn' || selectedMetric === 'wtdAvgSalesGrowth'
-                              ? entry.currentValue >= 0
-                                ? '#10b981' // emerald
-                                : '#A2AB73' // sage accent
+                              ? isNeg
+                                ? '#e11d48' // high-contrast rose/red for negative return
+                                : '#10b981' // vibrant emerald for positive return
                               : '#08090a' // deep charcoal
                           }
                           className="hover:opacity-85 transition-opacity"
