@@ -182,10 +182,16 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
     if (filterPreset === 'top25') return result.slice(0, 25);
     if (filterPreset === 'top50') return result.slice(0, 50);
     if (filterPreset === 'gainers') {
-      return [...result].sort((a, b) => b.changePercent - a.changePercent).slice(0, 15);
+      const positiveGainers = result.filter((w) => w.changePercent > 0);
+      return (positiveGainers.length > 0 ? positiveGainers : result)
+        .sort((a, b) => b.changePercent - a.changePercent)
+        .slice(0, 15);
     }
     if (filterPreset === 'decliners') {
-      return [...result].sort((a, b) => a.changePercent - b.changePercent).slice(0, 15);
+      const negativeDecliners = result.filter((w) => w.changePercent < 0);
+      return (negativeDecliners.length > 0 ? negativeDecliners : result)
+        .sort((a, b) => a.changePercent - b.changePercent)
+        .slice(0, 15);
     }
 
     return result;
@@ -774,25 +780,40 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
         </div>
       </div>
 
-      {/* Bottom Interactive Sector Rail & Legend for all Tracked Sectors */}
+      {/* Bottom Interactive Sector Rail & Legend for Active Sectors in Chart */}
       <div className="border-t border-[#b1ada1]/30 bg-[#f4f3ee]/60 p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2.5">
           <div className="flex items-center gap-2">
             <span className="text-xs font-extrabold text-[#08090a] uppercase tracking-wider font-display">
-              188 Sector Worm Index
+              {filterPreset === 'all' && !searchQuery
+                ? `${allSectorNames.length} Sector Worm Index`
+                : `${visibleWorms.length} Active Sectors in Chart`}
             </span>
             <span className="text-[11px] text-[#08090a]/60 font-medium">
               Tap / hover to highlight worm • Click for company breakdown
             </span>
           </div>
-          <span className="text-xs font-bold text-[#10b981] font-display self-start sm:self-auto">
-            {sortedWorms.length} Total Industries Tracked
-          </span>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {(filterPreset !== 'all' || searchQuery) && (
+              <button
+                onClick={() => {
+                  setFilterPreset('all');
+                  setSearchQuery('');
+                }}
+                className="text-[11px] font-bold text-[#A2AB73] hover:text-[#08090a] hover:underline cursor-pointer font-display"
+              >
+                Reset to All 188
+              </button>
+            )}
+            <span className="text-xs font-bold text-[#10b981] font-display">
+              {visibleWorms.length} of {allWormLines.length} Sectors Active
+            </span>
+          </div>
         </div>
 
-        {/* Scrollable multi-color chip bar */}
+        {/* Scrollable multi-color chip bar - strictly renders sectors visible on chart */}
         <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-56 overflow-y-auto pr-1 p-0.5">
-          {sortedWorms.map((w) => {
+          {visibleWorms.map((w) => {
             const isHovered = hoveredSector === w.sector;
             const isPinned = pinnedSectors.includes(w.sector);
             const isGainer = w.changePercent >= 0;

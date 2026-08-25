@@ -21,6 +21,8 @@ interface SchedulerModalProps {
   isFetching: boolean;
   onSyncGitHub: (repoName: string) => Promise<void>;
   isSyncingGitHub: boolean;
+  nextAutoSyncLabel?: string;
+  lastAutoSyncTime?: string | null;
 }
 
 export const SchedulerModal: React.FC<SchedulerModalProps> = ({
@@ -31,6 +33,8 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
   isFetching,
   onSyncGitHub,
   isSyncingGitHub,
+  nextAutoSyncLabel,
+  lastAutoSyncTime,
 }) => {
   const [repoInput, setRepoInput] = useState(() => getSavedGitHubRepo());
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -58,10 +62,10 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-extrabold text-[#08090a] font-display">
-                Hourly Market Auto-Fetch Scheduler
+                Intra-Day Scraper & In-Page Auto-Sync
               </h3>
               <p className="text-xs text-[#08090a]/60 font-medium">
-                Hourly Intra-Day Updates (9:00 AM – 7:00 PM IST) + Dual-Branch Architecture
+                Hourly Scraper (:30) ➜ +30 min Dashboard In-Page Sync (:00 IST)
               </p>
             </div>
           </div>
@@ -79,11 +83,46 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
           <div className="flex items-center justify-between p-4 bg-[#10b981]/10 rounded-[18px] border border-[#10b981]/30">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-ping" />
-              <span className="font-extrabold text-[#08090a] text-sm font-display">GitHub Action & Cron Active</span>
+              <div>
+                <span className="font-extrabold text-[#08090a] text-sm font-display block">Automated Sync Pipeline Active</span>
+                <span className="text-[11px] text-[#08090a]/70 font-medium">Runs 11 times per trading day (Mon-Fri)</span>
+              </div>
             </div>
             <span className="text-[11px] font-mono px-2.5 py-1 bg-[#10b981]/20 text-[#08090a] rounded-lg font-bold">
-              30 3-13 * * 1-5 (9 AM - 7 PM IST Hourly)
+              30 3-13 * * 1-5 (UTC)
             </span>
+          </div>
+
+          {/* 30-min Offset Pipeline Visualizer */}
+          <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/35 shadow-xs space-y-2.5">
+            <div className="font-extrabold text-xs text-[#08090a] uppercase tracking-wider font-display flex items-center gap-1.5">
+              <RefreshCw className="w-3.5 h-3.5 text-[#10b981]" />
+              Automated 30-Min Offset Sync Pipeline
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+              <div className="p-3 bg-[#f4f3ee] rounded-xl border border-[#b1ada1]/30">
+                <span className="font-bold text-[#08090a] block mb-0.5 font-display">1. GitHub Actions Scraper (:30)</span>
+                <span className="text-[#08090a]/70 leading-relaxed block font-medium">
+                  Runs at <strong>09:30, 10:30, 11:30 ... 19:30 IST</strong> and writes to <code className="text-[#10b981] font-mono font-bold">data-storage</code> branch.
+                </span>
+              </div>
+              <div className="p-3 bg-[#10b981]/10 rounded-xl border border-[#10b981]/30">
+                <span className="font-bold text-[#08090a] block mb-0.5 font-display">2. Dashboard In-Page Sync (:00)</span>
+                <span className="text-[#08090a]/80 leading-relaxed block font-medium">
+                  Refreshes at <strong>10:00, 11:00, 12:00 ... 20:00 IST</strong> without reload.
+                  {nextAutoSyncLabel && (
+                    <span className="block mt-1 text-[#10b981] font-bold">
+                      Next sync: {nextAutoSyncLabel}
+                    </span>
+                  )}
+                  {lastAutoSyncTime && (
+                    <span className="block text-[#08090a]/60">
+                      Last in-page sync: {lastAutoSyncTime}
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* GitHub Dual-Branch Isolation Card */}

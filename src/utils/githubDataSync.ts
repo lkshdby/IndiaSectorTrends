@@ -127,3 +127,75 @@ export async function fetchSnapshotsFromGitHub(
   };
 }
 
+/**
+ * Calculates the next in-browser Auto-Sync window.
+ * The GitHub workflow runs at :30 hourly (09:30 AM to 07:30 PM IST, Mon-Fri).
+ * The in-browser Auto-Sync runs with a +30 min offset at :00 (10:00 AM to 08:00 PM IST, Mon-Fri)
+ * to smoothly pull the fresh data snapshot into the active page without manual intervention.
+ */
+export function getNextInPageAutoSyncTime(): {
+  formattedIST: string;
+  isDuringMarketHours: boolean;
+  istHour: number;
+  istMinute: number;
+  istDay: string;
+} {
+  const now = new Date();
+
+  // Parse current IST time
+  const istFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    weekday: 'short',
+    hour12: false,
+  });
+
+  const parts = istFormatter.formatToParts(now);
+  const istHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
+  const istMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+  const istDay = parts.find((p) => p.type === 'weekday')?.value || 'Mon';
+
+  const isWeekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(istDay);
+  const isDuringMarketHours = isWeekday && istHour >= 10 && istHour <= 20;
+
+  // Auto-sync occurs at :00 for hours 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  let targetHour = 10;
+  let targetPrefix = 'Today';
+
+  if (!isWeekday) {
+    targetPrefix = istDay === 'Sat' ? 'Monday' : 'Monday';
+    targetHour = 10;
+  } else if (istHour < 10) {
+    targetPrefix = 'Today';
+    targetHour = 10;
+  } else if (istHour >= 20 && istMinute > 0) {
+    targetPrefix = istDay === 'Fri' ? 'Monday' : 'Tomorrow';
+    targetHour = 10;
+  } else {
+    // Current hour + 1 at top of the hour
+    targetHour = istMinute === 0 ? istHour : istHour + 1;
+    if (targetHour > 20) {
+      targetPrefix = istDay === 'Fri' ? 'Monday' : 'Tomorrow';
+      targetHour = 10;
+    } else {
+      targetPrefix = 'Today';
+    }
+  }
+
+  const hour12 = targetHour % 12 === 0 ? 12 : targetHour % 12;
+  const ampm = targetHour >= 12 ? 'PM' : 'AM';
+  const formattedIST = `${targetPrefix} @ ${hour12}:00 ${ampm} IST`;
+
+  return {
+    formattedIST,
+    isDuringMarketHours,
+    istHour,
+    istMinute,
+    istDay,
+  };
+}
+

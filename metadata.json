@@ -1,6 +1,6 @@
 {
   "name": "Industry Trends",
-  "description": "Daily 7 PM industry trends tracker and analyzer across sectors and financial metrics with daily, weekly, monthly, and yearly views and data export.",
+  "description": "Hourly intra-day industry trends tracker across 188 sectors with dual-branch GitHub Actions automation and automated in-page live sync.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

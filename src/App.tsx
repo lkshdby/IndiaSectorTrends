@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useRef, useState, useTransition } from 'react';
 import {
   DailySnapshot,
   MetricKey,
@@ -9,7 +9,11 @@ import { generateHistoricalSeedSnapshots } from './data/seedData';
 import { computeSectorComparison } from './utils/dataProcessor';
 import { clearLocalStorageCache, loadSnapshotsLocally, saveSnapshotsLocally } from './utils/storage';
 import { unpackSnapshots } from './utils/compactData';
-import { fetchSnapshotsFromGitHub, getSavedGitHubRepo } from './utils/githubDataSync';
+import {
+  fetchSnapshotsFromGitHub,
+  getNextInPageAutoSyncTime,
+  getSavedGitHubRepo,
+} from './utils/githubDataSync';
 import { Header } from './components/Header';
 import { MetricSelector } from './components/MetricSelector';
 import { ResolutionSelector } from './components/ResolutionSelector';
@@ -51,6 +55,9 @@ export default function App() {
   const [schedulerInfo, setSchedulerInfo] = useState<SchedulerInfo | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [isSyncingGitHub, setIsSyncingGitHub] = useState(false);
+  const [nextAutoSyncLabel, setNextAutoSyncLabel] = useState<string>(() => getNextInPageAutoSyncTime().formattedIST);
+  const [lastAutoSyncTime, setLastAutoSyncTime] = useState<string | null>(null);
+  const lastAutoSyncedSlotRef = useRef<string>('');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
   const [, startTransition] = useTransition();
 
@@ -165,6 +172,40 @@ export default function App() {
 
   useEffect(() => {
     loadDataFromServer();
+  }, []);
+
+  // In-Page Auto-Sync Poller (+30 min offset after GitHub Actions scraper runs)
+  // GitHub runs at :30 hourly (09:30 to 19:30 IST, Mon-Fri).
+  // Browser in-page sync polls at :00 (10:00 to 20:00 IST, Mon-Fri) smoothly refreshing the page.
+  useEffect(() => {
+    const checkAndSync = async () => {
+      const syncInfo = getNextInPageAutoSyncTime();
+      setNextAutoSyncLabel(syncInfo.formattedIST);
+
+      if (syncInfo.isDuringMarketHours && syncInfo.istMinute === 0) {
+        const slotKey = `${syncInfo.istDay}-${syncInfo.istHour}`;
+        if (lastAutoSyncedSlotRef.current !== slotKey) {
+          lastAutoSyncedSlotRef.current = slotKey;
+          try {
+            const ghResult = await fetchSnapshotsFromGitHub();
+            if (ghResult.success && ghResult.data && ghResult.data.length > 0) {
+              setSnapshots(ghResult.data);
+              saveSnapshotsLocally(ghResult.data);
+              const latestDate = ghResult.data[ghResult.data.length - 1].date;
+              setSelectedDate(latestDate);
+              const timeStr = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+              setLastAutoSyncTime(timeStr);
+              showToast(`Live Auto-Sync: Updated dashboard with ${latestDate} snapshot at ${timeStr} IST`, 'success');
+            }
+          } catch {
+            // silent retry next cycle
+          }
+        }
+      }
+    };
+
+    const timer = setInterval(checkAndSync, 20000);
+    return () => clearInterval(timer);
   }, []);
 
   // Update selected date whenever snapshots change and selectedDate is not in array
@@ -298,6 +339,8 @@ export default function App() {
           isSyncingGitHub={isSyncingGitHub}
           onOpenExportModal={() => setIsExportModalOpen(true)}
           onOpenSchedulerModal={() => setIsSchedulerModalOpen(true)}
+          nextAutoSyncLabel={nextAutoSyncLabel}
+          lastAutoSyncTime={lastAutoSyncTime}
         />
 
         {/* App Body Container - Chart View Paramount */}
@@ -424,6 +467,8 @@ export default function App() {
         isFetching={isFetching}
         onSyncGitHub={handleSyncGitHub}
         isSyncingGitHub={isSyncingGitHub}
+        nextAutoSyncLabel={nextAutoSyncLabel}
+        lastAutoSyncTime={lastAutoSyncTime}
       />
     </div>
   );

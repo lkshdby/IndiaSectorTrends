@@ -20,6 +20,8 @@ interface HeaderProps {
   isSyncingGitHub: boolean;
   onOpenExportModal: () => void;
   onOpenSchedulerModal: () => void;
+  nextAutoSyncLabel?: string;
+  lastAutoSyncTime?: string | null;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,6 +35,8 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncingGitHub,
   onOpenExportModal,
   onOpenSchedulerModal,
+  nextAutoSyncLabel,
+  lastAutoSyncTime,
 }) => {
   return (
     <header className="border-b border-[#b1ada1]/30 bg-white/95 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-5 py-2.5">
@@ -79,26 +83,41 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: Simple, crisp icon action buttons */}
+        {/* Right: Simple, crisp icon action buttons & auto-sync indicator */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Live Auto-Sync Status pill on medium+ displays */}
+          {nextAutoSyncLabel && (
+            <div
+              onClick={onOpenSchedulerModal}
+              title={`In-Page Auto-Sync: Active • Next automated sync: ${nextAutoSyncLabel}${lastAutoSyncTime ? ` • Last synced: ${lastAutoSyncTime}` : ''}`}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#f4f3ee] border border-[#b1ada1]/40 text-[11px] text-[#08090a]/75 hover:border-[#10b981] transition-all cursor-pointer font-display"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
+              <span className="font-extrabold text-[#08090a]">Auto-Sync:</span>
+              <span className="font-semibold text-[#08090a]/70 truncate max-w-[130px]">
+                {nextAutoSyncLabel.replace('Today @ ', '').replace('Tomorrow @ ', 'Tmrw ')}
+              </span>
+            </div>
+          )}
+
           {/* Sync Live GitHub Icon */}
           <button
             id="sync-github-live-button"
             onClick={onSyncGitHub}
             disabled={isSyncingGitHub}
-            title={isSyncingGitHub ? 'Syncing with live data...' : 'Sync Live GitHub Data'}
+            title={isSyncingGitHub ? 'Syncing with live data...' : `Sync GitHub Data Now (Next Auto-Sync: ${nextAutoSyncLabel || 'Active'})`}
             aria-label="Sync Live Data"
             className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-white bg-[#A2AB73] hover:bg-[#8f9862] active:scale-95 rounded-lg sm:rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2] ${isSyncingGitHub ? 'animate-spin' : ''}`} />
           </button>
 
-          {/* 7 PM Cron Status Icon */}
+          {/* Hourly Scheduler & Sync Status Icon */}
           <button
             id="scheduler-status-button"
             onClick={onOpenSchedulerModal}
-            title="7:00 PM IST Daily Cron Scheduler & GitHub Repo Settings"
-            aria-label="7:00 PM Daily Cron Scheduler"
+            title="Hourly Scraper & In-Page Auto-Sync Schedule"
+            aria-label="Hourly Scheduler and Sync Settings"
             className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-[#08090a] bg-white hover:bg-[#f4f3ee] border border-[#b1ada1]/40 active:scale-95 rounded-lg sm:rounded-xl transition-all shadow-2xs cursor-pointer"
           >
             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#08090a]/80 stroke-[2]" />
