@@ -47,7 +47,7 @@ export default function App() {
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<
     'value-desc' | 'value-asc' | 'change-desc' | 'change-asc' | 'alphabetical'
-  >('value-desc');
+  >('change-desc');
   const [mainViewMode, setMainViewMode] = useState<'worms' | 'bars'>('worms');
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);

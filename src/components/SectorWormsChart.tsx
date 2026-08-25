@@ -50,7 +50,7 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
   const [containerWidth, setContainerWidth] = useState(1000);
   const [filterPreset, setFilterPreset] = useState<
     'all' | 'top10' | 'top25' | 'top50' | 'gainers' | 'decliners' | 'custom'
-  >('all');
+  >('gainers');
   const [pinnedSectors, setPinnedSectors] = useState<string[]>([]);
   const [hoveredSector, setHoveredSector] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
