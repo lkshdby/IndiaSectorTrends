@@ -149,27 +149,17 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
   }, [allSectorNames, filteredSnapshots, selectedMetric]);
 
   // Sort worms by active sort order
-  const isPercentMetric = metricDef.unit === '%';
-
   const sortedWorms = useMemo(() => {
     const list = [...allWormLines];
     return list.sort((a, b) => {
       if (sortBy === 'value-desc') return b.currentValue - a.currentValue;
       if (sortBy === 'value-asc') return a.currentValue - b.currentValue;
-      if (sortBy === 'change-desc') {
-        return isPercentMetric
-          ? b.changeValue - a.changeValue
-          : b.changePercent - a.changePercent;
-      }
-      if (sortBy === 'change-asc') {
-        return isPercentMetric
-          ? a.changeValue - b.changeValue
-          : a.changePercent - b.changePercent;
-      }
+      if (sortBy === 'change-desc') return b.changePercent - a.changePercent;
+      if (sortBy === 'change-asc') return a.changePercent - b.changePercent;
       if (sortBy === 'alphabetical') return a.sector.localeCompare(b.sector);
       return b.currentValue - a.currentValue;
     });
-  }, [allWormLines, sortBy, isPercentMetric]);
+  }, [allWormLines, sortBy]);
 
   // Apply filters / presets
   const visibleWorms = useMemo(() => {
@@ -192,32 +182,20 @@ export const SectorWormsChart: React.FC<SectorWormsChartProps> = ({
     if (filterPreset === 'top25') return result.slice(0, 25);
     if (filterPreset === 'top50') return result.slice(0, 50);
     if (filterPreset === 'gainers') {
-      const positiveGainers = result.filter((w) =>
-        isPercentMetric ? w.changeValue > 0 : w.changePercent > 0
-      );
+      const positiveGainers = result.filter((w) => w.changePercent > 0);
       return (positiveGainers.length > 0 ? positiveGainers : result)
-        .sort((a, b) =>
-          isPercentMetric
-            ? b.changeValue - a.changeValue
-            : b.changePercent - a.changePercent
-        )
+        .sort((a, b) => b.changePercent - a.changePercent)
         .slice(0, 15);
     }
     if (filterPreset === 'decliners') {
-      const negativeDecliners = result.filter((w) =>
-        isPercentMetric ? w.changeValue < 0 : w.changePercent < 0
-      );
+      const negativeDecliners = result.filter((w) => w.changePercent < 0);
       return (negativeDecliners.length > 0 ? negativeDecliners : result)
-        .sort((a, b) =>
-          isPercentMetric
-            ? a.changeValue - b.changeValue
-            : a.changePercent - b.changePercent
-        )
+        .sort((a, b) => a.changePercent - b.changePercent)
         .slice(0, 15);
     }
 
     return result;
-  }, [sortedWorms, filterPreset, pinnedSectors, searchQuery, isPercentMetric]);
+  }, [sortedWorms, filterPreset, pinnedSectors, searchQuery]);
 
   // Compute SVG Plotting Bounds & Scales
   const plotDimensions = useMemo(() => {

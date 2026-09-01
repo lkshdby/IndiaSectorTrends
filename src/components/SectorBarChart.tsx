@@ -55,27 +55,17 @@ export const SectorBarChart: React.FC<SectorBarChartProps> = ({
   }, [items, searchQuery]);
 
   // Sort items according to user preference
-  const isPercentMetric = metricDef.unit === '%';
-
   const sortedItems = useMemo(() => {
     const list = [...filteredItems];
     return list.sort((a, b) => {
       if (sortBy === 'value-desc') return b.currentValue - a.currentValue;
       if (sortBy === 'value-asc') return a.currentValue - b.currentValue;
-      if (sortBy === 'change-desc') {
-        return isPercentMetric
-          ? b.changeValue - a.changeValue
-          : b.changePercent - a.changePercent;
-      }
-      if (sortBy === 'change-asc') {
-        return isPercentMetric
-          ? a.changeValue - b.changeValue
-          : a.changePercent - b.changePercent;
-      }
+      if (sortBy === 'change-desc') return b.changePercent - a.changePercent;
+      if (sortBy === 'change-asc') return a.changePercent - b.changePercent;
       if (sortBy === 'alphabetical') return a.sector.localeCompare(b.sector);
       return 0;
     });
-  }, [filteredItems, sortBy, isPercentMetric]);
+  }, [filteredItems, sortBy]);
 
   // Display items based on slice limit
   const visibleItems = useMemo(() => {
