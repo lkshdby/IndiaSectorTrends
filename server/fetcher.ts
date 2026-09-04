@@ -275,15 +275,16 @@ export function getNextHourlyRunTime(): Date {
 
   const next = new Date(now);
   if (istHour < 9) {
-    // Today at 9:00 AM IST
-    next.setMinutes(30);
+    // Today at 9:07 AM IST (3:37 UTC)
+    next.setMinutes(37);
   } else if (istHour >= 19) {
-    // Tomorrow at 9:00 AM IST
+    // Tomorrow at 9:07 AM IST
     next.setDate(next.getDate() + 1);
+    next.setMinutes(37);
   } else {
-    // Next hour at :30
-    next.setHours(next.getHours() + (istMinute >= 30 ? 1 : 0));
-    next.setMinutes(30);
+    // Next hour at :37
+    next.setHours(next.getHours() + (istMinute >= 37 ? 1 : 0));
+    next.setMinutes(37);
   }
 
   return next;
@@ -296,7 +297,7 @@ export function getSchedulerInfo(): SchedulerInfo {
 
   return {
     isActive: true,
-    schedule: '30 3-13 * * 1-5 (Hourly 9:00 AM - 7:00 PM IST, Mon-Fri)',
+    schedule: '37 3-13 * * 1-5 (Hourly 9:07 AM - 7:07 PM IST, Mon-Fri)',
     timezone: 'Asia/Kolkata (IST)',
     lastRunTime,
     nextRunTime: nextRun.toISOString(),
@@ -313,7 +314,7 @@ let schedulerTimer: NodeJS.Timeout | null = null;
 export function startBackgroundCron() {
   if (schedulerTimer) return;
 
-  addLog('Background hourly market fetcher initialized (9:00 AM - 7:00 PM IST). Checking trigger schedule every 60 seconds.');
+  addLog('Background hourly market fetcher initialized (9:07 AM - 7:07 PM IST). Checking trigger schedule every 60 seconds.');
 
   schedulerTimer = setInterval(() => {
     const now = new Date();
@@ -335,8 +336,8 @@ export function startBackgroundCron() {
       const istHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
       const istMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
 
-      // Hourly between 9 AM (09:00) and 7 PM (19:00) IST at :00 or :30
-      if (istHour >= 9 && istHour <= 19 && istMinute === 30) {
+      // Hourly between 9 AM (09:00) and 7 PM (19:00) IST at :37
+      if (istHour >= 9 && istHour <= 19 && istMinute === 37) {
         const todayStr = parts.find((p) => p.type === 'year')?.value + '-' +
                          parts.find((p) => p.type === 'month')?.value + '-' +
                          parts.find((p) => p.type === 'day')?.value;

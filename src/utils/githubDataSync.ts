@@ -129,8 +129,8 @@ export async function fetchSnapshotsFromGitHub(
 
 /**
  * Calculates the next in-browser Auto-Sync window.
- * The GitHub workflow runs at :30 hourly (09:30 AM to 07:30 PM IST, Mon-Fri).
- * The in-browser Auto-Sync runs with a +30 min offset at :00 (10:00 AM to 08:00 PM IST, Mon-Fri)
+ * The GitHub workflow runs at :37 hourly (09:37 AM to 07:37 PM IST, Mon-Fri).
+ * The in-browser Auto-Sync runs with an offset at :00 (10:00 AM to 08:00 PM IST, Mon-Fri)
  * to smoothly pull the fresh data snapshot into the active page without manual intervention.
  */
 export function getNextInPageAutoSyncTime(): {

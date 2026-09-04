@@ -174,8 +174,8 @@ export default function App() {
     loadDataFromServer();
   }, []);
 
-  // In-Page Auto-Sync Poller (+30 min offset after GitHub Actions scraper runs)
-  // GitHub runs at :30 hourly (09:30 to 19:30 IST, Mon-Fri).
+  // In-Page Auto-Sync Poller (offset after GitHub Actions scraper runs)
+  // GitHub runs at :37 hourly (09:37 to 19:37 IST, Mon-Fri).
   // Browser in-page sync polls at :00 (10:00 to 20:00 IST, Mon-Fri) smoothly refreshing the page.
   useEffect(() => {
     const checkAndSync = async () => {

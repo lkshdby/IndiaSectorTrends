@@ -65,7 +65,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 Intra-Day Scraper & In-Page Auto-Sync
               </h3>
               <p className="text-xs text-[#08090a]/60 font-medium">
-                Hourly Scraper (:30) ➜ +30 min Dashboard In-Page Sync (:00 IST)
+                Hourly Scraper (:37) ➜ Dashboard In-Page Sync (:00 IST)
               </p>
             </div>
           </div>
@@ -89,21 +89,21 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
               </div>
             </div>
             <span className="text-[11px] font-mono px-2.5 py-1 bg-[#10b981]/20 text-[#08090a] rounded-lg font-bold">
-              30 3-13 * * 1-5 (UTC)
+              37 3-13 * * 1-5 (UTC)
             </span>
           </div>
 
-          {/* 30-min Offset Pipeline Visualizer */}
+          {/* Pipeline Visualizer */}
           <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/35 shadow-xs space-y-2.5">
             <div className="font-extrabold text-xs text-[#08090a] uppercase tracking-wider font-display flex items-center gap-1.5">
               <RefreshCw className="w-3.5 h-3.5 text-[#10b981]" />
-              Automated 30-Min Offset Sync Pipeline
+              Automated Offset Sync Pipeline
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
               <div className="p-3 bg-[#f4f3ee] rounded-xl border border-[#b1ada1]/30">
-                <span className="font-bold text-[#08090a] block mb-0.5 font-display">1. GitHub Actions Scraper (:30)</span>
+                <span className="font-bold text-[#08090a] block mb-0.5 font-display">1. GitHub Actions Scraper (:37)</span>
                 <span className="text-[#08090a]/70 leading-relaxed block font-medium">
-                  Runs at <strong>09:30, 10:30, 11:30 ... 19:30 IST</strong> and writes to <code className="text-[#10b981] font-mono font-bold">data-storage</code> branch.
+                  Runs at <strong>09:37, 10:37, 11:37 ... 19:37 IST</strong> and writes to <code className="text-[#10b981] font-mono font-bold">data-storage</code> branch.
                 </span>
               </div>
               <div className="p-3 bg-[#10b981]/10 rounded-xl border border-[#10b981]/30">
@@ -189,7 +189,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                       hour: '2-digit',
                       minute: '2-digit',
                     })
-                  : 'Mon-Fri Hourly @ :30 (IST)'}
+                  : 'Mon-Fri Hourly @ :37 (IST)'}
               </div>
               <div className="text-[11px] text-[#08090a]/60 mt-1 font-medium">
                 Last Run: {lastRun ? lastRun.toLocaleTimeString('en-IN') : 'Active'}
