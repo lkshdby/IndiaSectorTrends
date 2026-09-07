@@ -65,7 +65,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 Intra-Day Scraper & In-Page Auto-Sync
               </h3>
               <p className="text-xs text-[#08090a]/60 font-medium">
-                Hourly Scraper (:37) ➜ Dashboard In-Page Sync (:00 IST)
+                Hourly Scraper (:30) ➜ +30 min Dashboard In-Page Sync (:00 IST)
               </p>
             </div>
           </div>
@@ -85,11 +85,11 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-ping" />
               <div>
                 <span className="font-extrabold text-[#08090a] text-sm font-display block">Automated Sync Pipeline Active</span>
-                <span className="text-[11px] text-[#08090a]/70 font-medium">Runs hourly, 24 hours a day, 7 days a week</span>
+                <span className="text-[11px] text-[#08090a]/70 font-medium">Runs 11 times per trading day (Mon-Fri)</span>
               </div>
             </div>
             <span className="text-[11px] font-mono px-2.5 py-1 bg-[#10b981]/20 text-[#08090a] rounded-lg font-bold">
-              37 * * * * (UTC)
+              30 3-13 * * 1-5 (UTC)
             </span>
           </div>
 
@@ -97,13 +97,13 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
           <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/35 shadow-xs space-y-2.5">
             <div className="font-extrabold text-xs text-[#08090a] uppercase tracking-wider font-display flex items-center gap-1.5">
               <RefreshCw className="w-3.5 h-3.5 text-[#10b981]" />
-              Automated Offset Sync Pipeline
+              Automated 30-Min Offset Sync Pipeline
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
               <div className="p-3 bg-[#f4f3ee] rounded-xl border border-[#b1ada1]/30">
-                <span className="font-bold text-[#08090a] block mb-0.5 font-display">1. GitHub Actions Scraper (:37)</span>
+                <span className="font-bold text-[#08090a] block mb-0.5 font-display">1. GitHub Actions Scraper (:30)</span>
                 <span className="text-[#08090a]/70 leading-relaxed block font-medium">
-                  Runs at <strong>09:37, 10:37, 11:37 ... 19:37 IST</strong> and writes to <code className="text-[#10b981] font-mono font-bold">data-storage</code> branch.
+                  Runs at <strong>09:30, 10:30, 11:30 ... 19:30 IST</strong> and writes to <code className="text-[#10b981] font-mono font-bold">data-storage</code> branch.
                 </span>
               </div>
               <div className="p-3 bg-[#10b981]/10 rounded-xl border border-[#10b981]/30">
@@ -170,11 +170,11 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
             <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
               <span className="text-[#08090a]/60 font-semibold block mb-1">Execution Schedule:</span>
               <div className="font-extrabold text-[#08090a] font-display">
-                Hourly 24/7 (Every hour @ :37 IST)
+                Mon-Fri Hourly (9:00 AM – 7:00 PM IST)
               </div>
               <div className="text-[11px] text-[#08090a]/60 mt-1 flex items-center gap-1 font-medium">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#10b981] stroke-[2]" />
-                <span>24 runs / day (All 7 Days)</span>
+                <span>11 intra-day updates / day</span>
               </div>
             </div>
 
@@ -189,7 +189,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                       hour: '2-digit',
                       minute: '2-digit',
                     })
-                  : 'Hourly @ :37 (IST)'}
+                  : 'Mon-Fri Hourly @ :30 (IST)'}
               </div>
               <div className="text-[11px] text-[#08090a]/60 mt-1 font-medium">
                 Last Run: {lastRun ? lastRun.toLocaleTimeString('en-IN') : 'Active'}
