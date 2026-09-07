@@ -85,11 +85,11 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-ping" />
               <div>
                 <span className="font-extrabold text-[#08090a] text-sm font-display block">Automated Sync Pipeline Active</span>
-                <span className="text-[11px] text-[#08090a]/70 font-medium">Runs 11 times per trading day (Mon-Fri)</span>
+                <span className="text-[11px] text-[#08090a]/70 font-medium">Runs hourly, 24 hours a day, 7 days a week</span>
               </div>
             </div>
             <span className="text-[11px] font-mono px-2.5 py-1 bg-[#10b981]/20 text-[#08090a] rounded-lg font-bold">
-              37 3-13 * * 1-5 (UTC)
+              37 * * * * (UTC)
             </span>
           </div>
 
@@ -170,11 +170,11 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
             <div className="p-4 bg-white rounded-[18px] border border-[#b1ada1]/30 shadow-xs">
               <span className="text-[#08090a]/60 font-semibold block mb-1">Execution Schedule:</span>
               <div className="font-extrabold text-[#08090a] font-display">
-                Mon-Fri Hourly (9:00 AM – 7:00 PM IST)
+                Hourly 24/7 (Every hour @ :37 IST)
               </div>
               <div className="text-[11px] text-[#08090a]/60 mt-1 flex items-center gap-1 font-medium">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#10b981] stroke-[2]" />
-                <span>11 intra-day updates / day</span>
+                <span>24 runs / day (All 7 Days)</span>
               </div>
             </div>
 
@@ -189,7 +189,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                       hour: '2-digit',
                       minute: '2-digit',
                     })
-                  : 'Mon-Fri Hourly @ :37 (IST)'}
+                  : 'Hourly @ :37 (IST)'}
               </div>
               <div className="text-[11px] text-[#08090a]/60 mt-1 font-medium">
                 Last Run: {lastRun ? lastRun.toLocaleTimeString('en-IN') : 'Active'}

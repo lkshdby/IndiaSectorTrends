@@ -257,36 +257,11 @@ export async function performDaily7PMFetch(
 
 export function getNextHourlyRunTime(): Date {
   const now = new Date();
-  
-  // Find next hourly window (9:00 AM to 7:00 PM IST, Monday to Friday)
-  const istFormatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  
-  const parts = istFormatter.formatToParts(now);
-  const istHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
-  const istMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
-
   const next = new Date(now);
-  if (istHour < 9) {
-    // Today at 9:07 AM IST (3:37 UTC)
-    next.setMinutes(37);
-  } else if (istHour >= 19) {
-    // Tomorrow at 9:07 AM IST
-    next.setDate(next.getDate() + 1);
-    next.setMinutes(37);
-  } else {
-    // Next hour at :37
-    next.setHours(next.getHours() + (istMinute >= 37 ? 1 : 0));
-    next.setMinutes(37);
-  }
-
+  next.setHours(next.getHours() + (now.getMinutes() >= 37 ? 1 : 0));
+  next.setMinutes(37);
+  next.setSeconds(0);
+  next.setMilliseconds(0);
   return next;
 }
 
@@ -297,7 +272,7 @@ export function getSchedulerInfo(): SchedulerInfo {
 
   return {
     isActive: true,
-    schedule: '37 3-13 * * 1-5 (Hourly 9:07 AM - 7:07 PM IST, Mon-Fri)',
+    schedule: '37 * * * * (Hourly @ :37, 24/7)',
     timezone: 'Asia/Kolkata (IST)',
     lastRunTime,
     nextRunTime: nextRun.toISOString(),
@@ -314,7 +289,7 @@ let schedulerTimer: NodeJS.Timeout | null = null;
 export function startBackgroundCron() {
   if (schedulerTimer) return;
 
-  addLog('Background hourly market fetcher initialized (9:07 AM - 7:07 PM IST). Checking trigger schedule every 60 seconds.');
+  addLog('Background hourly market fetcher initialized (Hourly @ :37, 24/7). Checking trigger schedule every 60 seconds.');
 
   schedulerTimer = setInterval(() => {
     const now = new Date();
@@ -329,24 +304,20 @@ export function startBackgroundCron() {
       hour12: false,
     });
 
-    const day = now.getDay();
-    // Monday (1) to Friday (5)
-    if (day >= 1 && day <= 5) {
-      const parts = istFormatter.formatToParts(now);
-      const istHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
-      const istMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const parts = istFormatter.formatToParts(now);
+    const istHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
+    const istMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
 
-      // Hourly between 9 AM (09:00) and 7 PM (19:00) IST at :37
-      if (istHour >= 9 && istHour <= 19 && istMinute === 37) {
-        const todayStr = parts.find((p) => p.type === 'year')?.value + '-' +
-                         parts.find((p) => p.type === 'month')?.value + '-' +
-                         parts.find((p) => p.type === 'day')?.value;
+    // Hourly trigger at minute 37 (24/7)
+    if (istMinute === 37) {
+      const todayStr = parts.find((p) => p.type === 'year')?.value + '-' +
+                       parts.find((p) => p.type === 'month')?.value + '-' +
+                       parts.find((p) => p.type === 'day')?.value;
 
-        addLog(`[CRON TRIGGER ${istHour}:${istMinute.toString().padStart(2, '0')} IST] Scraping live Screener.in for ${todayStr}...`);
-        performDaily7PMFetch(todayStr, true).catch((err) => {
-          console.error('Scheduled scrape error:', err);
-        });
-      }
+      addLog(`[CRON TRIGGER ${istHour}:${istMinute.toString().padStart(2, '0')} IST] Scraping live Screener.in for ${todayStr}...`);
+      performDaily7PMFetch(todayStr, true).catch((err) => {
+        console.error('Scheduled scrape error:', err);
+      });
     }
   }, 60000);
 }

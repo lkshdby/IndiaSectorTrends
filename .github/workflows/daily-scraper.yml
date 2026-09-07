@@ -2,8 +2,8 @@ name: Hourly & Daily Screener Sector Trends Fetcher
 
 on:
   schedule:
-    # 03:37 UTC to 13:37 UTC corresponds to 09:07 AM IST to 07:07 PM (19:07) IST, Monday to Friday (Hourly)
-    - cron: '37 3-13 * * 1-5'
+    # Runs at minute 37 of every hour, every day (24/7)
+    - cron: '37 * * * *'
   workflow_dispatch: # Allows manual trigger from GitHub Actions tab
 
 permissions:
