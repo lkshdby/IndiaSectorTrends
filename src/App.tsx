@@ -24,6 +24,7 @@ import { ExportModal } from './components/ExportModal';
 import { SchedulerModal } from './components/SchedulerModal';
 import { MarketSummaryCards } from './components/MarketSummaryCards';
 import { LaunchpadDock } from './components/LaunchpadDock';
+import { IndexTrackerView } from './components/IndexTrackerView';
 import { Activity, AlertCircle, BarChart3, CheckCircle2, Table } from 'lucide-react';
 
 export default function App() {
@@ -48,6 +49,7 @@ export default function App() {
   const [sortBy, setSortBy] = useState<
     'value-desc' | 'value-asc' | 'change-desc' | 'change-asc' | 'alphabetical'
   >('change-desc');
+  const [viewMode, setViewMode] = useState<'indices' | 'macro'>('indices');
   const [mainViewMode, setMainViewMode] = useState<'worms' | 'bars'>('worms');
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -325,8 +327,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Main HabitWis3 Shell */}
-      <div className="w-full max-w-6xl bg-[#f4f3ee] rounded-none sm:rounded-[36px] shadow-2xl overflow-hidden border-0 sm:border border-[#b1ada1]/40 flex flex-col grow pb-24 relative">
+      {/* Main Shell */}
+      <div className={`w-full ${viewMode === 'indices' ? 'max-w-7xl' : 'max-w-6xl'} bg-[#f4f3ee] rounded-none sm:rounded-[36px] shadow-2xl overflow-hidden border-0 sm:border border-[#b1ada1]/40 flex flex-col grow pb-24 relative`}>
         {/* Main Header */}
         <Header
           snapshots={snapshots}
@@ -341,92 +343,102 @@ export default function App() {
           onOpenSchedulerModal={() => setIsSchedulerModalOpen(true)}
           nextAutoSyncLabel={nextAutoSyncLabel}
           lastAutoSyncTime={lastAutoSyncTime}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
 
-        {/* App Body Container - Chart View Paramount */}
-        <main className="w-full px-3 sm:px-5 lg:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 grow">
-          {/* Unified Compact Control Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-[#b1ada1]/35 shadow-2xs">
-            {/* Left: View Switcher (Worms vs Ranked Bars) */}
-            <div className="flex items-center gap-1 bg-[#f4f3ee] p-0.5 rounded-xl border border-[#b1ada1]/30 self-start sm:self-auto">
-              <button
-                id="view-worms-btn"
-                onClick={() => setMainViewMode('worms')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all font-display cursor-pointer ${
-                  mainViewMode === 'worms'
-                    ? 'bg-[#08090a] text-white shadow-2xs'
-                    : 'text-[#08090a]/70 hover:text-[#08090a] hover:bg-white/60'
-                }`}
-              >
-                <Activity className={`w-3.5 h-3.5 stroke-[2.2] ${mainViewMode === 'worms' ? 'text-[#10b981]' : ''}`} />
-                <span>188 Worms</span>
-              </button>
+        {/* App Body Container */}
+        {viewMode === 'indices' ? (
+          <main className="w-full px-3 sm:px-5 lg:px-6 py-3 sm:py-4 flex-1 flex flex-col">
+            <IndexTrackerView onShowToast={showToast} />
+          </main>
+        ) : (
+          <main className="w-full px-3 sm:px-5 lg:px-6 py-3 sm:py-4 space-y-3 sm:space-y-4 grow">
+            {/* Unified Compact Control Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-[#b1ada1]/35 shadow-2xs">
+              {/* Left: View Switcher (Worms vs Ranked Bars) */}
+              <div className="flex items-center gap-1 bg-[#f4f3ee] p-0.5 rounded-xl border border-[#b1ada1]/30 self-start sm:self-auto">
+                <button
+                  id="view-worms-btn"
+                  onClick={() => setMainViewMode('worms')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all font-display cursor-pointer ${
+                    mainViewMode === 'worms'
+                      ? 'bg-[#08090a] text-white shadow-2xs'
+                      : 'text-[#08090a]/70 hover:text-[#08090a] hover:bg-white/60'
+                  }`}
+                >
+                  <Activity className={`w-3.5 h-3.5 stroke-[2.2] ${mainViewMode === 'worms' ? 'text-[#10b981]' : ''}`} />
+                  <span>188 Worms</span>
+                </button>
 
-              <button
-                id="view-bars-btn"
-                onClick={() => setMainViewMode('bars')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all font-display cursor-pointer ${
-                  mainViewMode === 'bars'
-                    ? 'bg-[#08090a] text-white shadow-2xs'
-                    : 'text-[#08090a]/70 hover:text-[#08090a] hover:bg-white/60'
-                }`}
-              >
-                <BarChart3 className="w-3.5 h-3.5 stroke-[2]" />
-                <span>Ranked Bars</span>
-              </button>
+                <button
+                  id="view-bars-btn"
+                  onClick={() => setMainViewMode('bars')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all font-display cursor-pointer ${
+                    mainViewMode === 'bars'
+                      ? 'bg-[#08090a] text-white shadow-2xs'
+                      : 'text-[#08090a]/70 hover:text-[#08090a] hover:bg-white/60'
+                  }`}
+                >
+                  <BarChart3 className="w-3.5 h-3.5 stroke-[2]" />
+                  <span>Ranked Bars</span>
+                </button>
+              </div>
+
+              {/* Right: Indicator Dropdown + Resolution D/W/M + Sort */}
+              <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
+                <MetricSelector
+                  selectedMetric={selectedMetric}
+                  onSelectMetric={(m) => startTransition(() => setSelectedMetric(m))}
+                />
+                <ResolutionSelector
+                  resolution={resolution}
+                  onSelectResolution={(r) => startTransition(() => setResolution(r))}
+                  sortBy={sortBy}
+                  onSelectSortBy={setSortBy}
+                />
+              </div>
             </div>
 
-            {/* Right: Indicator Dropdown + Resolution D/W/M + Sort */}
-            <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
-              <MetricSelector
-                selectedMetric={selectedMetric}
-                onSelectMetric={(m) => startTransition(() => setSelectedMetric(m))}
-              />
-              <ResolutionSelector
-                resolution={resolution}
-                onSelectResolution={(r) => startTransition(() => setResolution(r))}
-                sortBy={sortBy}
-                onSelectSortBy={setSortBy}
-              />
-            </div>
-          </div>
-
-          {/* Primary Paramount Visualization Area */}
-          {mainViewMode === 'worms' ? (
-            <section aria-label="188 Multi-Line Sector Worms Chart" className="w-full">
-              <SectorWormsChart
-                snapshots={snapshots}
-                selectedMetric={selectedMetric}
-                resolution={resolution}
-                selectedDate={selectedDate}
-                sortBy={sortBy}
-                onSelectSector={(sec) => setSelectedSector(sec)}
-              />
-            </section>
-          ) : (
-            <section aria-label="Sector Bar Chart Dashboard" className="w-full">
-              <SectorBarChart
-                items={comparison.items}
-                selectedMetric={selectedMetric}
-                resolution={resolution}
-                selectedDate={selectedDate}
-                previousDate={comparison.previousSnapshot?.date || null}
-                onSelectSector={(sec) => setSelectedSector(sec)}
-                sortBy={sortBy}
-              />
-            </section>
-          )}
-        </main>
+            {/* Primary Paramount Visualization Area */}
+            {mainViewMode === 'worms' ? (
+              <section aria-label="188 Multi-Line Sector Worms Chart" className="w-full">
+                <SectorWormsChart
+                  snapshots={snapshots}
+                  selectedMetric={selectedMetric}
+                  resolution={resolution}
+                  selectedDate={selectedDate}
+                  sortBy={sortBy}
+                  onSelectSector={(sec) => setSelectedSector(sec)}
+                />
+              </section>
+            ) : (
+              <section aria-label="Sector Bar Chart Dashboard" className="w-full">
+                <SectorBarChart
+                  items={comparison.items}
+                  selectedMetric={selectedMetric}
+                  resolution={resolution}
+                  selectedDate={selectedDate}
+                  previousDate={comparison.previousSnapshot?.date || null}
+                  onSelectSector={(sec) => setSelectedSector(sec)}
+                  sortBy={sortBy}
+                />
+              </section>
+            )}
+          </main>
+        )}
 
         {/* Footer */}
         <footer className="border-t border-[#b1ada1]/30 bg-white/80 backdrop-blur-xs py-4 mt-auto">
           <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#08090a]/60 font-medium">
             <div>
-              <span className="font-bold text-[#08090a] font-display">Industry Trends</span> •
-              Scheduled 7:00 PM IST Weekday Scraper
+              <span className="font-bold text-[#08090a] font-display">Sector Tracker</span> •
+              Constituent Stocks & Sector Rotation Analytics
             </div>
             <div>
-              Tracking {comparison.items.length} Industries • Multi-Resolution Analysis (Daily, Weekly, Monthly)
+              {viewMode === 'indices'
+                ? 'Pre-Built & Custom Equal-Weighted Industry Indices'
+                : `Tracking ${comparison.items.length} Industries • Multi-Resolution Analysis`}
             </div>
           </div>
         </footer>
@@ -434,8 +446,10 @@ export default function App() {
 
       {/* Fixed White Bottom Launchpad Dock */}
       <LaunchpadDock
+        viewMode={viewMode}
+        onSelectViewMode={setViewMode}
         mainViewMode={mainViewMode}
-        onSelectViewMode={setMainViewMode}
+        onSelectMainViewMode={setMainViewMode}
         onOpenSchedulerModal={() => setIsSchedulerModalOpen(true)}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onTriggerFetch={handleTriggerFetch}

@@ -1,9 +1,11 @@
 import React from 'react';
-import { Activity, BarChart3, Clock, Database, RefreshCw, Zap } from 'lucide-react';
+import { Activity, BarChart3, Clock, Database, Layers, Zap } from 'lucide-react';
 
 interface LaunchpadDockProps {
+  viewMode: 'indices' | 'macro';
+  onSelectViewMode: (mode: 'indices' | 'macro') => void;
   mainViewMode: 'worms' | 'bars';
-  onSelectViewMode: (mode: 'worms' | 'bars') => void;
+  onSelectMainViewMode: (mode: 'worms' | 'bars') => void;
   onOpenSchedulerModal: () => void;
   onOpenExportModal: () => void;
   onTriggerFetch: () => void;
@@ -11,8 +13,10 @@ interface LaunchpadDockProps {
 }
 
 export const LaunchpadDock: React.FC<LaunchpadDockProps> = ({
-  mainViewMode,
+  viewMode,
   onSelectViewMode,
+  mainViewMode,
+  onSelectMainViewMode,
   onOpenSchedulerModal,
   onOpenExportModal,
   onTriggerFetch,
@@ -21,26 +25,47 @@ export const LaunchpadDock: React.FC<LaunchpadDockProps> = ({
   return (
     <nav
       aria-label="Bottom Quick Launchpad"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-lg bg-white/95 backdrop-blur-md border border-[#b1ada1]/40 rounded-[28px] p-2 shadow-xl flex items-center justify-around font-display"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-xl bg-white/95 backdrop-blur-md border border-[#b1ada1]/40 rounded-[28px] p-2 shadow-xl flex items-center justify-around font-display"
     >
+      {/* Index & Stocks Tracker */}
+      <button
+        onClick={() => onSelectViewMode('indices')}
+        className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-[20px] transition-all cursor-pointer ${
+          viewMode === 'indices'
+            ? 'bg-[#2563eb] text-white shadow-xs scale-102'
+            : 'text-[#08090a]/60 hover:text-[#08090a] hover:bg-[#f4f3ee]'
+        }`}
+      >
+        <Layers className="w-4 h-4 stroke-[2.2]" />
+        <span className="text-[10px] font-extrabold tracking-tight mt-0.5 whitespace-nowrap">
+          Index Tracker
+        </span>
+      </button>
+
       {/* 188 Worms Tab */}
       <button
-        onClick={() => onSelectViewMode('worms')}
+        onClick={() => {
+          onSelectViewMode('macro');
+          onSelectMainViewMode('worms');
+        }}
         className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-[20px] transition-all cursor-pointer ${
-          mainViewMode === 'worms'
+          viewMode === 'macro' && mainViewMode === 'worms'
             ? 'bg-[#08090a] text-white shadow-xs scale-102'
             : 'text-[#08090a]/60 hover:text-[#08090a] hover:bg-[#f4f3ee]'
         }`}
       >
-        <Activity className={`w-4 h-4 stroke-[2.2] ${mainViewMode === 'worms' ? 'text-[#10b981]' : ''}`} />
+        <Activity className={`w-4 h-4 stroke-[2.2] ${viewMode === 'macro' && mainViewMode === 'worms' ? 'text-[#10b981]' : ''}`} />
         <span className="text-[10px] font-extrabold tracking-tight mt-0.5 whitespace-nowrap">188 Worms</span>
       </button>
 
       {/* Ranked Bars Tab */}
       <button
-        onClick={() => onSelectViewMode('bars')}
+        onClick={() => {
+          onSelectViewMode('macro');
+          onSelectMainViewMode('bars');
+        }}
         className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-[20px] transition-all cursor-pointer ${
-          mainViewMode === 'bars'
+          viewMode === 'macro' && mainViewMode === 'bars'
             ? 'bg-[#08090a] text-white shadow-xs scale-102'
             : 'text-[#08090a]/60 hover:text-[#08090a] hover:bg-[#f4f3ee]'
         }`}
@@ -67,7 +92,7 @@ export const LaunchpadDock: React.FC<LaunchpadDockProps> = ({
         className="flex flex-col items-center justify-center py-1.5 px-3 rounded-[20px] transition-all cursor-pointer text-[#08090a]/70 hover:text-[#08090a] hover:bg-[#f4f3ee]"
       >
         <Clock className="w-4 h-4 stroke-[2.2]" />
-        <span className="text-[10px] font-extrabold tracking-tight mt-0.5 whitespace-nowrap">7 PM Cron</span>
+        <span className="text-[10px] font-extrabold tracking-tight mt-0.5 whitespace-nowrap">Sync Schedule</span>
       </button>
 
       {/* Export / Backup Modal Opener */}

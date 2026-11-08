@@ -22,6 +22,8 @@ interface HeaderProps {
   onOpenSchedulerModal: () => void;
   nextAutoSyncLabel?: string;
   lastAutoSyncTime?: string | null;
+  viewMode: 'indices' | 'macro';
+  onViewModeChange: (mode: 'indices' | 'macro') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -37,50 +39,74 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSchedulerModal,
   nextAutoSyncLabel,
   lastAutoSyncTime,
+  viewMode,
+  onViewModeChange,
 }) => {
   return (
     <header className="border-b border-[#b1ada1]/30 bg-white/95 backdrop-blur-md sticky top-0 z-30 px-3 sm:px-5 py-2.5">
       <div className="flex items-center justify-between gap-3">
-        {/* Left: Brand & Date Scrubber */}
+        {/* Left: Brand & View Switcher */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-[#A2AB73] overflow-hidden border border-[#A2AB73]/60 shadow-xs shrink-0 flex items-center justify-center">
-            <BrandIcon className="w-full h-full" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] bg-[#2563eb] overflow-hidden border border-[#2563eb]/60 shadow-xs shrink-0 flex items-center justify-center text-white font-extrabold text-sm">
+            ST
           </div>
 
           <div className="flex items-center gap-2 min-w-0">
             <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-[#08090a] font-display truncate">
-              Industry Trends
+              Sector Tracker
             </h1>
-            <span className="hidden md:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#10b981]/15 text-[#10b981] whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
-              188 Sectors
-            </span>
           </div>
 
-          {/* Date Picker Selector */}
-          <div className="flex items-center bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-lg px-2 py-1 text-xs text-[#08090a] shadow-2xs h-8 ml-1">
-            <Calendar className="w-3.5 h-3.5 text-[#08090a]/60 mr-1.5 shrink-0 stroke-[2]" />
-            <select
-              value={selectedDate}
-              onChange={(e) => onSelectDate(e.target.value)}
-              className="bg-transparent text-[11px] sm:text-xs text-[#08090a] font-bold focus:outline-hidden cursor-pointer pr-1 font-display max-w-[130px] sm:max-w-[170px] truncate"
-              title="Select Historical Snapshot Date"
+          {/* Primary View Switcher Tabs */}
+          <div className="hidden sm:inline-flex p-0.5 bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-xl">
+            <button
+              onClick={() => onViewModeChange('indices')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer font-display ${
+                viewMode === 'indices'
+                  ? 'bg-white text-[#08090a] shadow-xs'
+                  : 'text-[#08090a]/60 hover:text-[#08090a]'
+              }`}
             >
-              {snapshots.slice().reverse().map((s, idx) => {
-                const d = new Date(s.date);
-                const formatted = d.toLocaleDateString('en-IN', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                });
-                return (
-                  <option key={s.date} value={s.date}>
-                    {idx === 0 ? '🟢 ' : ''}{formatted} ({s.date}){idx === 0 ? ' (Latest)' : ''}
-                  </option>
-                );
-              })}
-            </select>
+              Index & Stocks Tracker
+            </button>
+            <button
+              onClick={() => onViewModeChange('macro')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer font-display ${
+                viewMode === 'macro'
+                  ? 'bg-white text-[#08090a] shadow-xs'
+                  : 'text-[#08090a]/60 hover:text-[#08090a]'
+              }`}
+            >
+              188 Macro Sectors
+            </button>
           </div>
+
+          {/* Date Picker Selector (for Macro mode) */}
+          {viewMode === 'macro' && (
+            <div className="flex items-center bg-[#f4f3ee] border border-[#b1ada1]/40 rounded-lg px-2 py-1 text-xs text-[#08090a] shadow-2xs h-8 ml-1">
+              <Calendar className="w-3.5 h-3.5 text-[#08090a]/60 mr-1.5 shrink-0 stroke-[2]" />
+              <select
+                value={selectedDate}
+                onChange={(e) => onSelectDate(e.target.value)}
+                className="bg-transparent text-[11px] sm:text-xs text-[#08090a] font-bold focus:outline-hidden cursor-pointer pr-1 font-display max-w-[130px] sm:max-w-[170px] truncate"
+                title="Select Historical Snapshot Date"
+              >
+                {snapshots.slice().reverse().map((s, idx) => {
+                  const d = new Date(s.date);
+                  const formatted = d.toLocaleDateString('en-IN', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  });
+                  return (
+                    <option key={s.date} value={s.date}>
+                      {idx === 0 ? '🟢 ' : ''}{formatted} ({s.date}){idx === 0 ? ' (Latest)' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Right: Simple, crisp icon action buttons & auto-sync indicator */}
