@@ -63,39 +63,17 @@
   }
 }
 
-/* Explicit forced visible and draggable scrollbar for the sector/index list */
+/* Internal scrollable list container */
 .scrollable-index-list {
-  flex: 1 1 auto !important;
-  height: calc(100% - 275px) !important;
-  max-height: calc(100% - 275px) !important;
-  min-height: 200px !important;
+  height: 100% !important;
   overflow-y: scroll !important;
   overflow-x: hidden !important;
-  scrollbar-width: auto !important;
-  scrollbar-color: #08090a #eceae3 !important;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none !important;
 }
 
 .scrollable-index-list::-webkit-scrollbar {
-  width: 9px !important;
-  display: block !important;
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
 }
-
-.scrollable-index-list::-webkit-scrollbar-track {
-  background: #eceae3 !important;
-  border-radius: 9999px;
-  border: 1px solid rgba(177, 173, 161, 0.35);
-}
-
-.scrollable-index-list::-webkit-scrollbar-thumb {
-  background: #08090a !important;
-  border-radius: 9999px;
-  min-height: 48px !important;
-  border: 2px solid #eceae3;
-}
-
-.scrollable-index-list::-webkit-scrollbar-thumb:hover {
-  background: #2563eb !important;
-}
-
-

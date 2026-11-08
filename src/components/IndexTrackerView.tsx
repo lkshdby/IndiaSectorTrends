@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -175,6 +175,92 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     setSelectedSectorId(sectorId);
     setSelectedStockTicker(ticker);
   };
+
+  // Dedicated Custom Permanent Scrollbar State & Controls (100% visible across all OS/browsers)
+  const sectorListRef = useRef<HTMLDivElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0); // 0 to 1
+  const [thumbHeightPct, setThumbHeightPct] = useState(25); // percentage
+  const isDraggingScrollRef = useRef(false);
+  const dragStartYRef = useRef(0);
+  const dragStartScrollTopRef = useRef(0);
+
+  const updateScrollMetrics = () => {
+    if (!sectorListRef.current) return;
+    const el = sectorListRef.current;
+    const scrollRange = el.scrollHeight - el.clientHeight;
+    if (scrollRange <= 0) {
+      setScrollProgress(0);
+      setThumbHeightPct(100);
+      return;
+    }
+    const ratio = el.clientHeight / el.scrollHeight;
+    const heightPct = Math.max(14, Math.min(80, ratio * 100));
+    setThumbHeightPct(heightPct);
+    const progress = Math.max(0, Math.min(1, el.scrollTop / scrollRange));
+    setScrollProgress(progress);
+  };
+
+  const handleListScroll = () => {
+    updateScrollMetrics();
+  };
+
+  const scrollToTop = () => {
+    if (sectorListRef.current) {
+      sectorListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const scrollToBottom = () => {
+    if (sectorListRef.current) {
+      sectorListRef.current.scrollTo({
+        top: sectorListRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!sectorListRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickY = e.clientY - rect.top;
+    const clickRatio = Math.max(0, Math.min(1, clickY / rect.height));
+    const targetScroll = clickRatio * (sectorListRef.current.scrollHeight - sectorListRef.current.clientHeight);
+    sectorListRef.current.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  };
+
+  const handleThumbMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    isDraggingScrollRef.current = true;
+    dragStartYRef.current = e.clientY;
+    dragStartScrollTopRef.current = sectorListRef.current ? sectorListRef.current.scrollTop : 0;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDraggingScrollRef.current || !sectorListRef.current) return;
+      const deltaY = moveEvent.clientY - dragStartYRef.current;
+      const el = sectorListRef.current;
+      const scrollRange = el.scrollHeight - el.clientHeight;
+      const trackHeight = el.clientHeight || 400;
+      const scrollDelta = (deltaY / trackHeight) * scrollRange;
+      el.scrollTop = dragStartScrollTopRef.current + scrollDelta;
+    };
+
+    const onMouseUp = () => {
+      isDraggingScrollRef.current = false;
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateScrollMetrics();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [expandedSectors, activeTab]);
 
   // Find currently selected sector or benchmark
   const currentSector = useMemo<SectorIndexData>(() => {
@@ -626,7 +712,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Table Header: Name ⇅ | 1D | 1W ⌄ */}
+        {/* Table Header: Name ⇅ | Quick Nav | 1D | 1W ⌄ */}
         <div className="px-3.5 py-2 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9] shrink-0">
           <button
             onClick={() => toggleSort('name')}
@@ -636,8 +722,26 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             <span className="text-[10px]">⇅</span>
           </button>
 
-          <div className="flex items-center gap-4 pr-1">
-            <span className="text-[9px] text-[#2563eb] font-mono font-medium hidden sm:inline">Scroll ↓</span>
+          <div className="flex items-center gap-2 pr-1">
+            {/* Quick 1-Click Jump to Top / Bottom */}
+            <div className="flex items-center gap-1 bg-white border border-[#b1ada1]/40 rounded-md px-1.5 py-0.5 text-[10px]">
+              <button
+                onClick={scrollToTop}
+                title="Scroll to Top"
+                className="hover:text-[#2563eb] font-bold cursor-pointer px-0.5"
+              >
+                Top ↑
+              </button>
+              <span className="text-[#b1ada1]/60">|</span>
+              <button
+                onClick={scrollToBottom}
+                title="Scroll to Sector #46 (Bottom)"
+                className="hover:text-[#2563eb] font-bold cursor-pointer px-0.5 text-[#2563eb]"
+              >
+                End (46) ↓
+              </button>
+            </div>
+
             <button
               onClick={() => toggleSort('1d')}
               className="hover:text-[#08090a] cursor-pointer"
@@ -654,8 +758,13 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Scrollable Sector Rows */}
-        <div className="overflow-y-scroll divide-y divide-[#b1ada1]/15 scrollable-index-list">
+        {/* Scrollable Sector Rows with 100% Visible Permanent Custom Scrollbar */}
+        <div className="flex-1 min-h-0 flex relative overflow-hidden bg-white">
+          <div
+            ref={sectorListRef}
+            onScroll={handleListScroll}
+            className="flex-1 h-full overflow-y-auto divide-y divide-[#b1ada1]/15 scrollable-index-list"
+          >
           {activeTab === 'prebuilt' ? (
             filteredIndices.map((sector) => {
               const isSelected = selectedSectorId === sector.id && !selectedStockTicker;
@@ -823,7 +932,28 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             </div>
           )}
         </div>
+
+        {/* 100% PERMANENT VISIBLE CUSTOM SCROLLBAR TRACK & THUMB */}
+        <div
+          onClick={handleTrackClick}
+          className="w-3.5 h-full bg-[#f4f3ee] border-l border-[#b1ada1]/30 relative shrink-0 cursor-pointer select-none group"
+          title="Click or drag to scroll through all 46 sectors"
+        >
+          {/* Subtle guide line in center */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-2 bottom-2 w-0.5 bg-[#b1ada1]/30" />
+
+          {/* Draggable Solid Charcoal Thumb */}
+          <div
+            onMouseDown={handleThumbMouseDown}
+            style={{
+              top: `${scrollProgress * (100 - thumbHeightPct)}%`,
+              height: `${thumbHeightPct}%`,
+            }}
+            className="absolute left-0.5 right-0.5 rounded-full bg-[#08090a] group-hover:bg-[#2563eb] transition-colors shadow-xs cursor-grab active:cursor-grabbing z-10"
+          />
+        </div>
       </div>
+    </div>
 
       {/* ================= RIGHT MAIN CANVAS (DEFINITIVE PROOF & BENCHMARK COMPARISONS) ================= */}
       <div className="flex-1 flex flex-col bg-white overflow-hidden lg:h-full min-w-0">
