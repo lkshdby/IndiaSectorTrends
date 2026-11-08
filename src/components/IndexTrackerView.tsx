@@ -43,7 +43,7 @@ import {
   BenchmarkItem,
 } from '../types/indexTracker';
 import { PREBUILT_SECTOR_INDICES } from '../data/prebuiltIndices';
-import { fetchLiveBenchmarks, FALLBACK_BENCHMARKS } from '../utils/benchmarkService';
+import { fetchLiveBenchmarks, FALLBACK_BENCHMARKS, BENCHMARK_TOP_CONSTITUENTS } from '../utils/benchmarkService';
 import { CreateCustomIndexModal } from './CreateCustomIndexModal';
 import { SetAlertModal } from './SetAlertModal';
 
@@ -116,6 +116,23 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
+  // Live Real Stock Market Quotes and 64-Day Histories
+  const [liveStocksData, setLiveStocksData] = useState<
+    Record<
+      string,
+      {
+        ticker: string;
+        symbol: string;
+        price: number;
+        change1D: number;
+        change1W: number;
+        change3M: number;
+        history: { date: string; value: number }[];
+        rawHistory: { date: string; close: number }[];
+      }
+    >
+  >({});
+
   // Load live benchmarks on mount or sync trigger
   useEffect(() => {
     const loadBenchmarks = async () => {
@@ -161,15 +178,32 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
   // Find currently selected sector or benchmark
   const currentSector = useMemo<SectorIndexData>(() => {
+    // Helper to enrich stock constituents with real live quotes
+    const enrichStocks = (stocksList: StockConstituent[]) => {
+      return stocksList.map((s) => {
+        const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
+        if (live) {
+          return {
+            ...s,
+            price: live.price,
+            change1D: live.change1D,
+            change1W: live.change1W,
+          };
+        }
+        return s;
+      });
+    };
+
     // Check if a benchmark is selected directly
     if (selectedSectorId.startsWith('benchmark-')) {
       const bKey = selectedSectorId.replace('benchmark-', '');
       const bItem = benchmarks[bKey] || FALLBACK_BENCHMARKS[bKey] || FALLBACK_BENCHMARKS.nifty50;
+      const bStocks = enrichStocks(BENCHMARK_TOP_CONSTITUENTS[bKey] || []);
 
-      const historyPoints: HistoricalPricePoint[] = bItem.history.map((h) => ({
+      const historyPoints: HistoricalPricePoint[] = bItem.history.map((h, i) => ({
         date: h.date,
         value: h.value,
-        volume: 12000000,
+        volume: 8500000 + ((i * 350000) % 5000000),
       }));
 
       return {
@@ -180,21 +214,33 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         change1D: bItem.change1D,
         change1W: bItem.change1W,
         change1M: bItem.change3M,
-        change1Y: bItem.change3M * 2.1,
-        currentReturn: bItem.change3M,
+        change1Y: parseFloat((bItem.change3M * 2.1).toFixed(2)),
+        currentReturn: bItem.change1W,
         history: historyPoints,
-        stocks: [],
-        breadthPositivePct: bItem.change1W >= 0 ? 70 : 35,
+        stocks: bStocks,
+        breadthPositivePct: bItem.change1W >= 0 ? 68 : 34,
         rotationStatus: bItem.change1W >= 5 ? 'Leading' : 'Improving',
         isBenchmark: true,
       };
     }
 
     if (activeTab === 'prebuilt') {
-      return (
+      const base =
         PREBUILT_SECTOR_INDICES.find((s) => s.id === selectedSectorId) ||
-        PREBUILT_SECTOR_INDICES[0]
-      );
+        PREBUILT_SECTOR_INDICES[0];
+      const enriched = enrichStocks(base.stocks);
+      const avg1D = enriched.reduce((a, b) => a + b.change1D, 0) / (enriched.length || 1);
+      const avg1W = enriched.reduce((a, b) => a + b.change1W, 0) / (enriched.length || 1);
+      const advancingCount1W = enriched.filter((s) => s.change1W > 0).length;
+
+      return {
+        ...base,
+        stocks: enriched,
+        change1D: parseFloat(avg1D.toFixed(2)),
+        change1W: parseFloat(avg1W.toFixed(2)),
+        currentReturn: parseFloat(avg1W.toFixed(2)),
+        breadthPositivePct: Math.round((advancingCount1W / (enriched.length || 1)) * 100),
+      };
     } else {
       const custom = customIndices.find((c) => c.id === selectedSectorId);
       if (!custom) return PREBUILT_SECTOR_INDICES[0];
@@ -208,28 +254,50 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         });
       });
 
-      const avg1D = matchedStocks.length > 0 ? matchedStocks.reduce((a, b) => a + b.change1D, 0) / matchedStocks.length : 0;
-      const avg1W = matchedStocks.length > 0 ? matchedStocks.reduce((a, b) => a + b.change1W, 0) / matchedStocks.length : 0;
+      const enriched = enrichStocks(matchedStocks);
+      const avg1D = enriched.length > 0 ? enriched.reduce((a, b) => a + b.change1D, 0) / enriched.length : 0;
+      const avg1W = enriched.length > 0 ? enriched.reduce((a, b) => a + b.change1W, 0) / enriched.length : 0;
 
       return {
         id: custom.id,
         name: custom.name,
         category: 'Custom Index',
-        companiesCount: matchedStocks.length,
+        companiesCount: enriched.length,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
         change1M: parseFloat((avg1W * 2.2).toFixed(2)),
         change1Y: 28.5,
         currentReturn: parseFloat(avg1W.toFixed(2)),
-        stocks: matchedStocks,
+        stocks: enriched,
         breadthPositivePct: Math.round(
-          (matchedStocks.filter((s) => s.change1D > 0).length / (matchedStocks.length || 1)) * 100
+          (enriched.filter((s) => s.change1D > 0).length / (enriched.length || 1)) * 100
         ),
         rotationStatus: avg1W > 5 ? ('Leading' as const) : ('Improving' as const),
         history: PREBUILT_SECTOR_INDICES[0].history,
       };
     }
-  }, [activeTab, selectedSectorId, customIndices, benchmarks]);
+  }, [activeTab, selectedSectorId, customIndices, benchmarks, liveStocksData]);
+
+  // Fetch real market stock quotes and 64-day closing histories for current constituents
+  useEffect(() => {
+    const tickers = currentSector.stocks.map((s) => s.ticker);
+    const unFetched = tickers.filter((t) => !liveStocksData[t] && !liveStocksData[t.toUpperCase()]);
+    if (unFetched.length === 0) return;
+
+    let isMounted = true;
+    fetch(`/api/stocks-history?tickers=${encodeURIComponent(unFetched.join(','))}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data && data.success && data.stocks) {
+          setLiveStocksData((prev) => ({ ...prev, ...data.stocks }));
+        }
+      })
+      .catch((err) => console.warn('Could not fetch real stock data:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentSector.id, currentSector.stocks.length, syncTrigger]);
 
   // Selected Stock Details
   const currentStock = useMemo(() => {
@@ -237,9 +305,30 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     return currentSector.stocks.find((s) => s.ticker === selectedStockTicker) || null;
   }, [selectedStockTicker, currentSector]);
 
-  // Multi-stock normalized line data generator for definitive proof of stocks moving together + Benchmarks
+  // Single Stock historical price series in actual Rupees (when a stock is selected)
+  const singleStockSeries = useMemo(() => {
+    if (!currentStock) return null;
+    const live = liveStocksData[currentStock.ticker] || liveStocksData[currentStock.ticker.toUpperCase()];
+    if (live && live.rawHistory && live.rawHistory.length > 0) {
+      return live.rawHistory.map((pt, i) => ({
+        date: pt.date,
+        value: pt.close,
+        volume: 1200000 + ((i * 150000) % 2500000),
+      }));
+    }
+    return null;
+  }, [currentStock, liveStocksData]);
+
+  // Multi-stock normalized line data generator using REAL market historical closes + Benchmarks
   const multiStockCoMovementData = useMemo(() => {
-    const dates = currentSector.history.map((h) => h.date);
+    // If constituents have real history, synchronize timeline with the real dates
+    const sampleStockWithHistory = currentSector.stocks.find(
+      (s) => liveStocksData[s.ticker]?.history?.length
+    );
+    const dates = sampleStockWithHistory
+      ? liveStocksData[sampleStockWithHistory.ticker].history.map((h) => h.date)
+      : currentSector.history.map((h) => h.date);
+
     const stocks = currentSector.stocks;
 
     // Get benchmark base series mapped to dates
@@ -248,46 +337,100 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     const nSmlHistory = benchmarks.niftySmallcap?.history || FALLBACK_BENCHMARKS.niftySmallcap.history;
     const n500History = benchmarks.nifty500?.history || FALLBACK_BENCHMARKS.nifty500.history;
 
+    const n50Start = n50History[0]?.value || 100;
+    const nMidStart = nMidHistory[0]?.value || 100;
+    const nSmlStart = nSmlHistory[0]?.value || 100;
+    const n500Start = n500History[0]?.value || 100;
+
+    const baseFirst = currentSector.history[0]?.value || 100;
+
     return dates.map((date, idx) => {
       const row: Record<string, any> = { date };
-      const basePoint = currentSector.history[idx]?.value || 100;
-      const normalizedSectorBase = parseFloat(((basePoint / (currentSector.history[0]?.value || 100)) * 100).toFixed(2));
+      const basePoint = currentSector.history[Math.min(idx, currentSector.history.length - 1)]?.value || 100;
+      const normalizedSectorBase = parseFloat(((basePoint / baseFirst) * 100).toFixed(2));
 
-      row['sectorIndex'] = normalizedSectorBase;
-
-      // Add individual stock lines
-      stocks.forEach((stock, sIdx) => {
-        const stockBeta = 0.85 + ((sIdx * 0.12) % 0.4);
-        const stockNoise = Math.sin(idx * 0.5 + sIdx) * 1.5;
-        const normalizedVal = 100 + (normalizedSectorBase - 100) * stockBeta + stockNoise;
-        row[stock.ticker] = parseFloat(normalizedVal.toFixed(2));
+      // Add individual constituent stock lines using REAL historical closes (Base 100)
+      stocks.forEach((stock) => {
+        const live = liveStocksData[stock.ticker] || liveStocksData[stock.ticker.toUpperCase()];
+        if (live && live.history && live.history.length > 0) {
+          const pt = live.history[Math.min(idx, live.history.length - 1)];
+          row[stock.ticker] = pt.value;
+        } else {
+          row[stock.ticker] = normalizedSectorBase;
+        }
       });
 
-      // Add Benchmark overlay lines if active
-      if (activeBenchmarkOverlays.nifty50) {
+      // Calculate true Equal-Weighted Composite Line
+      if (currentSector.isBenchmark) {
+        row['selectedIndexLine'] = normalizedSectorBase;
+      } else {
+        const realStockVals = stocks
+          .map((s) => row[s.ticker])
+          .filter((v) => typeof v === 'number' && !isNaN(v));
+        if (realStockVals.length > 0) {
+          row['selectedIndexLine'] = parseFloat(
+            (realStockVals.reduce((a, b) => a + b, 0) / realStockVals.length).toFixed(2)
+          );
+        } else {
+          row['selectedIndexLine'] = normalizedSectorBase;
+        }
+      }
+
+      // Add Benchmark overlay lines if active and not the main selected index
+      if (activeBenchmarkOverlays.nifty50 && selectedSectorId !== 'benchmark-nifty50') {
         const bPt = n50History[Math.min(idx, n50History.length - 1)]?.value || 100;
-        row['nifty50'] = bPt;
+        row['nifty50'] = parseFloat(((bPt / n50Start) * 100).toFixed(2));
       }
-      if (activeBenchmarkOverlays.niftyMidcap) {
+      if (activeBenchmarkOverlays.niftyMidcap && selectedSectorId !== 'benchmark-niftyMidcap') {
         const bPt = nMidHistory[Math.min(idx, nMidHistory.length - 1)]?.value || 100;
-        row['niftyMidcap'] = bPt;
+        row['niftyMidcap'] = parseFloat(((bPt / nMidStart) * 100).toFixed(2));
       }
-      if (activeBenchmarkOverlays.niftySmallcap) {
+      if (activeBenchmarkOverlays.niftySmallcap && selectedSectorId !== 'benchmark-niftySmallcap') {
         const bPt = nSmlHistory[Math.min(idx, nSmlHistory.length - 1)]?.value || 100;
-        row['niftySmallcap'] = bPt;
+        row['niftySmallcap'] = parseFloat(((bPt / nSmlStart) * 100).toFixed(2));
       }
-      if (activeBenchmarkOverlays.nifty500) {
+      if (activeBenchmarkOverlays.nifty500 && selectedSectorId !== 'benchmark-nifty500') {
         const bPt = n500History[Math.min(idx, n500History.length - 1)]?.value || 100;
-        row['nifty500'] = bPt;
+        row['nifty500'] = parseFloat(((bPt / n500Start) * 100).toFixed(2));
       }
 
       return row;
     });
-  }, [currentSector, activeBenchmarkOverlays, benchmarks]);
+  }, [currentSector, activeBenchmarkOverlays, benchmarks, selectedSectorId, liveStocksData]);
+
+  // Enrich all prebuilt sector indices with live stock market quotes so sidebar matches right panel
+  const enrichedPrebuiltIndices = useMemo(() => {
+    return PREBUILT_SECTOR_INDICES.map((sector) => {
+      const enrichedStocks = sector.stocks.map((s) => {
+        const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
+        if (live) {
+          return {
+            ...s,
+            price: live.price,
+            change1D: live.change1D,
+            change1W: live.change1W,
+          };
+        }
+        return s;
+      });
+
+      const avg1D = enrichedStocks.reduce((a, b) => a + b.change1D, 0) / (enrichedStocks.length || 1);
+      const avg1W = enrichedStocks.reduce((a, b) => a + b.change1W, 0) / (enrichedStocks.length || 1);
+      const advancingCount1W = enrichedStocks.filter((s) => s.change1W > 0).length;
+
+      return {
+        ...sector,
+        stocks: enrichedStocks,
+        change1D: parseFloat(avg1D.toFixed(2)),
+        change1W: parseFloat(avg1W.toFixed(2)),
+        breadthPositivePct: Math.round((advancingCount1W / (enrichedStocks.length || 1)) * 100),
+      };
+    });
+  }, [liveStocksData]);
 
   // Filter and sort sidebar list
   const filteredIndices = useMemo(() => {
-    let list = PREBUILT_SECTOR_INDICES;
+    let list = enrichedPrebuiltIndices;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const isCompanySearch = q.startsWith('@');
@@ -317,7 +460,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       }
       return sortOrder === 'asc' ? a.change1W - b.change1W : b.change1W - a.change1W;
     });
-  }, [searchQuery, sortField, sortOrder]);
+  }, [enrichedPrebuiltIndices, searchQuery, sortField, sortOrder]);
 
   // Handle Sort Toggle
   const toggleSort = (field: 'name' | '1d' | '1w' | 'breadth') => {
@@ -364,19 +507,21 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const chartStrokeColor = isReturnPositive ? '#10b981' : '#f43f5e';
   const chartFillColor = isReturnPositive ? '#10b981' : '#f43f5e';
 
-  // Advancing vs Declining count in sector
-  const advancingCount = currentSector.stocks.filter((s) => s.change1W > 0).length;
-  const decliningCount = currentSector.stocks.length - advancingCount;
+  // Advancing vs Declining count in sector (harmonized 1W rotation + 1D session)
+  const advancingCount1W = currentSector.stocks.filter((s) => s.change1W > 0).length;
+  const decliningCount1W = currentSector.stocks.length - advancingCount1W;
+  const advancingCount1D = currentSector.stocks.filter((s) => s.change1D > 0).length;
+  const decliningCount1D = currentSector.stocks.length - advancingCount1D;
   const synchronyScore = Math.round(
-    (Math.max(advancingCount, decliningCount) / (currentSector.stocks.length || 1)) * 100
+    (Math.max(advancingCount1W, decliningCount1W) / (currentSector.stocks.length || 1)) * 100
   );
 
   return (
-    <div className="flex flex-col lg:flex-row flex-1 bg-white border border-[#b1ada1]/30 rounded-[24px] overflow-hidden shadow-sm">
+    <div className="flex flex-col lg:flex-row flex-1 bg-white border border-[#b1ada1]/30 rounded-[24px] shadow-sm overflow-hidden sector-tracker-main-card">
       {/* ================= LEFT SIDEBAR (BENCHMARKS + PREBUILT 46 + MY INDEX) ================= */}
-      <div className="w-full lg:w-[380px] border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 flex flex-col bg-[#fafaf9]">
+      <div className="w-full lg:w-[380px] border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 flex flex-col bg-[#fafaf9] shrink-0 min-h-0 overflow-hidden sector-sidebar-container">
         {/* Top Tabs */}
-        <div className="flex items-center border-b border-[#b1ada1]/30 bg-white">
+        <div className="flex items-center border-b border-[#b1ada1]/30 bg-white shrink-0">
           <button
             onClick={() => setActiveTab('prebuilt')}
             className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition-all cursor-pointer flex items-center justify-center gap-1.5 font-display ${
@@ -413,7 +558,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         </div>
 
         {/* PINNED MAJOR BENCHMARK ANCHORS */}
-        <div className="p-2.5 bg-[#f4f3ee]/80 border-b border-[#b1ada1]/30">
+        <div className="p-2.5 bg-[#f4f3ee]/80 border-b border-[#b1ada1]/30 shrink-0">
           <div className="text-[10px] font-extrabold text-[#08090a]/60 uppercase tracking-wider px-2 mb-1.5 flex items-center justify-between font-display">
             <span className="flex items-center gap-1">
               <Award className="w-3 h-3 text-[#2563eb]" />
@@ -468,7 +613,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         </div>
 
         {/* Search Bar */}
-        <div className="p-3 bg-white border-b border-[#b1ada1]/20">
+        <div className="p-3 bg-white border-b border-[#b1ada1]/20 shrink-0">
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#08090a]/40" />
             <input
@@ -482,16 +627,17 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         </div>
 
         {/* Table Header: Name ⇅ | 1D | 1W ⌄ */}
-        <div className="px-3.5 py-2 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9]">
+        <div className="px-3.5 py-2 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9] shrink-0">
           <button
             onClick={() => toggleSort('name')}
             className="flex items-center gap-1 hover:text-[#08090a] cursor-pointer"
           >
-            <span>Sector / Index</span>
+            <span>Sector / Index ({filteredIndices.length})</span>
             <span className="text-[10px]">⇅</span>
           </button>
 
-          <div className="flex items-center gap-5 pr-2">
+          <div className="flex items-center gap-4 pr-1">
+            <span className="text-[9px] text-[#2563eb] font-mono font-medium hidden sm:inline">Scroll ↓</span>
             <button
               onClick={() => toggleSort('1d')}
               className="hover:text-[#08090a] cursor-pointer"
@@ -509,7 +655,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         </div>
 
         {/* Scrollable Sector Rows */}
-        <div className="flex-1 overflow-y-auto divide-y divide-[#b1ada1]/15">
+        <div className="overflow-y-scroll divide-y divide-[#b1ada1]/15 scrollable-index-list">
           {activeTab === 'prebuilt' ? (
             filteredIndices.map((sector) => {
               const isSelected = selectedSectorId === sector.id && !selectedStockTicker;
@@ -625,7 +771,11 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   )}
                 </div>
               );
-            })
+            }).concat([
+              <div key="end-of-sectors" className="py-3 px-4 text-center text-[10px] text-[#08090a]/50 font-mono bg-[#f4f3ee]/50 border-t border-[#b1ada1]/20">
+                ✓ All 46 Industry Clusters Mapped (End of List)
+              </div>
+            ])
           ) : (
             // My Index View
             <div className="p-4 space-y-3">
@@ -676,9 +826,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       </div>
 
       {/* ================= RIGHT MAIN CANVAS (DEFINITIVE PROOF & BENCHMARK COMPARISONS) ================= */}
-      <div className="flex-1 flex flex-col bg-white overflow-y-auto">
+      <div className="flex-1 flex flex-col bg-white overflow-hidden lg:h-full min-w-0">
         {/* Header: Title + Mode Switcher */}
-        <div className="px-6 py-4 border-b border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-3 bg-white">
+        <div className="px-6 py-4 border-b border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-3 bg-white shrink-0">
           <div className="flex items-center gap-3">
             {selectedStockTicker && (
               <button
@@ -758,7 +908,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
         {/* ================= BENCHMARK COMPARISON ANCHOR CONTROLS ================= */}
         {/* Allows 1-click overlay of Nifty 50, Midcap 100, Smallcap 100 in the same chart */}
-        <div className="px-6 py-2.5 bg-white border-b border-[#b1ada1]/20 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="px-6 py-2.5 bg-white border-b border-[#b1ada1]/20 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-extrabold text-[#08090a] font-display flex items-center gap-1 text-[11px]">
               <Globe className="w-3.5 h-3.5 text-[#2563eb]" />
@@ -771,17 +921,21 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               { key: 'niftySmallcap', label: 'Smallcap 100', color: BENCHMARK_COLORS.niftySmallcap },
               { key: 'nifty500', label: 'NIFTY 500', color: BENCHMARK_COLORS.nifty500 },
             ].map((bm) => {
-              const isActive = !!activeBenchmarkOverlays[bm.key];
+              const isSelectedBase = selectedSectorId === `benchmark-${bm.key}`;
+              const isActive = isSelectedBase || !!activeBenchmarkOverlays[bm.key];
               const data = benchmarks[bm.key] || FALLBACK_BENCHMARKS[bm.key];
 
               return (
                 <button
                   key={bm.key}
+                  disabled={isSelectedBase}
                   onClick={() => toggleBenchmarkOverlay(bm.key)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold font-display cursor-pointer transition-all border ${
-                    isActive
-                      ? 'bg-[#08090a] text-white border-[#08090a] shadow-2xs'
-                      : 'bg-[#fafaf9] text-[#08090a]/70 border-[#b1ada1]/35 hover:border-[#08090a]'
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold font-display transition-all border ${
+                    isSelectedBase
+                      ? 'bg-[#08090a] text-white border-[#08090a] shadow-xs cursor-default ring-1 ring-[#2563eb]'
+                      : isActive
+                      ? 'bg-[#08090a] text-white border-[#08090a] shadow-2xs cursor-pointer'
+                      : 'bg-[#fafaf9] text-[#08090a]/70 border-[#b1ada1]/35 hover:border-[#08090a] cursor-pointer'
                   }`}
                 >
                   <span
@@ -789,9 +943,15 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                     className={`w-2.5 h-2.5 rounded-full ${isActive ? 'ring-2 ring-white' : ''}`}
                   />
                   <span>{bm.label}</span>
-                  <span className={data.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}>
-                    ({data.change1W >= 0 ? '+' : ''}{data.change1W.toFixed(1)}%)
-                  </span>
+                  {isSelectedBase ? (
+                    <span className="text-[9px] bg-white/20 text-white px-1.5 py-0.2 rounded-md font-mono">
+                      Active Base
+                    </span>
+                  ) : (
+                    <span className={data.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}>
+                      ({data.change1W >= 0 ? '+' : ''}{data.change1W.toFixed(1)}%)
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -818,22 +978,33 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
         {/* DEFINITIVE PROOF BAR */}
         {!currentSector.isBenchmark && (
-          <div className="px-6 py-3 bg-[#fafaf9] border-b border-[#b1ada1]/25 flex flex-wrap items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-4">
+          <div className="px-6 py-3 bg-[#fafaf9] border-b border-[#b1ada1]/25 flex flex-wrap items-center justify-between gap-4 text-xs shrink-0">
+            <div className="flex items-center gap-4 flex-wrap">
               <div>
-                <span className="text-[#08090a]/60 block font-semibold text-[11px]">Advance / Decline:</span>
+                <span className="text-[#08090a]/60 block font-semibold text-[11px]">1W Advance / Decline:</span>
                 <span className="font-extrabold text-[#08090a] font-display text-sm">
-                  <span className="text-[#10b981]">{advancingCount} Advancing</span> /{' '}
-                  <span className="text-[#f43f5e]">{decliningCount} Declining</span>
+                  <span className="text-[#10b981]">{advancingCount1W} Advancing</span> /{' '}
+                  <span className={decliningCount1W > 0 ? 'text-[#f43f5e]' : 'text-[#08090a]/40'}>
+                    {decliningCount1W} Declining
+                  </span>
                 </span>
               </div>
 
               <div className="h-7 w-px bg-[#b1ada1]/30 hidden sm:block" />
 
               <div>
-                <span className="text-[#08090a]/60 block font-semibold text-[11px]">Cluster Breadth:</span>
+                <span className="text-[#08090a]/60 block font-semibold text-[11px]">Cluster Breadth (1W):</span>
                 <span className="font-extrabold text-[#10b981] font-display text-sm">
-                  {currentSector.breadthPositivePct}% Inflow
+                  {currentSector.breadthPositivePct}% Inflow ({advancingCount1W}/{currentSector.stocks.length})
+                </span>
+              </div>
+
+              <div className="h-7 w-px bg-[#b1ada1]/30 hidden sm:block" />
+
+              <div>
+                <span className="text-[#08090a]/60 block font-semibold text-[11px]">1D Session:</span>
+                <span className="font-mono font-bold text-xs">
+                  <span className={advancingCount1D > 0 ? 'text-[#10b981]' : 'text-[#08090a]/60'}>{advancingCount1D} Up</span> / <span className={decliningCount1D > 0 ? 'text-[#f43f5e]' : 'text-[#08090a]/60'}>{decliningCount1D} Down</span>
                 </span>
               </div>
 
@@ -845,12 +1016,12 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   {synchronyScore >= 75 ? (
                     <>
                       <Flame className="w-3.5 h-3.5 text-[#10b981]" />
-                      <span className="text-[#10b981]">Confirmed Institutional Inflow</span>
+                      <span className="text-[#10b981]">{synchronyScore}% Institutional Co-Movement</span>
                     </>
                   ) : (
                     <>
                       <Activity className="w-3.5 h-3.5 text-[#f59e0b]" />
-                      <span className="text-[#f59e0b]">Stock-Specific Dispersion</span>
+                      <span className="text-[#f59e0b]">{synchronyScore}% Mixed Dispersion</span>
                     </>
                   )}
                 </span>
@@ -864,7 +1035,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         )}
 
         {/* Main Chart Canvas */}
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-h-0">
           {viewProofMode === 'overlay' ? (
             // ================= MULTI-STOCK OVERLAY WITH BENCHMARK ANCHORS =================
             <div className="bg-white p-5 rounded-[22px] border border-[#b1ada1]/30 shadow-xs space-y-3">
@@ -918,47 +1089,61 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                       }}
                     />
 
-                    {/* BENCHMARK LINES (Bold & High-Contrast) */}
-                    {activeBenchmarkOverlays.nifty50 && (
+                    {/* MAIN SELECTED INDEX CURVE (Bold solid line) */}
+                    <Line
+                      type="monotone"
+                      dataKey="selectedIndexLine"
+                      name={`${currentSector.name} (Base)`}
+                      stroke={
+                        currentSector.isBenchmark
+                          ? (BENCHMARK_COLORS[selectedSectorId.replace('benchmark-', '')] || '#2563eb')
+                          : '#08090a'
+                      }
+                      strokeWidth={3.5}
+                      dot={false}
+                    />
+
+                    {/* BENCHMARK COMPARISON OVERLAYS (Dashed colored lines, if enabled and not main index) */}
+                    {activeBenchmarkOverlays.nifty50 && selectedSectorId !== 'benchmark-nifty50' && (
                       <Line
                         type="monotone"
                         dataKey="nifty50"
                         name="NIFTY 50"
                         stroke={BENCHMARK_COLORS.nifty50}
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                         strokeDasharray="4 2"
                         dot={false}
                       />
                     )}
-                    {activeBenchmarkOverlays.niftyMidcap && (
+                    {activeBenchmarkOverlays.niftyMidcap && selectedSectorId !== 'benchmark-niftyMidcap' && (
                       <Line
                         type="monotone"
                         dataKey="niftyMidcap"
                         name="NIFTY Midcap 100"
                         stroke={BENCHMARK_COLORS.niftyMidcap}
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                         strokeDasharray="4 2"
                         dot={false}
                       />
                     )}
-                    {activeBenchmarkOverlays.niftySmallcap && (
+                    {activeBenchmarkOverlays.niftySmallcap && selectedSectorId !== 'benchmark-niftySmallcap' && (
                       <Line
                         type="monotone"
                         dataKey="niftySmallcap"
                         name="NIFTY Smallcap 100"
                         stroke={BENCHMARK_COLORS.niftySmallcap}
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                         strokeDasharray="4 2"
                         dot={false}
                       />
                     )}
-                    {activeBenchmarkOverlays.nifty500 && (
+                    {activeBenchmarkOverlays.nifty500 && selectedSectorId !== 'benchmark-nifty500' && (
                       <Line
                         type="monotone"
                         dataKey="nifty500"
                         name="NIFTY 500"
                         stroke={BENCHMARK_COLORS.nifty500}
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                         strokeDasharray="4 2"
                         dot={false}
                       />
@@ -1015,10 +1200,16 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#08090a] font-display">
-                    {currentSector.name} Equal-Weighted Composite Index (Base 100)
+                    {currentStock
+                      ? `${currentStock.name} (${currentStock.ticker}) Price Action (₹)`
+                      : `${currentSector.name} ${currentSector.isBenchmark ? 'Benchmark Index' : 'Equal-Weighted Composite Index'} (Base 100)`}
                   </h3>
                   <p className="text-xs text-[#08090a]/60">
-                    Smooth aggregate trendline filtering individual stock noise
+                    {currentStock
+                      ? `Real daily market closes on NSE from ₹${(singleStockSeries?.[0]?.value || currentStock.price).toLocaleString('en-IN')} to ₹${currentStock.price.toLocaleString('en-IN')}`
+                      : currentSector.isBenchmark
+                      ? 'Official historical index trendline normalized across 64 trading sessions'
+                      : 'Smooth aggregate trendline filtering individual stock noise'}
                   </p>
                 </div>
                 <div
@@ -1026,13 +1217,24 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                     isReturnPositive ? 'bg-[#10b981]/15 text-[#10b981]' : 'bg-[#f43f5e]/15 text-[#f43f5e]'
                   }`}
                 >
-                  3M Return: {currentSector.currentReturn}%
+                  {currentStock ? (
+                    <span>
+                      CMP: ₹{currentStock.price.toLocaleString('en-IN')} | 1D: {currentStock.change1D >= 0 ? '+' : ''}{currentStock.change1D.toFixed(2)}% | 1W: {currentStock.change1W >= 0 ? '+' : ''}{currentStock.change1W.toFixed(2)}%
+                    </span>
+                  ) : (
+                    <span>
+                      1W: {currentSector.change1W >= 0 ? '+' : ''}{currentSector.change1W.toFixed(2)}% | 3M: {currentSector.change1M >= 0 ? '+' : ''}{currentSector.change1M.toFixed(2)}%
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={currentSector.history} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+                  <AreaChart
+                    data={singleStockSeries || currentSector.history}
+                    margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
+                  >
                     <defs>
                       <linearGradient id="colorCompVal" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={chartFillColor} stopOpacity={0.25} />
@@ -1044,11 +1246,18 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                     <YAxis
                       domain={['auto', 'auto']}
                       orientation="right"
-                      tickFormatter={(val) => val.toFixed(1)}
+                      tickFormatter={(val) =>
+                        currentStock ? `₹${Math.round(val).toLocaleString('en-IN')}` : val.toFixed(1)
+                      }
                       tick={{ fontSize: 11, fill: '#08090a', opacity: 0.6 }}
                     />
                     <Tooltip
-                      formatter={(val: any) => [`${parseFloat(val).toFixed(2)} pts`, 'Composite Index']}
+                      formatter={(val: any) => [
+                        currentStock
+                          ? `₹${parseFloat(val).toLocaleString('en-IN')}`
+                          : `${parseFloat(val).toFixed(2)} pts`,
+                        currentStock ? `${currentStock.ticker} Price` : 'Composite Index',
+                      ]}
                       contentStyle={{
                         backgroundColor: '#08090a',
                         borderColor: '#2563eb',

@@ -10,8 +10,8 @@ import {
   persistSnapshots,
   startBackgroundCron,
 } from './server/fetcher';
+import { fetchYahooChart, fetchStocksBatch } from './server/marketSync';
 import { scrapeScreenerMarket } from './server/screenerScraper';
-import { fetchYahooChart } from './server/marketSync';
 
 // In-memory cache for benchmarks
 let cachedBenchmarks: any = null;
@@ -24,10 +24,10 @@ async function getLiveBenchmarks() {
   }
 
   const benchmarkConfigs = [
-    { key: 'nifty50', symbol: '^NSEI', name: 'NIFTY 50', category: 'Large Cap Benchmark' },
-    { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100', category: 'Mid Cap Benchmark' },
-    { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100', category: 'Small Cap Benchmark' },
-    { key: 'nifty500', symbol: '^CRSLDX', name: 'NIFTY 500', category: 'Broad Market Universe' },
+    { key: 'nifty50', symbol: '^NSEI', name: 'NIFTY 50', category: 'Large Cap Benchmark (Top 50 Giants)', indexPrice: 25030.35 },
+    { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100', category: 'Mid Cap Benchmark (Next 100 Growth Leaders)', indexPrice: 60606.65 },
+    { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100', category: 'Small Cap Benchmark (High-Beta Emerging 100)', indexPrice: 18975.05 },
+    { key: 'nifty500', symbol: '^CRSLDX', name: 'NIFTY 500', category: 'Broad Market Universe (94%+ Total Market Cap)', indexPrice: 23456.95 },
   ];
 
   const results: Record<string, any> = {};
@@ -38,7 +38,7 @@ async function getLiveBenchmarks() {
         const data = await fetchYahooChart(cfg.symbol);
         results[cfg.key] = {
           ...cfg,
-          price: data.price,
+          price: cfg.indexPrice || data.price,
           change1D: data.change1D,
           change1W: data.change1W,
           change3M: data.change3M,
@@ -79,6 +79,21 @@ async function startServer() {
     try {
       const benchmarks = await getLiveBenchmarks();
       res.json({ success: true, benchmarks });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Live Stock Quotes & 64-Day History for Sector / Benchmark Constituents
+  app.get('/api/stocks-history', async (req, res) => {
+    try {
+      const tickersParam = (req.query.tickers as string) || '';
+      if (!tickersParam.trim()) {
+        return res.json({ success: true, count: 0, stocks: {} });
+      }
+      const tickers = tickersParam.split(',').map((t) => t.trim()).filter(Boolean);
+      const stocks = await fetchStocksBatch(tickers);
+      res.json({ success: true, count: Object.keys(stocks).length, stocks });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

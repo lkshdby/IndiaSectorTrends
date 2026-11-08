@@ -41,3 +41,61 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(8, 9, 10, 0.4);
 }
+
+/* Main tracker card and sidebar fixed-height constraints ensuring scrollability */
+.sector-tracker-main-card {
+  height: calc(100vh - 140px);
+  min-height: 640px;
+  max-height: 940px;
+}
+
+.sector-sidebar-container {
+  height: 520px;
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .sector-sidebar-container {
+    height: 100% !important;
+    max-height: 100% !important;
+  }
+}
+
+/* Explicit forced visible and draggable scrollbar for the sector/index list */
+.scrollable-index-list {
+  flex: 1 1 auto !important;
+  height: calc(100% - 275px) !important;
+  max-height: calc(100% - 275px) !important;
+  min-height: 200px !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  scrollbar-width: auto !important;
+  scrollbar-color: #08090a #eceae3 !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollable-index-list::-webkit-scrollbar {
+  width: 9px !important;
+  display: block !important;
+}
+
+.scrollable-index-list::-webkit-scrollbar-track {
+  background: #eceae3 !important;
+  border-radius: 9999px;
+  border: 1px solid rgba(177, 173, 161, 0.35);
+}
+
+.scrollable-index-list::-webkit-scrollbar-thumb {
+  background: #08090a !important;
+  border-radius: 9999px;
+  min-height: 48px !important;
+  border: 2px solid #eceae3;
+}
+
+.scrollable-index-list::-webkit-scrollbar-thumb:hover {
+  background: #2563eb !important;
+}
+
+

@@ -73,7 +73,7 @@ export default function App() {
         <Header onRefresh={handleSyncMarketCloses} isSyncing={isSyncing} />
 
         {/* Master Sector Rotation & Co-Movement Engine */}
-        <main className="w-full px-3 sm:px-5 lg:px-6 py-4 flex-1 flex flex-col">
+        <main className="w-full px-3 sm:px-5 lg:px-6 py-4 flex-1 flex flex-col min-h-0">
           <IndexTrackerView onShowToast={showToast} syncTrigger={syncTrigger} />
         </main>
 

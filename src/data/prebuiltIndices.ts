@@ -236,9 +236,9 @@ export const PREBUILT_SECTOR_INDICES: SectorIndexData[] = [
     breadthPositivePct: 83,
     rotationStatus: 'Leading',
     stocks: [
-      { ticker: 'WAAREE', name: 'Waaree Energies Ltd', price: 2950.0, change1D: 3.20, change1W: 16.40, marketCapCr: 84500, pe: 55.0, volume: 3400000, logoBg: '#f59e0b', logoText: 'WE' },
+      { ticker: 'WAAREEENER', name: 'Waaree Energies Ltd', price: 2438.0, change1D: -1.45, change1W: -5.82, marketCapCr: 69800, pe: 42.0, volume: 3400000, logoBg: '#f59e0b', logoText: 'WE' },
       { ticker: 'PREMIERENE', name: 'Premier Energies Ltd', price: 1120.0, change1D: 2.80, change1W: 18.20, marketCapCr: 50400, pe: 64.0, volume: 2800000, logoBg: '#10b981', logoText: 'PE' },
-      { ticker: 'SUZLON', name: 'Suzlon Energy Ltd', price: 68.5, change1D: 1.50, change1W: 9.80, marketCapCr: 93500, pe: 68.0, volume: 45000000, logoBg: '#0284c7', logoText: 'SE' },
+      { ticker: 'SUZLON', name: 'Suzlon Energy Ltd', price: 38.8, change1D: 0.80, change1W: 1.40, marketCapCr: 53500, pe: 68.0, volume: 45000000, logoBg: '#0284c7', logoText: 'SE' },
       { ticker: 'INOXWIND', name: 'Inox Wind Ltd', price: 215.0, change1D: 2.10, change1W: 12.40, marketCapCr: 28000, pe: 52.0, volume: 6200000, logoBg: '#6366f1', logoText: 'IW' },
       { ticker: 'BORORENEW', name: 'Borosil Renewables Ltd', price: 510.0, change1D: -0.40, change1W: 4.80, marketCapCr: 6650, pe: 48.0, volume: 750000, logoBg: '#059669', logoText: 'BR' },
     ],
