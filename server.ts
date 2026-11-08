@@ -19,9 +19,9 @@ async function startServer() {
   // JSON Body parsing
   app.use(express.json({ limit: '50mb' }));
 
-  // Initialize data store and background cron
+  // Initialize data store
   initializeDataStore();
-  startBackgroundCron();
+  // startBackgroundCron(); // Disabled: Screener sync retired
 
   // Health check
   app.get('/api/health', (req, res) => {
