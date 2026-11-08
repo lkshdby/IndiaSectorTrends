@@ -1,11 +1,12 @@
 import React from 'react';
-import { Layers, Activity, RefreshCw } from 'lucide-react';
+import { Layers, RefreshCw } from 'lucide-react';
 
 interface HeaderProps {
   onRefresh?: () => void;
+  isSyncing?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRefresh }) => {
+export const Header: React.FC<HeaderProps> = ({ onRefresh, isSyncing }) => {
   return (
     <header className="border-b border-[#b1ada1]/30 bg-white/95 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
@@ -31,12 +32,24 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh }) => {
           </div>
         </div>
 
-        {/* Right: Clean Status */}
+        {/* Right: Clean Status & Live Market Sync Button */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f4f3ee] border border-[#b1ada1]/30 rounded-xl text-xs font-semibold text-[#08090a]">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#f4f3ee] border border-[#b1ada1]/30 rounded-xl text-xs font-semibold text-[#08090a]">
             <Layers className="w-3.5 h-3.5 text-[#2563eb]" />
-            <span>46 Sector Clusters</span>
+            <span>46 Clusters + 4 Benchmarks</span>
           </div>
+
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isSyncing}
+              title="Sync latest live market closes for Nifty 50, Midcap 100, Smallcap 100 & NSE 500"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#08090a] hover:bg-[#1f2429] active:scale-95 text-white rounded-xl text-xs font-bold font-display cursor-pointer transition-all shadow-xs disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-[#10b981] ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync Market Closes'}</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

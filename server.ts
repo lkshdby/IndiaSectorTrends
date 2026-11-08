@@ -11,6 +11,52 @@ import {
   startBackgroundCron,
 } from './server/fetcher';
 import { scrapeScreenerMarket } from './server/screenerScraper';
+import { fetchYahooChart } from './server/marketSync';
+
+// In-memory cache for benchmarks
+let cachedBenchmarks: any = null;
+let lastBenchmarkFetchTime = 0;
+
+async function getLiveBenchmarks() {
+  const now = Date.now();
+  if (cachedBenchmarks && now - lastBenchmarkFetchTime < 3600000) {
+    return cachedBenchmarks;
+  }
+
+  const benchmarkConfigs = [
+    { key: 'nifty50', symbol: '^NSEI', name: 'NIFTY 50', category: 'Large Cap Benchmark' },
+    { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100', category: 'Mid Cap Benchmark' },
+    { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100', category: 'Small Cap Benchmark' },
+    { key: 'nifty500', symbol: '^CRSLDX', name: 'NIFTY 500', category: 'Broad Market Universe' },
+  ];
+
+  const results: Record<string, any> = {};
+
+  await Promise.allSettled(
+    benchmarkConfigs.map(async (cfg) => {
+      try {
+        const data = await fetchYahooChart(cfg.symbol);
+        results[cfg.key] = {
+          ...cfg,
+          price: data.price,
+          change1D: data.change1D,
+          change1W: data.change1W,
+          change3M: data.change3M,
+          history: data.history,
+        };
+      } catch (err: any) {
+        console.warn(`Could not fetch live benchmark for ${cfg.symbol}:`, err.message);
+      }
+    })
+  );
+
+  if (Object.keys(results).length > 0) {
+    cachedBenchmarks = results;
+    lastBenchmarkFetchTime = now;
+  }
+
+  return cachedBenchmarks || results;
+}
 
 async function startServer() {
   const app = express();
@@ -26,6 +72,16 @@ async function startServer() {
   // Health check
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString() });
+  });
+
+  // Live Benchmarks (NIFTY 50, NIFTY Midcap 100, NIFTY Smallcap 100, NIFTY 500)
+  app.get('/api/benchmarks', async (req, res) => {
+    try {
+      const benchmarks = await getLiveBenchmarks();
+      res.json({ success: true, benchmarks });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   // Get all snapshots

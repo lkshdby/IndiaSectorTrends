@@ -32,6 +32,7 @@ export interface SectorIndexData {
   stocks: StockConstituent[];
   breadthPositivePct: number; // % of stocks in green today
   rotationStatus: 'Leading' | 'Improving' | 'Weakening' | 'Lagging';
+  isBenchmark?: boolean;
 }
 
 export type TimeframePeriod = '3M' | '6M' | 'YTD' | '1Y' | '3Y' | '5Y' | 'Max';
@@ -42,4 +43,16 @@ export interface CustomIndexItem {
   description?: string;
   createdAt: string;
   stockTickers: string[];
+}
+
+export interface BenchmarkItem {
+  key: string;
+  symbol: string;
+  name: string;
+  category: string;
+  price: number;
+  change1D: number;
+  change1W: number;
+  change3M: number;
+  history: { date: string; value: number }[];
 }
