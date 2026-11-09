@@ -6,12 +6,12 @@ const workflow = readFileSync('.github/workflows/market-snapshot-refresh.yml', '
 const app = readFileSync('src/App.tsx', 'utf8');
 
 describe('zero-config automatic market collection policy', () => {
-  it('has exactly the three originally requested IST slots on Indian trading sessions', () => {
+  it('has exactly the three originally requested IST slots every calendar day', () => {
     const crons = [...workflow.matchAll(/cron:\s*'([^']+)'/g)].map(x => x[1]);
     assert.deepEqual(crons, [
-      '0 13 * * 1-5',  // 18:30 IST Monday-Friday
-      '30 20 * * 1-5', // 02:00 IST Tuesday-Saturday
-      '30 22 * * 1-5', // 04:00 IST Tuesday-Saturday
+      '0 13 * * *',  // 18:30 IST daily
+      '30 20 * * *', // 02:00 IST daily
+      '30 22 * * *', // 04:00 IST daily
     ]);
     assert.ok(!workflow.includes('workflow_dispatch:'));
   });
