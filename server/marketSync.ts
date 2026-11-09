@@ -116,6 +116,8 @@ export function fetchYahooChart(symbol: string, range = '3mo'): Promise<{
 export const STOCK_SYMBOL_MAP: Record<string, string> = {
   WAAREE: 'WAAREEENER.NS',
   WAAREEENER: 'WAAREEENER.NS',
+  ETERNAL: 'ETERNAL.NS',
+  ZOMATO: 'ETERNAL.NS',
   ZEN: 'ZENTEC.NS',
   ZENTEC: 'ZENTEC.NS',
   MAPMYINDIA: 'MAPMYINDIA.NS',

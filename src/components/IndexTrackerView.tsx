@@ -86,13 +86,16 @@ const BENCHMARK_COLORS: Record<string, string> = {
 export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast, syncTrigger }) => {
   const [activeTab, setActiveTab] = useState<'prebuilt' | 'myIndex'>('prebuilt');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [weightingMode, setWeightingMode] = useState<'equal' | 'mcap'>('equal');
   const [sortField, setSortField] = useState<'name' | '1d' | '1w' | 'breadth'>('1w');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [expandedSectors, setExpandedSectors] = useState<Record<string, boolean>>({
+    'quick-commerce-consumer-tech': true,
     hospitals: true,
   });
 
-  const [selectedSectorId, setSelectedSectorId] = useState<string>('hospitals');
+  const [selectedSectorId, setSelectedSectorId] = useState<string>('quick-commerce-consumer-tech');
   const [selectedStockTicker, setSelectedStockTicker] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<TimeframePeriod>('3M');
   const [viewProofMode, setViewProofMode] = useState<'overlay' | 'composite' | 'rotation'>('overlay');
@@ -233,7 +236,19 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       };
     }
 
-    // Helper to build real equal-weighted 63-day composite history from constituent stocks
+    // Helper to compute Equal-Weighted or Market-Cap Weighted average of a metric
+    const computeWeightedAvg = (stocksList: StockConstituent[], field: 'change1D' | 'change1W') => {
+      if (stocksList.length === 0) return 0;
+      if (weightingMode === 'mcap') {
+        const totalMcap = stocksList.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0);
+        if (totalMcap > 0) {
+          return stocksList.reduce((acc, s) => acc + s[field] * ((s.marketCapCr || 10000) / totalMcap), 0);
+        }
+      }
+      return stocksList.reduce((acc, s) => acc + s[field], 0) / stocksList.length;
+    };
+
+    // Helper to build real 63-day composite history (Equal-Weighted or Market-Cap Weighted) from constituent stocks
     const buildRealCompositeHistory = (
       stocksList: StockConstituent[],
       fallbackHistory: HistoricalPricePoint[]
@@ -244,15 +259,20 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       if (!sample) return fallbackHistory;
       const sampleHistory = (liveStocksData[sample.ticker] || liveStocksData[sample.ticker.toUpperCase()]).history;
       return sampleHistory.map((pt, idx) => {
-        const vals: number[] = [];
+        let weightedSum = 0;
+        let weightTotal = 0;
         stocksList.forEach((st) => {
           const stLive = liveStocksData[st.ticker] || liveStocksData[st.ticker.toUpperCase()];
           if (stLive?.history?.length) {
             const stPt = stLive.history[Math.min(idx, stLive.history.length - 1)];
-            if (stPt && typeof stPt.value === 'number') vals.push(stPt.value);
+            if (stPt && typeof stPt.value === 'number') {
+              const w = weightingMode === 'mcap' ? (st.marketCapCr || 10000) : 1;
+              weightedSum += stPt.value * w;
+              weightTotal += w;
+            }
           }
         });
-        const avgVal = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : pt.value;
+        const avgVal = weightTotal > 0 ? weightedSum / weightTotal : pt.value;
         return {
           date: pt.date,
           value: parseFloat(avgVal.toFixed(2)),
@@ -266,8 +286,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         PREBUILT_SECTOR_INDICES.find((s) => s.id === selectedSectorId) ||
         PREBUILT_SECTOR_INDICES[0];
       const enriched = enrichStocks(base.stocks);
-      const avg1D = enriched.reduce((a, b) => a + b.change1D, 0) / (enriched.length || 1);
-      const avg1W = enriched.reduce((a, b) => a + b.change1W, 0) / (enriched.length || 1);
+      const avg1D = computeWeightedAvg(enriched, 'change1D');
+      const avg1W = computeWeightedAvg(enriched, 'change1W');
       const advancingCount1W = enriched.filter((s) => s.change1W > 0).length;
       const realHistory = buildRealCompositeHistory(enriched, base.history);
       const real3M =
@@ -299,8 +319,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       });
 
       const enriched = enrichStocks(matchedStocks);
-      const avg1D = enriched.length > 0 ? enriched.reduce((a, b) => a + b.change1D, 0) / enriched.length : 0;
-      const avg1W = enriched.length > 0 ? enriched.reduce((a, b) => a + b.change1W, 0) / enriched.length : 0;
+      const avg1D = computeWeightedAvg(enriched, 'change1D');
+      const avg1W = computeWeightedAvg(enriched, 'change1W');
       const realHistory = buildRealCompositeHistory(enriched, PREBUILT_SECTOR_INDICES[0].history);
       const real3M =
         realHistory.length > 1
@@ -325,7 +345,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         history: realHistory,
       };
     }
-  }, [activeTab, selectedSectorId, customIndices, benchmarks, liveStocksData]);
+  }, [activeTab, selectedSectorId, customIndices, benchmarks, liveStocksData, weightingMode]);
 
   // Fetch real market stock quotes and 64-day closing histories for current constituents
   useEffect(() => {
@@ -413,17 +433,22 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         }
       });
 
-      // Calculate true Equal-Weighted Composite Line
+      // Calculate Composite Line (Equal-Weighted or Market-Cap Weighted)
       if (currentSector.isBenchmark) {
         row['selectedIndexLine'] = normalizedSectorBase;
       } else {
-        const realStockVals = stocks
-          .map((s) => row[s.ticker])
-          .filter((v) => typeof v === 'number' && !isNaN(v));
-        if (realStockVals.length > 0) {
-          row['selectedIndexLine'] = parseFloat(
-            (realStockVals.reduce((a, b) => a + b, 0) / realStockVals.length).toFixed(2)
-          );
+        let weightedSum = 0;
+        let weightTotal = 0;
+        stocks.forEach((s) => {
+          const val = row[s.ticker];
+          if (typeof val === 'number' && !isNaN(val)) {
+            const w = weightingMode === 'mcap' ? (s.marketCapCr || 10000) : 1;
+            weightedSum += val * w;
+            weightTotal += w;
+          }
+        });
+        if (weightTotal > 0) {
+          row['selectedIndexLine'] = parseFloat((weightedSum / weightTotal).toFixed(2));
         } else {
           row['selectedIndexLine'] = normalizedSectorBase;
         }
@@ -467,8 +492,16 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         return s;
       });
 
-      const avg1D = enrichedStocks.reduce((a, b) => a + b.change1D, 0) / (enrichedStocks.length || 1);
-      const avg1W = enrichedStocks.reduce((a, b) => a + b.change1W, 0) / (enrichedStocks.length || 1);
+      const avg1D =
+        weightingMode === 'mcap'
+          ? enrichedStocks.reduce((acc, s) => acc + s.change1D * (s.marketCapCr || 10000), 0) /
+            Math.max(1, enrichedStocks.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0))
+          : enrichedStocks.reduce((a, b) => a + b.change1D, 0) / (enrichedStocks.length || 1);
+      const avg1W =
+        weightingMode === 'mcap'
+          ? enrichedStocks.reduce((acc, s) => acc + s.change1W * (s.marketCapCr || 10000), 0) /
+            Math.max(1, enrichedStocks.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0))
+          : enrichedStocks.reduce((a, b) => a + b.change1W, 0) / (enrichedStocks.length || 1);
       const advancingCount1W = enrichedStocks.filter((s) => s.change1W > 0).length;
 
       return {
@@ -479,18 +512,23 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         breadthPositivePct: Math.round((advancingCount1W / (enrichedStocks.length || 1)) * 100),
       };
     });
-  }, [liveStocksData]);
+  }, [liveStocksData, weightingMode]);
 
   // Filter and sort sidebar list
   const filteredIndices = useMemo(() => {
     let list = enrichedPrebuiltIndices;
+    if (selectedCategory !== 'All') {
+      list = list.filter((sec) => sec.category === selectedCategory);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const isCompanySearch = q.startsWith('@');
       const cleanQ = isCompanySearch ? q.slice(1) : q;
 
       list = list.filter((sec) => {
-        if (!isCompanySearch && sec.name.toLowerCase().includes(cleanQ)) return true;
+        if (!isCompanySearch && (sec.name.toLowerCase().includes(cleanQ) || sec.category.toLowerCase().includes(cleanQ))) {
+          return true;
+        }
         return sec.stocks.some(
           (st) =>
             st.ticker.toLowerCase().includes(cleanQ) ||
@@ -513,7 +551,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       }
       return sortOrder === 'asc' ? a.change1W - b.change1W : b.change1W - a.change1W;
     });
-  }, [enrichedPrebuiltIndices, searchQuery, sortField, sortOrder]);
+  }, [enrichedPrebuiltIndices, selectedCategory, searchQuery, sortField, sortOrder]);
 
   // Handle Sort Toggle
   const toggleSort = (field: 'name' | '1d' | '1w' | 'breadth') => {
@@ -665,17 +703,41 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="p-3 bg-white border-b border-[#b1ada1]/20 shrink-0">
+        {/* Search Bar + Category Filter Tabs */}
+        <div className="p-2.5 bg-white border-b border-[#b1ada1]/20 shrink-0 space-y-2">
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#08090a]/40" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search 46 indexes or @company..."
+              placeholder={`Search ${PREBUILT_SECTOR_INDICES.length} sectors or @company (e.g. @eternal, @swiggy, @milkymist)...`}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f4f3ee]/60 border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:border-[#2563eb] text-[#08090a] placeholder:text-[#08090a]/40"
             />
+          </div>
+
+          {/* Macro Theme Filter Bar */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
+            {[
+              { id: 'All', label: 'All (62)' },
+              { id: 'New-Age & Tech', label: 'New-Age & Tech' },
+              { id: 'Consumer & Retail', label: 'Consumer & Dairy' },
+              { id: 'Energy & Infra', label: 'Energy & Infra' },
+              { id: 'Financials', label: 'Financials' },
+              { id: 'Manufacturing & Healthcare', label: 'Mfg & Healthcare' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold font-display whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                  selectedCategory === cat.id
+                    ? 'bg-[#08090a] text-white'
+                    : 'bg-[#f4f3ee] text-[#08090a]/70 hover:text-[#08090a]'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -841,7 +903,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   key="end-of-sectors"
                   className="py-3 px-4 text-center text-[10px] text-[#08090a]/50 font-mono bg-[#f4f3ee]/50 border-t border-[#b1ada1]/20"
                 >
-                  ✓ All 46 Industry Clusters Mapped
+                  ✓ Showing {filteredIndices.length} of {PREBUILT_SECTOR_INDICES.length} Industry Clusters
                 </div>
               ])
             ) : (
@@ -1027,9 +1089,35 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Equal-Weighted vs Market-Cap Weighted Toggle */}
+            <div className="flex items-center bg-[#f4f3ee] p-0.5 rounded-xl border border-[#b1ada1]/35">
+              <button
+                onClick={() => setWeightingMode('equal')}
+                title="Equal-Weighted: Every constituent contributes equally so mid/small-caps & new-age stocks are not drowned out"
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold font-display cursor-pointer transition-colors whitespace-nowrap shrink-0 ${
+                  weightingMode === 'equal'
+                    ? 'bg-[#08090a] text-white shadow-2xs'
+                    : 'text-[#08090a]/60 hover:text-[#08090a]'
+                }`}
+              >
+                Equal Wt
+              </button>
+              <button
+                onClick={() => setWeightingMode('mcap')}
+                title="Market-Cap Weighted: Weights sector return & composite line by constituent market capitalization"
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold font-display cursor-pointer transition-colors whitespace-nowrap shrink-0 ${
+                  weightingMode === 'mcap'
+                    ? 'bg-[#08090a] text-white shadow-2xs'
+                    : 'text-[#08090a]/60 hover:text-[#08090a]'
+                }`}
+              >
+                MCap Wt
+              </button>
+            </div>
+
             <button
               onClick={handleCopy}
-              className="px-3 py-1 text-xs font-semibold text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl hover:bg-[#f4f3ee] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-3 py-1 text-xs font-semibold text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl hover:bg-[#f4f3ee] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
             >
               <Copy className="w-3.5 h-3.5" />
               <span>Copy</span>
@@ -1037,7 +1125,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
             <button
               onClick={() => setIsAlertModalOpen(true)}
-              className="px-3 py-1 text-xs font-semibold text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl hover:bg-[#f4f3ee] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-3 py-1 text-xs font-semibold text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl hover:bg-[#f4f3ee] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
             >
               <Bell className="w-3.5 h-3.5 text-[#eab308]" />
               <span>Set Alert</span>

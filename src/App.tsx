@@ -83,7 +83,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-[#08090a] font-display">Sector Rotation Engine</span>
               <span>•</span>
-              <span>46 Pre-Built Industry Clusters mapped to NSE 500 / BSE 500</span>
+              <span>62 Pre-Built Industry Clusters (456 Stocks) mapped to NSE 500, BSE 500 & New-Age IPOs</span>
             </div>
             <div className="text-[11px]">
               Multi-Stock Co-Movement Ribbons & Cluster Breadth Tracking vs NIFTY 50, Midcap 100 & Smallcap 100
