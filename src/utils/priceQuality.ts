@@ -38,6 +38,17 @@ function isRecognizedDate(date: string): boolean {
  */
 export function validateAndRepairStock(record: PriceHistoryRecord | null | undefined): QualityResult {
   if (!record || !Array.isArray(record.rawHistory)) return { record: null, warnings: ['Missing raw daily-close history'] };
+  // Avoid incorrectly attributing a different listed company's history.
+  const expectedSymbols: Record<string, string> = {
+    LTIM: 'LTM.NS',
+    LTM: 'LTM.NS',
+    TMCV: 'TMCV.NS',
+    TATAMOTORS: 'TMPV.NS',
+  };
+  const ticker = record.ticker?.toUpperCase();
+  if (ticker && expectedSymbols[ticker] && record.symbol?.toUpperCase() !== expectedSymbols[ticker]) {
+    return { record: null, warnings: [`Symbol mismatch: ${ticker} expected ${expectedSymbols[ticker]}, received ${record.symbol}; discarded`] };
+  }
   const raw = record.rawHistory.filter(p =>
     !!p && isRecognizedDate(p.date) && Number.isFinite(p.close) && p.close > 0
   );
