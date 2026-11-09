@@ -4,7 +4,7 @@ import { runFullUniverseSync } from '../server/marketSync';
 import { CORE_SECTOR_INDICES, THEMATIC_SECTOR_INDICES } from '../src/data/sectorUniverse';
 import { validateAndRepairStock } from '../src/utils/priceQuality';
 
-/** GitHub Actions collects 3 times per Indian trading session. It never
+/** GitHub Actions collects 3 times per IST calendar day. It never
  * overwrites the saved file if network/provider coverage is insufficient. */
 async function main() {
   const startedAt = Date.now();
