@@ -106,11 +106,11 @@ export function observedHorizonReturn(
 }
 
 /** Validate all cached records before giving them to any basket calculation. */
-export function sanitizeSnapshot<T extends Record<string, PriceHistoryRecord>>(raw: T): Record<string, PriceHistoryRecord> {
+export function sanitizeSnapshot<T extends Record<string, PriceHistoryRecord>>(raw: T): T {
   const clean: Record<string, PriceHistoryRecord> = {};
   for (const [ticker, value] of Object.entries(raw || {})) {
     const result = validateAndRepairStock(value);
     if (result.record) clean[ticker.toUpperCase()] = result.record;
   }
-  return clean;
+  return clean as T;
 }
