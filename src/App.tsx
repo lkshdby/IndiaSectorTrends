@@ -20,24 +20,22 @@ export default function App() {
   const handleSyncMarketCloses = async () => {
     setIsSyncing(true);
     try {
-      const res = await fetch('/api/benchmarks');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          setSyncTrigger((prev) => prev + 1);
-          const n50Price = json.benchmarks?.nifty50?.price || 25030.35;
-          showToast(
-            `Live Closes Synced: NIFTY 50 @ ₹${n50Price.toLocaleString('en-IN')}, Midcap 100 & Smallcap 100 refreshed!`,
-            'success'
-          );
-        } else {
-          showToast('Updated benchmarks from local verified cache.', 'info');
-        }
-      } else {
-        showToast('Updated benchmarks from verified local store.', 'info');
+      const response = await fetch('/api/sync-universe', { method: 'POST' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      if (!result.success || !result.updatedStocksCount) {
+        throw new Error('No fresh stock histories could be retrieved');
       }
-    } catch {
-      showToast('Refreshed benchmark relative strength anchors.', 'success');
+      const benchmarksResponse = await fetch('/api/benchmarks?force=true');
+      const benchmarksResult = benchmarksResponse.ok ? await benchmarksResponse.json() : null;
+      setSyncTrigger(previous => previous + 1);
+      if (benchmarksResult?.success && Object.keys(benchmarksResult.benchmarks || {}).length === 4) {
+        showToast(`Refreshed ${result.updatedStocksCount} stock histories and 4 benchmarks.`, 'success');
+      } else {
+        showToast(`Refreshed ${result.updatedStocksCount} stock histories; benchmark refresh incomplete.`, 'info');
+      }
+    } catch (error) {
+      showToast(`Market refresh failed: ${error instanceof Error ? error.message : 'unknown error'}. Existing data retained.`, 'error');
     } finally {
       setIsSyncing(false);
     }
@@ -86,7 +84,7 @@ export default function App() {
               <span>62 Pre-Built Industry Clusters (456 Stocks) mapped to NSE 500, BSE 500 & New-Age IPOs</span>
             </div>
             <div className="text-[11px]">
-              Multi-Stock Co-Movement Ribbons & Cluster Breadth Tracking vs NIFTY 50, Midcap 100 & Smallcap 100
+              Multi-Stock Price Overlays & Cluster Breadth Tracking vs NIFTY 50, Midcap 100 & Smallcap 100
             </div>
           </div>
         </footer>
