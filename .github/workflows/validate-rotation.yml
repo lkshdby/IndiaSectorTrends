@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - fix/rotation-data-integrity-20261109
+      - feat/sector-universe-price-qa-20261109
   pull_request:
 
 permissions:
@@ -23,5 +24,9 @@ jobs:
         run: npm run lint
       - name: Index math tests
         run: npx tsx --test src/utils/sectorIndexMath.test.ts
+      - name: Price quality tests
+        run: npx tsx --test src/utils/priceQuality.test.ts
+      - name: Sector membership tests
+        run: npx tsx --test src/data/sectorUniverse.test.ts
       - name: Production build
         run: npm run build
