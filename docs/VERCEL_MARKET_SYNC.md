@@ -1,76 +1,91 @@
-# Fixing HTTP 405 on market refresh (Vercel)
+# Three scheduled market-data collections — Vercel, no secrets
 
-## Root cause
+## Final design
 
-The app is built as a Vite static site (`vercel.json` uses `vite build`). The
-previous React refresh button posted to `/api/sync-universe`, but that route
-existed only in `server.ts` (an Express server **not deployed** by Vercel).
-Vercel served the SPA fallback instead of the API, so POST returned HTTP 405.
+The Sector Rotation Engine is hosted as a **Vite static frontend** on Vercel.
+Vercel does NOT run the long-lived Express `server.ts`, and it should not
+fetch hundreds of stock histories from a web button.
 
-## Architecture after this change
+A public, read-only Vercel API serves the last saved, validated snapshot.
+GitHub Actions automatically collects the stock data **three times per Indian
+trading day**, following the originally requested schedule.
 
-1. Vercel deploys `api/sync-universe.ts` (POST). It checks an admin key and,
-   using a server-side GitHub token, **queues** the `market-snapshot-refresh.yml`
-   workflow. It does **not** directly scrape 452+ ticker series in an API request.
-2. GitHub Actions runs `scripts/refresh-market-snapshot.ts` with the full
-   universe, and commits `src/data/verifiedLiveMarketData.json` to `main`
-   only if enough stocks refreshed successfully. The scheduled job is also
-   configured for weekdays at 19:00 IST.
-3. The `api/stocks-snapshot.ts` and `api/benchmarks.ts` Vercel functions
-   retrieve the latest **committed** snapshot from GitHub. The UI uses these
-   on load, regardless of whether Vercel has redeployed yet.
-4. The button reports **queued**, not **synchronized**. The new data appears
-   after the GitHub Action finishes and commits it; reload the page then.
+| IST slot | UTC GitHub Actions schedule | Days |
+| --- | --- | --- |
+| **18:30 IST** | 13:00 UTC | Monday–Friday |
+| **02:00 IST** | 20:30 UTC on the previous calendar day | Tuesday–Saturday |
+| **04:00 IST** | 22:30 UTC on the previous calendar day | Tuesday–Saturday |
 
-## Required configuration — Vercel dashboard
+All three entries use weekday UTC crons to cover a Monday–Friday session
+and its following overnight checks. **There is no extra scheduled run and
+no browser-triggered collection.** On an exchange holiday, these may still
+run, but prices will ordinarily remain at the latest completed session.
 
-Open the Vercel project that deploys `lkshdby/IndiaSectorTrends` and set
-these **server-side environment variables** for Production (and Preview if
-using Preview):
+GitHub Actions cron is best-effort: especially during high service load, jobs
+can start late or occasionally be skipped. The original time slots are
+configured, not guaranteed to execute to the second.
 
-- `GITHUB_ACTIONS_TOKEN`: GitHub fine-grained personal access token limited to
-  **only** `lkshdby/IndiaSectorTrends`, with repository permission
-  **Actions: Read and write**. This token stays **on Vercel only**.
-- `SYNC_ADMIN_KEY`: a separate long, random secret passphrase that you keep
-  privately. The browser asks for it when pressing Request Market Refresh.
-  This avoids allowing any website visitor to enqueue expensive jobs.
+## What the dashboard button does
 
-**Never** prefix these variables with `VITE_` and never commit their values
-to GitHub. Redeploy the Vercel site after saving the environment variables.
+**Reload Saved Data** makes a read-only GET to `/api/stocks-snapshot` and
+re-renders the latest saved stocks and benchmarks. It does **not** start a
+new market-price download and does **not** write data. No token, key, login,
+or manual GitHub Actions dispatch is required.
 
-The manual sync API returns:
-- `202` with `queued:true` when the workflow dispatch is accepted.
-- `503` when the environment variables are missing.
-- `401` for an incorrect admin key.
-- `502` when GitHub rejects the dispatch or cannot be reached.
-- `405` for methods other than POST on this *working* endpoint.
+Vercel routes:
+- `GET /api/stocks-snapshot` returns the last GitHub-committed stock snapshot.
+- `GET /api/stocks-history?tickers=...` returns saved observations.
+- `GET /api/benchmarks` returns saved benchmark series (ETF proxies identified).
+- All other dynamic Express routes are not deployed on the Vercel frontend.
 
-## Verification checklist
+## What keeps stored data safe
 
-1. Merge this branch and redeploy the Vercel project from `main`.
-2. Visit `https://<your-domain>/api/benchmarks`. It should return JSON
-   with `success:true`, not the application's HTML.
-3. Visit `https://<your-domain>/api/stocks-snapshot`; verify it returns a
-   nonempty `stocks` object and a `fetchedAt` time.
-4. Press **Request Market Refresh**, enter `SYNC_ADMIN_KEY`, and confirm
-   it says *queued* (not *all stocks refreshed*).
-5. Open the
-   [Market Snapshot Refresh workflow](https://github.com/lkshdby/IndiaSectorTrends/actions/workflows/market-snapshot-refresh.yml)
-   and verify the triggered run completes successfully and makes a commit.
-6. Reload the dashboard; check quote freshness and price anomaly alerts.
+The workflow uses its **built-in GitHub Actions GITHUB_TOKEN** with narrowly
+declared `contents: write` permission to save the refreshed JSON to `main`.
+No personal access token or Vercel environment variable is needed.
 
-## Caveats
+Collection safeguards:
+- Reconstruct stock returns from real daily closes and reject unverified
+  large discontinuities.
+- Require at least **90% of thematic symbols** to be fetched fresh.
+- Require **all four benchmark** histories to have been fetched in that run.
+- Ensure every core basket has at least one fresh constituent.
+- When validation fails, the workflow exits with an error **before the commit**
+  and keeps the existing saved snapshot unchanged.
+- The snapshot's `fetchedAt` is the **collection timestamp**, not the
+  timestamp of an actual market trade; overnight pulls may retrieve the same
+  closing prices as the preceding evening.
+- Avoid concurrent overlapping runs and rebase the bot's data-only commit
+  on changes to the main branch.
 
-- This does not guarantee NSE/BSE trade settlement or split/bonus adjustment.
-  The source remains Yahoo daily chart data and remains subject to the quality
-  safeguards introduced in PR #2.
-- GitHub Actions `GITHUB_TOKEN` must have **Contents: write** permission
-  to push the refreshed snapshot (set in the workflow).
-- The GitHub Actions job may fail from market-data provider throttling or
-  return too few valid stocks. In that case it deliberately makes **no commit**.
-  The last saved snapshot remains available.
-- The Vercel snapshot API reads a public repository file; for a private
-  repository a different authenticated storage mechanism would be necessary.
-- A configured Vercel API is not an Express server. Other routes in
-  `server.ts`, such as older Screener industry APIs, are not automatically
-  exposed by this change.
+## Verification after merge/deploy
+
+1. Merge the code change and let Vercel automatically deploy `main`,
+   or redeploy it manually if your project doesn't auto-deploy.
+2. Visit `/api/stocks-snapshot`; you should see JSON with
+   `success: true`, a nonempty `stocks` collection and `fetchedAt`.
+3. Press **Reload Saved Data**. It should report the saved collection time
+   without asking for a key or issuing an HTTP POST.
+4. Visit [GitHub Actions](https://github.com/lkshdby/IndiaSectorTrends/actions/workflows/market-snapshot-refresh.yml)
+   to inspect the next scheduled run. GitHub Actions must be enabled on the
+   repository, and `GITHUB_TOKEN` must be allowed to commit to `main`
+   under any branch protection rules you apply.
+5. Check the recent `data: record scheduled verified sector snapshot` commit.
+   If the Action fails, inspect its validation output: **stale data is safer
+   than publishing fabricated or partially collected sector rankings**.
+
+## Known remaining limitations
+
+- Yahoo Finance daily chart bars are **not** independent NSE/BSE bhavcopy
+  reconciliation. Some listings or symbols may fail or be thinly traded.
+- The market-cap figures in sector definitions are stored estimates and
+  not continuously updated exchange free-float weights.
+- All bars and sectors retain the existing price-data and theme-fit caveats
+  in `docs/SECTOR_ROTATION_DATA_POLICY.md`.
+- This zero-config setup trades guaranteed exact-on-time collection for a
+  simpler and more reliable scheduled snapshot architecture. For guaranteed
+  execution-time SLAs, use a dedicated managed scheduler.
+
+**Do not configure `GITHUB_ACTIONS_TOKEN` or `SYNC_ADMIN_KEY` in Vercel
+for this design.** They were only needed for the now-removed manual-dispatch
+route in the previous version.
