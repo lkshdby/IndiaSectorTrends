@@ -16,6 +16,7 @@ import {
 import {
   Search,
   ChevronDown,
+  ChevronUp,
   ChevronRight,
   Copy,
   Bell,
@@ -176,91 +177,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     setSelectedStockTicker(ticker);
   };
 
-  // Dedicated Custom Permanent Scrollbar State & Controls (100% visible across all OS/browsers)
+  // Classic Scroll Container Ref
   const sectorListRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0); // 0 to 1
-  const [thumbHeightPct, setThumbHeightPct] = useState(25); // percentage
-  const isDraggingScrollRef = useRef(false);
-  const dragStartYRef = useRef(0);
-  const dragStartScrollTopRef = useRef(0);
-
-  const updateScrollMetrics = () => {
-    if (!sectorListRef.current) return;
-    const el = sectorListRef.current;
-    const scrollRange = el.scrollHeight - el.clientHeight;
-    if (scrollRange <= 0) {
-      setScrollProgress(0);
-      setThumbHeightPct(100);
-      return;
-    }
-    const ratio = el.clientHeight / el.scrollHeight;
-    const heightPct = Math.max(14, Math.min(80, ratio * 100));
-    setThumbHeightPct(heightPct);
-    const progress = Math.max(0, Math.min(1, el.scrollTop / scrollRange));
-    setScrollProgress(progress);
-  };
-
-  const handleListScroll = () => {
-    updateScrollMetrics();
-  };
-
-  const scrollToTop = () => {
-    if (sectorListRef.current) {
-      sectorListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const scrollToBottom = () => {
-    if (sectorListRef.current) {
-      sectorListRef.current.scrollTo({
-        top: sectorListRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  };
-
-  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!sectorListRef.current) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickY = e.clientY - rect.top;
-    const clickRatio = Math.max(0, Math.min(1, clickY / rect.height));
-    const targetScroll = clickRatio * (sectorListRef.current.scrollHeight - sectorListRef.current.clientHeight);
-    sectorListRef.current.scrollTo({ top: targetScroll, behavior: 'smooth' });
-  };
-
-  const handleThumbMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    isDraggingScrollRef.current = true;
-    dragStartYRef.current = e.clientY;
-    dragStartScrollTopRef.current = sectorListRef.current ? sectorListRef.current.scrollTop : 0;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      if (!isDraggingScrollRef.current || !sectorListRef.current) return;
-      const deltaY = moveEvent.clientY - dragStartYRef.current;
-      const el = sectorListRef.current;
-      const scrollRange = el.scrollHeight - el.clientHeight;
-      const trackHeight = el.clientHeight || 400;
-      const scrollDelta = (deltaY / trackHeight) * scrollRange;
-      el.scrollTop = dragStartScrollTopRef.current + scrollDelta;
-    };
-
-    const onMouseUp = () => {
-      isDraggingScrollRef.current = false;
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      updateScrollMetrics();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [expandedSectors, activeTab]);
 
   // Find currently selected sector or benchmark
   const currentSector = useMemo<SectorIndexData>(() => {
@@ -603,9 +521,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   );
 
   return (
-    <div className="flex flex-col lg:flex-row flex-1 bg-white border border-[#b1ada1]/30 rounded-[24px] shadow-sm overflow-hidden sector-tracker-main-card">
+    <div className="flex flex-col lg:flex-row items-stretch bg-white border border-[#b1ada1]/30 rounded-[24px] shadow-sm overflow-hidden">
       {/* ================= LEFT SIDEBAR (BENCHMARKS + PREBUILT 46 + MY INDEX) ================= */}
-      <div className="w-full lg:w-[380px] border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 flex flex-col bg-[#fafaf9] shrink-0 min-h-0 overflow-hidden sector-sidebar-container">
+      <div className="w-full lg:w-[380px] border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 bg-[#fafaf9] shrink-0">
         {/* Top Tabs */}
         <div className="flex items-center border-b border-[#b1ada1]/30 bg-white shrink-0">
           <button
@@ -712,8 +630,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Table Header: Name ⇅ | Quick Nav | 1D | 1W ⌄ */}
-        <div className="px-3.5 py-2 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9] shrink-0">
+        {/* Table Header: Name ⇅ | 1D | 1W ⌄ */}
+        <div className="px-3.5 py-2.5 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9] shrink-0">
           <button
             onClick={() => toggleSort('name')}
             className="flex items-center gap-1 hover:text-[#08090a] cursor-pointer"
@@ -723,34 +641,15 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </button>
 
           <div className="flex items-center gap-2 pr-1">
-            {/* Quick 1-Click Jump to Top / Bottom */}
-            <div className="flex items-center gap-1 bg-white border border-[#b1ada1]/40 rounded-md px-1.5 py-0.5 text-[10px]">
-              <button
-                onClick={scrollToTop}
-                title="Scroll to Top"
-                className="hover:text-[#2563eb] font-bold cursor-pointer px-0.5"
-              >
-                Top ↑
-              </button>
-              <span className="text-[#b1ada1]/60">|</span>
-              <button
-                onClick={scrollToBottom}
-                title="Scroll to Sector #46 (Bottom)"
-                className="hover:text-[#2563eb] font-bold cursor-pointer px-0.5 text-[#2563eb]"
-              >
-                End (46) ↓
-              </button>
-            </div>
-
             <button
               onClick={() => toggleSort('1d')}
-              className="hover:text-[#08090a] cursor-pointer"
+              className="hover:text-[#08090a] cursor-pointer px-1.5 py-0.5 rounded hover:bg-[#b1ada1]/20"
             >
               1D
             </button>
             <button
               onClick={() => toggleSort('1w')}
-              className="flex items-center gap-0.5 text-[#08090a] font-bold cursor-pointer"
+              className="flex items-center gap-0.5 text-[#08090a] font-bold cursor-pointer px-1.5 py-0.5 rounded hover:bg-[#b1ada1]/20"
             >
               <span>1W</span>
               <span className="text-[10px]">⌄</span>
@@ -758,205 +657,186 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Scrollable Sector Rows with 100% Visible Permanent Custom Scrollbar */}
-        <div className="flex-1 min-h-0 flex relative overflow-hidden bg-white">
-          <div
-            ref={sectorListRef}
-            onScroll={handleListScroll}
-            className="flex-1 h-full overflow-y-auto divide-y divide-[#b1ada1]/15 scrollable-index-list"
-          >
-          {activeTab === 'prebuilt' ? (
-            filteredIndices.map((sector) => {
-              const isSelected = selectedSectorId === sector.id && !selectedStockTicker;
-              const isExpanded = !!expandedSectors[sector.id];
+        {/* Scrollable Sector Rows with Classic Browser Scrollbar (Strict 500px Block Height) */}
+        <div
+          ref={sectorListRef}
+          style={{ height: '500px', maxHeight: '500px', overflowY: 'scroll' }}
+          className="w-full divide-y divide-[#b1ada1]/15 classic-scrollbar bg-white"
+        >
+            {activeTab === 'prebuilt' ? (
+              filteredIndices.map((sector) => {
+                const isSelected = selectedSectorId === sector.id && !selectedStockTicker;
+                const isExpanded = !!expandedSectors[sector.id];
 
-              return (
-                <div key={sector.id} className="group">
-                  {/* Sector Header Row */}
-                  <div
-                    onClick={() => handleSelectSector(sector.id)}
-                    className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'bg-[#2563eb]/8 border-l-4 border-[#2563eb]'
-                        : 'hover:bg-white border-l-4 border-transparent'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                      <button
-                        onClick={(e) => toggleSectorExpand(sector.id, e)}
-                        className="p-1 hover:bg-[#b1ada1]/20 rounded-md text-[#08090a]/60 cursor-pointer"
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="w-3.5 h-3.5 text-[#2563eb]" />
-                        ) : (
-                          <ChevronRight className="w-3.5 h-3.5 text-[#08090a]/50" />
-                        )}
-                      </button>
-                      <div className="truncate">
-                        <span
-                          className={`text-xs font-semibold block truncate ${
-                            isSelected ? 'text-[#2563eb] font-bold' : 'text-[#08090a]'
-                          }`}
-                        >
-                          {sector.name}
-                        </span>
-                        <span className="text-[10px] text-[#08090a]/50 font-medium">
-                          {sector.stocks.length} stocks · {sector.breadthPositivePct}% breadth
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs font-mono font-medium shrink-0">
-                      <span
-                        className={sector.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}
-                      >
-                        {sector.change1D >= 0 ? '+' : ''}
-                        {sector.change1D.toFixed(2)}%
-                      </span>
-                      <span
-                        className={`w-14 text-right font-bold ${
-                          sector.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                        }`}
-                      >
-                        {sector.change1W >= 0 ? '+' : ''}
-                        {sector.change1W.toFixed(2)}%
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Expanded Company Rows */}
-                  {isExpanded && (
-                    <div className="bg-white/80 pl-6 pr-3.5 py-1 space-y-0.5 border-t border-b border-[#b1ada1]/10">
-                      {sector.stocks.map((stock) => {
-                        const isStockSelected =
-                          selectedStockTicker === stock.ticker && selectedSectorId === sector.id;
-
-                        return (
-                          <div
-                            key={stock.ticker}
-                            onClick={(e) => handleSelectStock(stock.ticker, sector.id, e)}
-                            className={`flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition-colors ${
-                              isStockSelected
-                                ? 'bg-[#2563eb]/10 text-[#2563eb]'
-                                : 'hover:bg-[#f4f3ee] text-[#08090a]'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0 pr-2">
-                              <div
-                                style={{ backgroundColor: stock.logoBg || '#0284c7' }}
-                                className="w-5 h-5 rounded-md text-white font-mono font-extrabold text-[9px] flex items-center justify-center shrink-0 shadow-2xs"
-                              >
-                                {stock.logoText || stock.ticker.slice(0, 2)}
-                              </div>
-                              <span
-                                className={`text-[11px] font-mono truncate ${
-                                  isStockSelected ? 'font-bold text-[#2563eb]' : 'font-semibold'
-                                }`}
-                              >
-                                {stock.ticker}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-4 text-[11px] font-mono shrink-0">
-                              <span
-                                className={stock.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}
-                              >
-                                {stock.change1D >= 0 ? '+' : ''}
-                                {stock.change1D.toFixed(2)}%
-                              </span>
-                              <span
-                                className={`w-14 text-right ${
-                                  stock.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                                }`}
-                              >
-                                {stock.change1W >= 0 ? '+' : ''}
-                                {stock.change1W.toFixed(2)}%
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }).concat([
-              <div key="end-of-sectors" className="py-3 px-4 text-center text-[10px] text-[#08090a]/50 font-mono bg-[#f4f3ee]/50 border-t border-[#b1ada1]/20">
-                ✓ All 46 Industry Clusters Mapped (End of List)
-              </div>
-            ])
-          ) : (
-            // My Index View
-            <div className="p-4 space-y-3">
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="w-full py-2.5 px-3 bg-[#08090a] text-white rounded-xl text-xs font-bold font-display hover:bg-[#1f2429] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Create New Basket</span>
-              </button>
-
-              {customIndices.length === 0 ? (
-                <div className="p-6 text-center text-xs text-[#08090a]/60 space-y-2 bg-white rounded-xl border border-dashed border-[#b1ada1]/40">
-                  <Layers className="w-8 h-8 mx-auto text-[#08090a]/30" />
-                  <p className="font-semibold text-[#08090a]">No custom indices yet</p>
-                  <p className="text-[11px] leading-relaxed">
-                    Create custom equal-weighted stock baskets to track your specific sector rotation theses.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {customIndices.map((c) => (
+                return (
+                  <div key={sector.id} className="group">
+                    {/* Sector Header Row */}
                     <div
-                      key={c.id}
-                      onClick={() => setSelectedSectorId(c.id)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                        selectedSectorId === c.id
-                          ? 'bg-white border-[#2563eb] shadow-xs'
-                          : 'bg-white/60 border-[#b1ada1]/30 hover:bg-white'
+                      onClick={() => handleSelectSector(sector.id)}
+                      className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer transition-colors ${
+                        isSelected
+                          ? 'bg-[#2563eb]/8 border-l-4 border-[#2563eb]'
+                          : 'hover:bg-white border-l-4 border-transparent'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-[#08090a] font-display">{c.name}</span>
-                        <span className="text-[10px] bg-[#2563eb]/10 text-[#2563eb] px-2 py-0.5 rounded-full font-bold">
-                          {c.stockTickers.length} stocks
+                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                        <button
+                          onClick={(e) => toggleSectorExpand(sector.id, e)}
+                          className="p-1 hover:bg-[#b1ada1]/20 rounded-md text-[#08090a]/60 cursor-pointer"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="w-3.5 h-3.5 text-[#2563eb]" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5 text-[#08090a]/50" />
+                          )}
+                        </button>
+                        <div className="truncate">
+                          <span
+                            className={`text-xs font-semibold block truncate ${
+                              isSelected ? 'text-[#2563eb] font-bold' : 'text-[#08090a]'
+                            }`}
+                          >
+                            {sector.name}
+                          </span>
+                          <span className="text-[10px] text-[#08090a]/50 font-medium">
+                            {sector.stocks.length} stocks · {sector.breadthPositivePct}% breadth
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs font-mono font-medium shrink-0">
+                        <span
+                          className={sector.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}
+                        >
+                          {sector.change1D >= 0 ? '+' : ''}
+                          {sector.change1D.toFixed(2)}%
+                        </span>
+                        <span
+                          className={`w-14 text-right font-bold ${
+                            sector.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                          }`}
+                        >
+                          {sector.change1W >= 0 ? '+' : ''}
+                          {sector.change1W.toFixed(2)}%
                         </span>
                       </div>
-                      {c.description && (
-                        <p className="text-[11px] text-[#08090a]/60 mt-1 line-clamp-1">{c.description}</p>
-                      )}
                     </div>
-                  ))}
+
+                    {/* Expanded Company Rows */}
+                    {isExpanded && (
+                      <div className="bg-white/80 pl-6 pr-3.5 py-1 space-y-0.5 border-t border-b border-[#b1ada1]/10">
+                        {sector.stocks.map((stock) => {
+                          const isStockSelected =
+                            selectedStockTicker === stock.ticker && selectedSectorId === sector.id;
+
+                          return (
+                            <div
+                              key={stock.ticker}
+                              onClick={(e) => handleSelectStock(stock.ticker, sector.id, e)}
+                              className={`flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition-colors ${
+                                isStockSelected
+                                  ? 'bg-[#2563eb]/10 text-[#2563eb]'
+                                  : 'hover:bg-[#f4f3ee] text-[#08090a]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0 pr-2">
+                                <div
+                                  style={{ backgroundColor: stock.logoBg || '#0284c7' }}
+                                  className="w-5 h-5 rounded-md text-white font-mono font-extrabold text-[9px] flex items-center justify-center shrink-0 shadow-2xs"
+                                >
+                                  {stock.logoText || stock.ticker.slice(0, 2)}
+                                </div>
+                                <span
+                                  className={`text-[11px] font-mono truncate ${
+                                    isStockSelected ? 'font-bold text-[#2563eb]' : 'font-semibold'
+                                  }`}
+                                >
+                                  {stock.ticker}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-4 text-[11px] font-mono shrink-0">
+                                <span
+                                  className={stock.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}
+                                >
+                                  {stock.change1D >= 0 ? '+' : ''}
+                                  {stock.change1D.toFixed(2)}%
+                                </span>
+                                <span
+                                  className={`w-14 text-right ${
+                                    stock.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                                  }`}
+                                >
+                                  {stock.change1W >= 0 ? '+' : ''}
+                                  {stock.change1W.toFixed(2)}%
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }).concat([
+                <div
+                  key="end-of-sectors"
+                  className="py-3 px-4 text-center text-[10px] text-[#08090a]/50 font-mono bg-[#f4f3ee]/50 border-t border-[#b1ada1]/20"
+                >
+                  ✓ All 46 Industry Clusters Mapped
                 </div>
-              )}
-            </div>
+              ])
+            ) : (
+              // My Index View
+              <div className="p-4 space-y-3">
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="w-full py-2.5 px-3 bg-[#08090a] text-white rounded-xl text-xs font-bold font-display hover:bg-[#1f2429] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create New Basket</span>
+                </button>
+
+                {customIndices.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-[#08090a]/60 space-y-2 bg-white rounded-xl border border-dashed border-[#b1ada1]/40">
+                    <Layers className="w-8 h-8 mx-auto text-[#08090a]/30" />
+                    <p className="font-semibold text-[#08090a]">No custom indices yet</p>
+                    <p className="text-[11px] leading-relaxed">
+                      Create custom equal-weighted stock baskets to track your specific sector rotation theses.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {customIndices.map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => setSelectedSectorId(c.id)}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          selectedSectorId === c.id
+                            ? 'bg-white border-[#2563eb] shadow-xs'
+                            : 'bg-white/60 border-[#b1ada1]/30 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-[#08090a] font-display">{c.name}</span>
+                          <span className="text-[10px] bg-[#2563eb]/10 text-[#2563eb] px-2 py-0.5 rounded-full font-bold">
+                            {c.stockTickers.length} stocks
+                          </span>
+                        </div>
+                        {c.description && (
+                          <p className="text-[11px] text-[#08090a]/60 mt-1 line-clamp-1">{c.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
           )}
         </div>
-
-        {/* 100% PERMANENT VISIBLE CUSTOM SCROLLBAR TRACK & THUMB */}
-        <div
-          onClick={handleTrackClick}
-          className="w-3.5 h-full bg-[#f4f3ee] border-l border-[#b1ada1]/30 relative shrink-0 cursor-pointer select-none group"
-          title="Click or drag to scroll through all 46 sectors"
-        >
-          {/* Subtle guide line in center */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-2 bottom-2 w-0.5 bg-[#b1ada1]/30" />
-
-          {/* Draggable Solid Charcoal Thumb */}
-          <div
-            onMouseDown={handleThumbMouseDown}
-            style={{
-              top: `${scrollProgress * (100 - thumbHeightPct)}%`,
-              height: `${thumbHeightPct}%`,
-            }}
-            className="absolute left-0.5 right-0.5 rounded-full bg-[#08090a] group-hover:bg-[#2563eb] transition-colors shadow-xs cursor-grab active:cursor-grabbing z-10"
-          />
-        </div>
       </div>
-    </div>
 
       {/* ================= RIGHT MAIN CANVAS (DEFINITIVE PROOF & BENCHMARK COMPARISONS) ================= */}
-      <div className="flex-1 flex flex-col bg-white overflow-hidden lg:h-full min-w-0">
+      <div className="flex-1 flex flex-col bg-white min-w-0">
         {/* Header: Title + Mode Switcher */}
         <div className="px-6 py-4 border-b border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-3 bg-white shrink-0">
           <div className="flex items-center gap-3">
@@ -1165,7 +1045,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         )}
 
         {/* Main Chart Canvas */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-h-0">
+        <div className="p-4 sm:p-6 space-y-6">
           {viewProofMode === 'overlay' ? (
             // ================= MULTI-STOCK OVERLAY WITH BENCHMARK ANCHORS =================
             <div className="bg-white p-5 rounded-[22px] border border-[#b1ada1]/30 shadow-xs space-y-3">

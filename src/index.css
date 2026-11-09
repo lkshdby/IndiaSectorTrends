@@ -42,38 +42,15 @@
   background: rgba(8, 9, 10, 0.4);
 }
 
-/* Main tracker card and sidebar fixed-height constraints ensuring scrollability */
-.sector-tracker-main-card {
-  height: calc(100vh - 140px);
-  min-height: 640px;
-  max-height: 940px;
-}
-
-.sector-sidebar-container {
-  height: 520px;
-  max-height: 520px;
-  display: flex;
-  flex-direction: column;
-}
-
-@media (min-width: 1024px) {
-  .sector-sidebar-container {
-    height: 100% !important;
-    max-height: 100% !important;
-  }
-}
-
-/* Internal scrollable list container */
-.scrollable-index-list {
-  height: 100% !important;
+/* Classic standard browser scrollbar for sector list with strict 500px block height */
+.classic-scrollbar {
+  display: block !important;
+  height: 500px !important;
+  min-height: 500px !important;
+  max-height: 500px !important;
   overflow-y: scroll !important;
   overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none !important;
+  scrollbar-width: auto;
+  scrollbar-color: #6b7280 #e5e4de;
 }
 
-.scrollable-index-list::-webkit-scrollbar {
-  width: 0px !important;
-  height: 0px !important;
-  display: none !important;
-}
