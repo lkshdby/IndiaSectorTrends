@@ -32,8 +32,8 @@ async function getLiveBenchmarks(forceRefresh = false) {
 
   const benchmarkConfigs = [
     { key: 'nifty50', symbol: '^NSEI', name: 'NIFTY 50', category: 'Large Cap Benchmark (Top 50 Giants)', indexPrice: 25030.35 },
-    { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100', category: 'Mid Cap Benchmark (Next 100 Growth Leaders)', indexPrice: 60606.65 },
-    { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100', category: 'Small Cap Benchmark (High-Beta Emerging 100)', indexPrice: 18975.05 },
+    { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100 ETF proxy (MOM100)', category: 'Mid Cap Benchmark (Next 100 Growth Leaders)', indexPrice: 60606.65 },
+    { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100 ETF proxy (SML100CASE)', category: 'Small Cap Benchmark (High-Beta Emerging 100)', indexPrice: 18975.05 },
     { key: 'nifty500', symbol: '^CRSLDX', name: 'NIFTY 500', category: 'Broad Market Universe (94%+ Total Market Cap)', indexPrice: 23456.95 },
   ];
 
@@ -45,7 +45,7 @@ async function getLiveBenchmarks(forceRefresh = false) {
         const data = await fetchYahooChart(cfg.symbol);
         results[cfg.key] = {
           ...cfg,
-          price: data.price || cfg.indexPrice,
+          price: data.price,
           change1D: data.change1D,
           change1W: data.change1W,
           change3M: data.change3M,
