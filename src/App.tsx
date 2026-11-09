@@ -29,11 +29,14 @@ export default function App() {
       const benchmarksResponse = await fetch('/api/benchmarks?force=true');
       const benchmarksResult = benchmarksResponse.ok ? await benchmarksResponse.json() : null;
       setSyncTrigger(previous => previous + 1);
-      if (benchmarksResult?.success && Object.keys(benchmarksResult.benchmarks || {}).length === 4) {
-        showToast(`Refreshed ${result.updatedStocksCount} stock histories and 4 benchmarks.`, 'success');
-      } else {
-        showToast(`Refreshed ${result.updatedStocksCount} stock histories; benchmark refresh incomplete.`, 'info');
-      }
+      const requested = result.totalRequestedCount || result.updatedStocksCount;
+      const coverage = `${result.updatedStocksCount}/${requested}`;
+      const allBenchmarks = benchmarksResult?.success &&
+        Object.keys(benchmarksResult.benchmarks || {}).length === 4;
+      showToast(
+        `Refreshed ${coverage} stock histories; benchmarks ${allBenchmarks ? 'available' : 'incomplete'}. ${result.updatedStocksCount < requested ? 'Some older quotes remain cached.' : ''}`,
+        allBenchmarks && result.updatedStocksCount === requested ? 'success' : 'info'
+      );
     } catch (error) {
       showToast(`Market refresh failed: ${error instanceof Error ? error.message : 'unknown error'}. Existing data retained.`, 'error');
     } finally {
