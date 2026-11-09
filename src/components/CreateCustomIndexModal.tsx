@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Check, Search, Layers } from 'lucide-react';
 import { CustomIndexItem } from '../types/indexTracker';
-import { PREBUILT_SECTOR_INDICES } from '../data/prebuiltIndices';
+import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
 
 interface CreateCustomIndexModalProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export const CreateCustomIndexModal: React.FC<CreateCustomIndexModalProps> = ({
 
   // Gather all unique stocks across all prebuilt indices
   const allStocksMap = new Map<string, { ticker: string; name: string; sector: string }>();
-  PREBUILT_SECTOR_INDICES.forEach((sec) => {
+  THEMATIC_SECTOR_INDICES.forEach((sec) => {
     sec.stocks.forEach((st) => {
       if (!allStocksMap.has(st.ticker)) {
         allStocksMap.set(st.ticker, { ticker: st.ticker, name: st.name, sector: sec.name });
