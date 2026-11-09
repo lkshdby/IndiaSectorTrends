@@ -1,7 +1,8 @@
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
-import { PREBUILT_SECTOR_INDICES } from '../src/data/prebuiltIndices';
+import { THEMATIC_SECTOR_INDICES } from '../src/data/sectorUniverse';
+import { validateAndRepairStock, sanitizeSnapshot } from '../src/utils/priceQuality';
 
 export interface MarketHistoryPoint {
   date: string;
@@ -56,14 +57,13 @@ export function fetchYahooChart(symbol: string, range = '3mo'): Promise<{
             const timestamps: number[] = result.timestamp || [];
             const quotes = result.indicators?.quote?.[0]?.close || [];
 
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const rawPoints: { date: string; close: number }[] = [];
 
             for (let i = 0; i < timestamps.length; i++) {
               const val = quotes[i];
               if (val !== null && val !== undefined && !isNaN(val)) {
                 const d = new Date(timestamps[i] * 1000);
-                const formattedDate = `${d.getDate()} ${monthNames[d.getMonth()]}`;
+                const formattedDate = d.toISOString().slice(0, 10);
                 rawPoints.push({
                   date: formattedDate,
                   close: parseFloat(val.toFixed(2)),
@@ -72,7 +72,15 @@ export function fetchYahooChart(symbol: string, range = '3mo'): Promise<{
             }
 
             // Real market price & accurate 1D (yesterday close), 1W (5 trading days ago), 3M (range start)
-            const currentPrice = meta.regularMarketPrice || (rawPoints.length > 0 ? rawPoints[rawPoints.length - 1].close : 0);
+            if (rawPoints.length < 2) return reject(new Error('Insufficient daily closing history'));
+            // Avoid mismatched intraday/meta quotes (notably DRONE.NS in cached data).
+            // All metrics here refer to observed daily closes, not live intraday ticks.
+            const currentPrice = rawPoints[rawPoints.length - 1].close;
+            const quoteDrift = meta.regularMarketPrice && currentPrice
+              ? Math.abs(meta.regularMarketPrice / currentPrice - 1) * 100 : 0;
+            if (quoteDrift > 5) {
+              console.warn(`[QUOTE-DIVERGENCE] ${symbol}: meta ${meta.regularMarketPrice} vs daily close ${currentPrice}`);
+            }
             const yesterdayClose = rawPoints.length >= 2 ? rawPoints[rawPoints.length - 2].close : (meta.previousClose || currentPrice);
             const change1D = yesterdayClose > 0 ? ((currentPrice - yesterdayClose) / yesterdayClose) * 100 : 0;
 
@@ -126,6 +134,7 @@ export const STOCK_SYMBOL_MAP: Record<string, string> = {
   MANIPALHOS: 'MANIPALHOS.BO',
   JUPITERWAG: 'JWL.NS',
   TATAMOTORS: 'TMPV.NS',
+  TMCV: 'TMCV.NS',
   FORCE: 'FORCEMOT.NS',
   LTIM: 'LTM.NS',
   LTM: 'LTM.NS', // NSE symbol changed effective 27 February 2026
@@ -158,12 +167,13 @@ try {
   const seedPath = path.join(process.cwd(), 'src', 'data', 'verifiedLiveMarketData.json');
   if (fs.existsSync(seedPath)) {
     const seedJson = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
-    if (seedJson.fetchedAt) {
-      lastSyncAt = seedJson.fetchedAt;
+    if (seedJson.fetchedAt || seedJson.syncedAt) {
+      lastSyncAt = seedJson.fetchedAt || seedJson.syncedAt;
     }
     if (seedJson.stocks) {
-      const seededAt = Date.now();
-      for (const [ticker, stockObj] of Object.entries(seedJson.stocks)) {
+      const seededAt = Date.parse(seedJson.fetchedAt || seedJson.syncedAt || '') || 0;
+      const cleaned = sanitizeSnapshot(seedJson.stocks);
+      for (const [ticker, stockObj] of Object.entries(cleaned)) {
         stockHistoryCache.set(ticker.toUpperCase(), { data: stockObj, cachedAt: seededAt });
       }
     }
@@ -214,8 +224,13 @@ export async function fetchStocksBatch(
               rawHistory: chartData.rawHistory,
               fetchedAt: new Date().toISOString(),
             };
-            stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
-            results[ticker] = stockResult;
+            const checked = validateAndRepairStock(stockResult);
+            if (!checked.record) {
+              console.warn(`[QUARANTINED] ${ticker}: ${checked.warnings.join('; ')}`);
+              return;
+            }
+            stockHistoryCache.set(ticker, { data: checked.record, cachedAt: now });
+            results[ticker] = checked.record;
           } catch {
             // If .NS failed and doesn't have an extension, try .BO as fallback
             if (!ticker.includes('.')) {
@@ -233,8 +248,13 @@ export async function fetchStocksBatch(
                   rawHistory: chartData.rawHistory,
                   fetchedAt: new Date().toISOString(),
                 };
-                stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
-                results[ticker] = stockResult;
+                const checked = validateAndRepairStock(stockResult);
+                if (!checked.record) {
+                  console.warn(`[QUARANTINED] ${ticker}: ${checked.warnings.join('; ')}`);
+                  return;
+                }
+                stockHistoryCache.set(ticker, { data: checked.record, cachedAt: now });
+                results[ticker] = checked.record;
               } catch {
                 // Fall back to existing cached entry if available
                 const stale = stockHistoryCache.get(ticker);
@@ -281,7 +301,7 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     // Include the entire curated constituent universe, not only stocks in the seed cache.
     const allTickers = Array.from(
       new Set([
-        ...PREBUILT_SECTOR_INDICES.flatMap(sector => sector.stocks.map(stock => stock.ticker)),
+        ...THEMATIC_SECTOR_INDICES.flatMap(sector => sector.stocks.map(stock => stock.ticker)),
         ...Object.keys(existingJson.stocks || {}),
         ...Array.from(stockHistoryCache.keys()),
       ])
@@ -289,7 +309,10 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
 
     const syncStartedAt = Date.now();
     const refreshedStocks = await fetchStocksBatch(allTickers, true);
-    const mergedStocks = { ...(existingJson.stocks || {}), ...refreshedStocks };
+    const mergedStocks = {
+      ...sanitizeSnapshot(existingJson.stocks || {}),
+      ...refreshedStocks,
+    };
     const refreshedCount = Object.values(refreshedStocks).filter((s: any) =>
       s?.fetchedAt && Date.parse(s.fetchedAt) >= syncStartedAt
     ).length;
@@ -297,8 +320,8 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     // Refresh the 4 benchmarks as well
     const benchmarkConfigs = [
       { key: 'nifty50', symbol: '^NSEI', name: 'NIFTY 50', category: 'Large Cap Benchmark (Top 50 Giants)', indexPrice: 25030.35 },
-      { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100', category: 'Mid Cap Benchmark (Next 100 Growth Leaders)', indexPrice: 60606.65 },
-      { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100', category: 'Small Cap Benchmark (High-Beta Emerging 100)', indexPrice: 18975.05 },
+      { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100 ETF proxy (MOM100)', category: 'Mid Cap Benchmark (Next 100 Growth Leaders)', indexPrice: 60606.65 },
+      { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100 ETF proxy (SML100CASE)', category: 'Small Cap Benchmark (High-Beta Emerging 100)', indexPrice: 18975.05 },
       { key: 'nifty500', symbol: '^CRSLDX', name: 'NIFTY 500', category: 'Broad Market Universe (94%+ Total Market Cap)', indexPrice: 23456.95 },
     ];
 
@@ -309,7 +332,7 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
           const data = await fetchYahooChart(cfg.symbol);
           refreshedBenchmarks[cfg.key] = {
             ...cfg,
-            price: data.price || cfg.indexPrice,
+            price: data.price,
             change1D: data.change1D,
             change1W: data.change1W,
             change3M: data.change3M,
@@ -431,3 +454,14 @@ export function startMarketSyncScheduler() {
 
 
 
+
+/**
+ * Complete in-memory, validated snapshot for frontend rehydration.
+ * This does not trigger 452 independent network fetches.
+ */
+export function getVerifiedStockSnapshot(): { stocks: Record<string, any>; fetchedAt: string | null } {
+  return {
+    stocks: Object.fromEntries(Array.from(stockHistoryCache, ([ticker, entry]) => [ticker, entry.data])),
+    fetchedAt: lastSyncAt,
+  };
+}
