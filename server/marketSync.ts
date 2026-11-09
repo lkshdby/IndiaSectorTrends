@@ -1,6 +1,7 @@
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
+import { PREBUILT_SECTOR_INDICES } from '../src/data/prebuiltIndices';
 
 export interface MarketHistoryPoint {
   date: string;
@@ -126,7 +127,8 @@ export const STOCK_SYMBOL_MAP: Record<string, string> = {
   JUPITERWAG: 'JWL.NS',
   TATAMOTORS: 'TMPV.NS',
   FORCE: 'FORCEMOT.NS',
-  LTIM: 'LTTS.NS',
+  LTIM: 'LTM.NS',
+  LTM: 'LTM.NS', // NSE symbol changed effective 27 February 2026
   SUVENPHAR: 'SUVEN.NS',
   TRIL: 'TARIL.NS',
   VEDANTFASH: 'MANYAVAR.NS',
@@ -210,6 +212,7 @@ export async function fetchStocksBatch(
               change3M: chartData.change3M,
               history: chartData.history,
               rawHistory: chartData.rawHistory,
+              fetchedAt: new Date().toISOString(),
             };
             stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
             results[ticker] = stockResult;
@@ -228,6 +231,7 @@ export async function fetchStocksBatch(
                   change3M: chartData.change3M,
                   history: chartData.history,
                   rawHistory: chartData.rawHistory,
+                  fetchedAt: new Date().toISOString(),
                 };
                 stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
                 results[ticker] = stockResult;
@@ -254,12 +258,14 @@ export async function fetchStocksBatch(
 export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promise<{
   success: boolean;
   updatedStocksCount: number;
+  totalRequestedCount: number;
   syncedAt: string;
 }> {
   if (isSyncInProgress) {
     return {
       success: false,
-      updatedStocksCount: stockHistoryCache.size,
+      updatedStocksCount: 0,
+      totalRequestedCount: stockHistoryCache.size,
       syncedAt: lastSyncAt || new Date().toISOString(),
     };
   }
@@ -272,15 +278,21 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
       existingJson = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
     }
 
+    // Include the entire curated constituent universe, not only stocks in the seed cache.
     const allTickers = Array.from(
       new Set([
+        ...PREBUILT_SECTOR_INDICES.flatMap(sector => sector.stocks.map(stock => stock.ticker)),
         ...Object.keys(existingJson.stocks || {}),
         ...Array.from(stockHistoryCache.keys()),
       ])
     );
 
+    const syncStartedAt = Date.now();
     const refreshedStocks = await fetchStocksBatch(allTickers, true);
     const mergedStocks = { ...(existingJson.stocks || {}), ...refreshedStocks };
+    const refreshedCount = Object.values(refreshedStocks).filter((s: any) =>
+      s?.fetchedAt && Date.parse(s.fetchedAt) >= syncStartedAt
+    ).length;
 
     // Refresh the 4 benchmarks as well
     const benchmarkConfigs = [
@@ -327,8 +339,9 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     }
 
     return {
-      success: true,
-      updatedStocksCount: Object.keys(mergedStocks).length,
+      success: refreshedCount > 0,
+      updatedStocksCount: refreshedCount,
+      totalRequestedCount: allTickers.length,
       syncedAt: nowIso,
     };
   } finally {
