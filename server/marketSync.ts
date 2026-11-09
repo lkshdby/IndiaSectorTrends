@@ -212,6 +212,7 @@ export async function fetchStocksBatch(
               change3M: chartData.change3M,
               history: chartData.history,
               rawHistory: chartData.rawHistory,
+              fetchedAt: new Date().toISOString(),
             };
             stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
             results[ticker] = stockResult;
@@ -230,6 +231,7 @@ export async function fetchStocksBatch(
                   change3M: chartData.change3M,
                   history: chartData.history,
                   rawHistory: chartData.rawHistory,
+                  fetchedAt: new Date().toISOString(),
                 };
                 stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
                 results[ticker] = stockResult;
@@ -256,12 +258,14 @@ export async function fetchStocksBatch(
 export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promise<{
   success: boolean;
   updatedStocksCount: number;
+  totalRequestedCount: number;
   syncedAt: string;
 }> {
   if (isSyncInProgress) {
     return {
       success: false,
-      updatedStocksCount: stockHistoryCache.size,
+      updatedStocksCount: 0,
+      totalRequestedCount: stockHistoryCache.size,
       syncedAt: lastSyncAt || new Date().toISOString(),
     };
   }
@@ -283,9 +287,12 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
       ])
     );
 
+    const syncStartedAt = Date.now();
     const refreshedStocks = await fetchStocksBatch(allTickers, true);
     const mergedStocks = { ...(existingJson.stocks || {}), ...refreshedStocks };
-    const refreshedCount = Object.keys(refreshedStocks).length;
+    const refreshedCount = Object.values(refreshedStocks).filter((s: any) =>
+      s?.fetchedAt && Date.parse(s.fetchedAt) >= syncStartedAt
+    ).length;
 
     // Refresh the 4 benchmarks as well
     const benchmarkConfigs = [
@@ -334,6 +341,7 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     return {
       success: refreshedCount > 0,
       updatedStocksCount: refreshedCount,
+      totalRequestedCount: allTickers.length,
       syncedAt: nowIso,
     };
   } finally {
