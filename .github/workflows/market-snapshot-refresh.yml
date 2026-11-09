@@ -1,0 +1,43 @@
+name: Refresh Committed Market Snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 19:00 IST on trading weekdays (13:30 UTC); exchange holidays still produce no new bar.
+    - cron: '30 13 * * 1-5'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-snapshot-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Fetch and validate listed stock closes
+        run: npx tsx scripts/refresh-market-snapshot.ts
+      - name: Commit refreshed market snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/data/verifiedLiveMarketData.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: update verified sector-rotation market snapshot [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "No snapshot changes to commit."
+          fi
