@@ -43,7 +43,7 @@ import {
   HistoricalPricePoint,
   BenchmarkItem,
 } from '../types/indexTracker';
-import { CORE_SECTOR_INDICES, getSectorOpportunityMembers } from '../data/sectorUniverse';
+import { CORE_SECTOR_INDICES, THEMATIC_SECTOR_INDICES, getSectorOpportunityMembers } from '../data/sectorUniverse';
 import { sanitizeSnapshot, observedHorizonReturn } from '../utils/priceQuality';
 import {
   fetchLiveBenchmarks,
@@ -365,7 +365,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       if (!custom) return CORE_SECTOR_INDICES[0];
 
       const matchedStocks: StockConstituent[] = [];
-      CORE_SECTOR_INDICES.forEach((sec) => {
+      // User-created indices may intentionally mix core and adjacent ideas.
+      THEMATIC_SECTOR_INDICES.forEach((sec) => {
         sec.stocks.forEach((st) => {
           if (custom.stockTickers.includes(st.ticker) && !matchedStocks.some((m) => m.ticker === st.ticker)) {
             matchedStocks.push(st);
