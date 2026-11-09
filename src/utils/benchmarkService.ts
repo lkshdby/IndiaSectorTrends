@@ -59,10 +59,12 @@ export const FALLBACK_BENCHMARKS: Record<string, BenchmarkItem> = {
   niftyMidcap: {
     ...(verifiedLiveMarketData.benchmarks.niftyMidcap as BenchmarkItem),
     name: 'NIFTY Midcap 100 ETF proxy (MOM100)',
+    price: 0, // Cached benchmark input held an index-level price, not ETF price.
   },
   niftySmallcap: {
     ...(verifiedLiveMarketData.benchmarks.niftySmallcap as BenchmarkItem),
     name: 'NIFTY Smallcap 100 ETF proxy (SML100CASE)',
+    price: 0, // Never substitute index points for the ETF quote.
   },
 };
 
