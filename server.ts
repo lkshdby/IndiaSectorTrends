@@ -10,16 +10,22 @@ import {
   persistSnapshots,
   startBackgroundCron,
 } from './server/fetcher';
-import { fetchYahooChart, fetchStocksBatch } from './server/marketSync';
+import {
+  fetchYahooChart,
+  fetchStocksBatch,
+  startMarketSyncScheduler,
+  getMarketSyncStatus,
+  runFullUniverseSync,
+} from './server/marketSync';
 import { scrapeScreenerMarket } from './server/screenerScraper';
 
 // In-memory cache for benchmarks
 let cachedBenchmarks: any = null;
 let lastBenchmarkFetchTime = 0;
 
-async function getLiveBenchmarks() {
+async function getLiveBenchmarks(forceRefresh = false) {
   const now = Date.now();
-  if (cachedBenchmarks && now - lastBenchmarkFetchTime < 3600000) {
+  if (!forceRefresh && cachedBenchmarks && now - lastBenchmarkFetchTime < 3600000) {
     return cachedBenchmarks;
   }
 
@@ -38,7 +44,7 @@ async function getLiveBenchmarks() {
         const data = await fetchYahooChart(cfg.symbol);
         results[cfg.key] = {
           ...cfg,
-          price: cfg.indexPrice || data.price,
+          price: data.price || cfg.indexPrice,
           change1D: data.change1D,
           change1W: data.change1W,
           change3M: data.change3M,
@@ -65,20 +71,21 @@ async function startServer() {
   // JSON Body parsing
   app.use(express.json({ limit: '50mb' }));
 
-  // Initialize data store
+  // Initialize data store & start automated IST market sync scheduler (18:30 IST, 02:00 IST, 04:00 IST)
   initializeDataStore();
-  // startBackgroundCron(); // Disabled: Screener sync retired
+  startMarketSyncScheduler();
 
   // Health check
   app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString() });
+    res.json({ status: 'ok', time: new Date().toISOString(), sync: getMarketSyncStatus() });
   });
 
   // Live Benchmarks (NIFTY 50, NIFTY Midcap 100, NIFTY Smallcap 100, NIFTY 500)
   app.get('/api/benchmarks', async (req, res) => {
     try {
-      const benchmarks = await getLiveBenchmarks();
-      res.json({ success: true, benchmarks });
+      const force = req.query.force === 'true';
+      const benchmarks = await getLiveBenchmarks(force);
+      res.json({ success: true, benchmarks, syncStatus: getMarketSyncStatus() });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -88,12 +95,27 @@ async function startServer() {
   app.get('/api/stocks-history', async (req, res) => {
     try {
       const tickersParam = (req.query.tickers as string) || '';
+      const force = req.query.force === 'true';
       if (!tickersParam.trim()) {
         return res.json({ success: true, count: 0, stocks: {} });
       }
       const tickers = tickersParam.split(',').map((t) => t.trim()).filter(Boolean);
-      const stocks = await fetchStocksBatch(tickers);
+      const stocks = await fetchStocksBatch(tickers, force);
       res.json({ success: true, count: Object.keys(stocks).length, stocks });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Automated IST Sync Status & Full Universe Manual Trigger
+  app.get('/api/sync-status', (req, res) => {
+    res.json({ success: true, status: getMarketSyncStatus() });
+  });
+
+  app.post('/api/sync-universe', async (req, res) => {
+    try {
+      const result = await runFullUniverseSync('Manual On-Demand Sync');
+      res.json(result);
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

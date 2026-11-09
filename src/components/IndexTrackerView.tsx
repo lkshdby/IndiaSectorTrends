@@ -347,14 +347,18 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     }
   }, [activeTab, selectedSectorId, customIndices, benchmarks, liveStocksData, weightingMode]);
 
-  // Fetch real market stock quotes and 64-day closing histories for current constituents
+  // Fetch real market stock quotes and 63-day closing histories for current constituents
   useEffect(() => {
     const tickers = currentSector.stocks.map((s) => s.ticker);
-    const unFetched = tickers.filter((t) => !liveStocksData[t] && !liveStocksData[t.toUpperCase()]);
-    if (unFetched.length === 0) return;
+    const isManualSync = Boolean(syncTrigger && syncTrigger > 0);
+    const targetTickers = isManualSync
+      ? tickers
+      : tickers.filter((t) => !liveStocksData[t] && !liveStocksData[t.toUpperCase()]);
+    if (targetTickers.length === 0) return;
 
     let isMounted = true;
-    fetch(`/api/stocks-history?tickers=${encodeURIComponent(unFetched.join(','))}`)
+    const forceQuery = isManualSync ? '&force=true' : '';
+    fetch(`/api/stocks-history?tickers=${encodeURIComponent(targetTickers.join(','))}${forceQuery}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (isMounted && data && data.success && data.stocks) {

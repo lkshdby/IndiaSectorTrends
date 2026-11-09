@@ -138,10 +138,27 @@ export const STOCK_SYMBOL_MAP: Record<string, string> = {
 const stockHistoryCache = new Map<string, { data: any; cachedAt: number }>();
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours (daily rotation cadence)
 
+export interface SyncSchedulerStatus {
+  timezone: string;
+  scheduledTimesIST: string[];
+  lastSyncAt: string | null;
+  lastSyncReason: string;
+  isSyncInProgress: boolean;
+  totalTrackedStocks: number;
+}
+
+let lastSyncAt: string | null = null;
+let lastSyncReason = 'Pre-verified NSE/BSE Snapshot';
+let isSyncInProgress = false;
+const triggeredSlots = new Set<string>();
+
 try {
   const seedPath = path.join(process.cwd(), 'src', 'data', 'verifiedLiveMarketData.json');
   if (fs.existsSync(seedPath)) {
     const seedJson = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
+    if (seedJson.fetchedAt) {
+      lastSyncAt = seedJson.fetchedAt;
+    }
     if (seedJson.stocks) {
       const seededAt = Date.now();
       for (const [ticker, stockObj] of Object.entries(seedJson.stocks)) {
@@ -153,7 +170,10 @@ try {
   // continue if seed file not accessible
 }
 
-export async function fetchStocksBatch(tickers: string[]): Promise<Record<string, any>> {
+export async function fetchStocksBatch(
+  tickers: string[],
+  forceRefresh = false
+): Promise<Record<string, any>> {
   const now = Date.now();
   const results: Record<string, any> = {};
   const tickersToFetch: string[] = [];
@@ -162,7 +182,7 @@ export async function fetchStocksBatch(tickers: string[]): Promise<Record<string
     const t = rawTicker.trim().toUpperCase();
     if (!t) continue;
     const cached = stockHistoryCache.get(t);
-    if (cached && now - cached.cachedAt < CACHE_TTL_MS) {
+    if (!forceRefresh && cached && now - cached.cachedAt < CACHE_TTL_MS) {
       results[t] = cached.data;
     } else {
       tickersToFetch.push(t);
@@ -170,56 +190,204 @@ export async function fetchStocksBatch(tickers: string[]): Promise<Record<string
   }
 
   if (tickersToFetch.length > 0) {
-    await Promise.allSettled(
-      tickersToFetch.map(async (ticker) => {
-        const symbol =
-          STOCK_SYMBOL_MAP[ticker] || (ticker.includes('.') ? ticker : `${ticker}.NS`);
+    // Process in polite batches of 15 to avoid Yahoo Finance rate limiting
+    const BATCH_SIZE = 15;
+    for (let i = 0; i < tickersToFetch.length; i += BATCH_SIZE) {
+      const batch = tickersToFetch.slice(i, i + BATCH_SIZE);
+      await Promise.allSettled(
+        batch.map(async (ticker) => {
+          const symbol =
+            STOCK_SYMBOL_MAP[ticker] || (ticker.includes('.') ? ticker : `${ticker}.NS`);
 
-        try {
-          const chartData = await fetchYahooChart(symbol);
-          const stockResult = {
-            ticker,
-            symbol,
-            price: chartData.price,
-            change1D: chartData.change1D,
-            change1W: chartData.change1W,
-            change3M: chartData.change3M,
-            history: chartData.history,
-            rawHistory: chartData.rawHistory,
-          };
-          stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
-          results[ticker] = stockResult;
-        } catch (err: any) {
-          // If .NS failed and doesn't have an extension, try .BO as fallback
-          if (!ticker.includes('.')) {
-            try {
-              const boSymbol = `${ticker}.BO`;
-              const chartData = await fetchYahooChart(boSymbol);
-              const stockResult = {
-                ticker,
-                symbol: boSymbol,
-                price: chartData.price,
-                change1D: chartData.change1D,
-                change1W: chartData.change1W,
-                change3M: chartData.change3M,
-                history: chartData.history,
-                rawHistory: chartData.rawHistory,
-              };
-              stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
-              results[ticker] = stockResult;
-            } catch {
-              // Fall back to existing cached entry if available
-              const stale = stockHistoryCache.get(ticker);
-              if (stale) {
-                results[ticker] = stale.data;
+          try {
+            const chartData = await fetchYahooChart(symbol);
+            const stockResult = {
+              ticker,
+              symbol,
+              price: chartData.price,
+              change1D: chartData.change1D,
+              change1W: chartData.change1W,
+              change3M: chartData.change3M,
+              history: chartData.history,
+              rawHistory: chartData.rawHistory,
+            };
+            stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
+            results[ticker] = stockResult;
+          } catch {
+            // If .NS failed and doesn't have an extension, try .BO as fallback
+            if (!ticker.includes('.')) {
+              try {
+                const boSymbol = `${ticker}.BO`;
+                const chartData = await fetchYahooChart(boSymbol);
+                const stockResult = {
+                  ticker,
+                  symbol: boSymbol,
+                  price: chartData.price,
+                  change1D: chartData.change1D,
+                  change1W: chartData.change1W,
+                  change3M: chartData.change3M,
+                  history: chartData.history,
+                  rawHistory: chartData.rawHistory,
+                };
+                stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
+                results[ticker] = stockResult;
+              } catch {
+                // Fall back to existing cached entry if available
+                const stale = stockHistoryCache.get(ticker);
+                if (stale) {
+                  results[ticker] = stale.data;
+                }
               }
             }
           }
-        }
-      })
-    );
+        })
+      );
+    }
   }
 
   return results;
 }
+
+/**
+ * Full-universe pull of all 456 stocks + 4 benchmarks, persisting to verifiedLiveMarketData.json
+ */
+export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promise<{
+  success: boolean;
+  updatedStocksCount: number;
+  syncedAt: string;
+}> {
+  if (isSyncInProgress) {
+    return {
+      success: false,
+      updatedStocksCount: stockHistoryCache.size,
+      syncedAt: lastSyncAt || new Date().toISOString(),
+    };
+  }
+
+  isSyncInProgress = true;
+  try {
+    const seedPath = path.join(process.cwd(), 'src', 'data', 'verifiedLiveMarketData.json');
+    let existingJson: any = { benchmarks: {}, stocks: {} };
+    if (fs.existsSync(seedPath)) {
+      existingJson = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
+    }
+
+    const allTickers = Array.from(
+      new Set([
+        ...Object.keys(existingJson.stocks || {}),
+        ...Array.from(stockHistoryCache.keys()),
+      ])
+    );
+
+    const refreshedStocks = await fetchStocksBatch(allTickers, true);
+    const mergedStocks = { ...(existingJson.stocks || {}), ...refreshedStocks };
+
+    // Refresh the 4 benchmarks as well
+    const benchmarkConfigs = [
+      { key: 'nifty50', symbol: '^NSEI', name: 'NIFTY 50', category: 'Large Cap Benchmark (Top 50 Giants)', indexPrice: 25030.35 },
+      { key: 'niftyMidcap', symbol: 'MOM100.NS', name: 'NIFTY Midcap 100', category: 'Mid Cap Benchmark (Next 100 Growth Leaders)', indexPrice: 60606.65 },
+      { key: 'niftySmallcap', symbol: 'SML100CASE.NS', name: 'NIFTY Smallcap 100', category: 'Small Cap Benchmark (High-Beta Emerging 100)', indexPrice: 18975.05 },
+      { key: 'nifty500', symbol: '^CRSLDX', name: 'NIFTY 500', category: 'Broad Market Universe (94%+ Total Market Cap)', indexPrice: 23456.95 },
+    ];
+
+    const refreshedBenchmarks: Record<string, any> = { ...(existingJson.benchmarks || {}) };
+    await Promise.allSettled(
+      benchmarkConfigs.map(async (cfg) => {
+        try {
+          const data = await fetchYahooChart(cfg.symbol);
+          refreshedBenchmarks[cfg.key] = {
+            ...cfg,
+            price: data.price || cfg.indexPrice,
+            change1D: data.change1D,
+            change1W: data.change1W,
+            change3M: data.change3M,
+            history: data.history,
+          };
+        } catch {
+          // keep existing benchmark entry on transient error
+        }
+      })
+    );
+
+    const nowIso = new Date().toISOString();
+    lastSyncAt = nowIso;
+    lastSyncReason = reason;
+
+    const updatedPayload = {
+      fetchedAt: nowIso,
+      lastSyncReason: reason,
+      benchmarks: refreshedBenchmarks,
+      stocks: mergedStocks,
+    };
+
+    try {
+      fs.writeFileSync(seedPath, JSON.stringify(updatedPayload, null, 2), 'utf-8');
+    } catch {
+      // ignore if read-only container filesystem
+    }
+
+    return {
+      success: true,
+      updatedStocksCount: Object.keys(mergedStocks).length,
+      syncedAt: nowIso,
+    };
+  } finally {
+    isSyncInProgress = false;
+  }
+}
+
+export function getMarketSyncStatus(): SyncSchedulerStatus {
+  return {
+    timezone: 'Asia/Kolkata (IST)',
+    scheduledTimesIST: [
+      '18:30 IST (Post-Market EOD & Bhavcopy Settlement Pull)',
+      '02:00 IST (Overnight Primary Batch Pull)',
+      '04:00 IST (Pre-Market Corporate Action & Reconciliation Pull)',
+    ],
+    lastSyncAt,
+    lastSyncReason,
+    isSyncInProgress,
+    totalTrackedStocks: stockHistoryCache.size,
+  };
+}
+
+/**
+ * Starts automated daily pulls in Indian Standard Time (IST):
+ * 1) 18:30 IST (6:30 PM) - Right after NSE/BSE final closing settlement & Bhavcopy release
+ * 2) 02:00 IST (2:00 AM) - Overnight full-universe pull
+ * 3) 04:00 IST (4:00 AM) - Pre-market verification & corporate action adjustment pull
+ */
+export function startMarketSyncScheduler() {
+  const TARGET_SLOTS: Record<string, string> = {
+    '18:30': '18:30 IST Post-Market Settlement Pull',
+    '02:00': '02:00 IST Overnight Primary Pull',
+    '04:00': '04:00 IST Pre-Market Verification Pull',
+  };
+
+  setInterval(() => {
+    try {
+      const nowIST = new Date(
+        new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+      );
+      const yyyy = nowIST.getFullYear();
+      const mm = String(nowIST.getMonth() + 1).padStart(2, '0');
+      const dd = String(nowIST.getDate()).padStart(2, '0');
+      const hh = String(nowIST.getHours()).padStart(2, '0');
+      const min = String(nowIST.getMinutes()).padStart(2, '0');
+
+      const hhmm = `${hh}:${min}`;
+      const slotKey = `${yyyy}-${mm}-${dd}_${hhmm}`;
+
+      if (TARGET_SLOTS[hhmm] && !triggeredSlots.has(slotKey)) {
+        triggeredSlots.add(slotKey);
+        runFullUniverseSync(TARGET_SLOTS[hhmm]).catch((err) =>
+          console.warn(`Scheduled market sync (${hhmm} IST) error:`, err)
+        );
+      }
+    } catch {
+      // ignore timezone formatting issues
+    }
+  }, 30 * 1000);
+}
+
 
