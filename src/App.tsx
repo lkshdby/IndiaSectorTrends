@@ -18,27 +18,36 @@ export default function App() {
   };
 
   const handleSyncMarketCloses = async () => {
+    // Manual refresh is a privileged operation that launches a GitHub Actions job,
+    // not a synchronous 450-stock network operation in the browser.
+    const adminKey = window.prompt(
+      'Enter the Sync Admin Key configured in Vercel. The refresh will be queued in GitHub Actions.'
+    );
+    if (adminKey === null) return;
+    if (!adminKey.trim()) {
+      showToast('A Sync Admin Key is required. Configure it in Vercel first.', 'error');
+      return;
+    }
     setIsSyncing(true);
     try {
-      const response = await fetch('/api/sync-universe', { method: 'POST' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const result = await response.json();
-      if (!result.success || !result.updatedStocksCount) {
-        throw new Error('No fresh stock histories could be retrieved');
+      const response = await fetch('/api/sync-universe', {
+        method: 'POST',
+        headers: { 'x-sync-key': adminKey.trim() },
+        cache: 'no-store',
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.success || !result.queued) {
+        throw new Error(result?.error || `HTTP ${response.status}`);
       }
-      const benchmarksResponse = await fetch('/api/benchmarks?force=true');
-      const benchmarksResult = benchmarksResponse.ok ? await benchmarksResponse.json() : null;
-      setSyncTrigger(previous => previous + 1);
-      const requested = result.totalRequestedCount || result.updatedStocksCount;
-      const coverage = `${result.updatedStocksCount}/${requested}`;
-      const allBenchmarks = benchmarksResult?.success &&
-        Object.keys(benchmarksResult.benchmarks || {}).length === 4;
       showToast(
-        `Refreshed ${coverage} stock histories; benchmarks ${allBenchmarks ? 'available' : 'incomplete'}. ${result.updatedStocksCount < requested ? 'Some older quotes remain cached.' : ''}`,
-        allBenchmarks && result.updatedStocksCount === requested ? 'success' : 'info'
+        'Market refresh queued in GitHub Actions. Data will update after the job finishes and the snapshot is saved.',
+        'info'
       );
     } catch (error) {
-      showToast(`Market refresh failed: ${error instanceof Error ? error.message : 'unknown error'}. Existing data retained.`, 'error');
+      showToast(
+        `Market refresh could not be queued: ${error instanceof Error ? error.message : 'unknown error'}. Existing data retained.`,
+        'error'
+      );
     } finally {
       setIsSyncing(false);
     }
