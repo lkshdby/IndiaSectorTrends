@@ -668,6 +668,10 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const advancingCount1D = currentSector.stocks.filter((s) => s.change1D > 0).length;
   const decliningCount1D = currentSector.stocks.length - advancingCount1D;
   const thematicBeneficiaries = getSectorOpportunityMembers(selectedSectorId);
+  const capSum = currentSector.stocks.reduce((n, st) => n + Math.max(0, st.marketCapCr || 0), 0);
+  const topCapWeightPct = capSum > 0
+    ? Math.round(100 * Math.max(0, ...currentSector.stocks.map(st => st.marketCapCr || 0)) / capSum)
+    : 0;
   const synchronyScore = Math.round(
     (Math.max(advancingCount1W, decliningCount1W) / (currentSector.stocks.length || 1)) * 100
   );
@@ -975,7 +979,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5 text-[10px] text-[#08090a]/60 font-mono">
-                    <span>₹{data.price.toLocaleString('en-IN')}</span>
+                    <span>{data.price > 0 && Number.isFinite(data.price) ? `₹${data.price.toLocaleString('en-IN')}` : 'Quote unavailable'}</span>
                     <span className={data.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}>
                       1D: {data.change1D >= 0 ? '+' : ''}{data.change1D.toFixed(1)}%
                     </span>
@@ -1500,6 +1504,15 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
+        {!currentSector.isBenchmark && (
+          <div className="px-5 py-2.5 border-b border-[#b1ada1]/20 bg-[#fffbeb] text-[11px] text-[#78350f]">
+            Core data coverage: {currentSector.dataCoveragePct ?? 0}% · Basket size: {currentSector.stocks.length}
+            {currentSector.stocks.length < 4 ? ' · Low-confidence breadth: fewer than 4 priced core stocks' : ''}
+            {topCapWeightPct >= 50 ? ` · Concentration caution: largest company has approximately ${topCapWeightPct}% of stored market-cap weight` : ''}
+            {' · '}Market-cap weights are static estimates, not free-float index weights.
+          </div>
+        )}
+
         {/* Adjacent thematic beneficiaries remain research candidates, not sector constituents. */}
         {thematicBeneficiaries.length > 0 && (
           <div className="px-5 py-3 bg-[#f1f5f9] border-b border-[#b1ada1]/20 text-[11px]">
@@ -1528,7 +1541,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-extrabold text-[#08090a] font-display uppercase tracking-wider">
-                  4-Signal Institutional Rotation & SMID Divergence Engine
+                  4-Signal Price Rotation & SMID Divergence Engine
                 </span>
                 <span className="text-[11px] text-[#08090a]/55 font-mono">
                   · Median Constituent MCap: ₹{Math.round(fourSignalDiagnostics.medianMcap).toLocaleString('en-IN')} Cr
