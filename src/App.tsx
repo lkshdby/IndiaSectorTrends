@@ -84,10 +84,10 @@ export default function App() {
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-[#08090a] font-display">Sector Rotation Engine</span>
               <span>•</span>
-              <span>62 Pre-Built Industry Clusters (456 Stocks) mapped to NSE 500, BSE 500 & New-Age IPOs</span>
+              <span>62 custom sector baskets with explicit core and adjacent exposures</span>
             </div>
             <div className="text-[11px]">
-              Multi-Stock Price Overlays & Cluster Breadth Tracking vs NIFTY 50, Midcap 100 & Smallcap 100
+              Price-based sector rotation and breadth vs NIFTY 50, NIFTY 500 and ETF proxies
             </div>
           </div>
         </footer>
