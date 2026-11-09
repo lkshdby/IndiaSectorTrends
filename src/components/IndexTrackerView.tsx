@@ -428,19 +428,19 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   // Fetch real market stock quotes and 63-day closing histories for current constituents
   useEffect(() => {
     const tickers = currentSector.stocks.map((s) => s.ticker);
-    const isManualSync = Boolean(syncTrigger && syncTrigger > 0);
-    const targetTickers = isManualSync
-      ? tickers
-      : tickers.filter((t) => !liveStocksData[t] && !liveStocksData[t.toUpperCase()]);
+    // Scheduled collection handles network refreshes; this fallback only
+    // fills missing ticker histories from the already saved snapshot.
+    const targetTickers = tickers.filter(
+      ticker => !liveStocksData[ticker] && !liveStocksData[ticker.toUpperCase()]
+    );
     if (targetTickers.length === 0) return;
 
     let isMounted = true;
-    const forceQuery = isManualSync ? '&force=true' : '';
-    fetch(`/api/stocks-history?tickers=${encodeURIComponent(targetTickers.join(','))}${forceQuery}`)
+    fetch(`/api/stocks-history?tickers=${encodeURIComponent(targetTickers.join(','))}`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (isMounted && data && data.success && data.stocks) {
-          setLiveStocksData((prev) => ({ ...prev, ...data.stocks }));
+          setLiveStocksData((prev) => ({ ...prev, ...sanitizeSnapshot(data.stocks) }));
         }
       })
       .catch((err) => console.warn('Could not fetch real stock data:', err));
