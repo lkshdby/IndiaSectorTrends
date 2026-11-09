@@ -52,6 +52,7 @@ import {
 } from '../utils/benchmarkService';
 import { CreateCustomIndexModal } from './CreateCustomIndexModal';
 import { SetAlertModal } from './SetAlertModal';
+import { buildAlignedBasketHistory, classifyPriceRotation, tradingDayKey } from '../utils/sectorIndexMath';
 
 interface IndexTrackerViewProps {
   onShowToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
@@ -287,46 +288,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       return stocksList.reduce((acc, s) => acc + ((s[field] as number) || 0), 0) / stocksList.length;
     };
 
-    // Helper to build real 63-day composite history (storing BOTH Equal-Weight and MCap-Weight curves)
-    const buildRealCompositeHistory = (
-      stocksList: StockConstituent[],
-      fallbackHistory: HistoricalPricePoint[]
-    ): HistoricalPricePoint[] => {
-      const sample = stocksList.find(
-        (s) => (liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()])?.history?.length
-      );
-      if (!sample) return fallbackHistory;
-      const sampleHistory = (liveStocksData[sample.ticker] || liveStocksData[sample.ticker.toUpperCase()]).history;
-      return sampleHistory.map((pt, idx) => {
-        let ewSum = 0;
-        let ewCount = 0;
-        let mcapSum = 0;
-        let mcapTotal = 0;
-        stocksList.forEach((st) => {
-          const stLive = liveStocksData[st.ticker] || liveStocksData[st.ticker.toUpperCase()];
-          if (stLive?.history?.length) {
-            const stPt = stLive.history[Math.min(idx, stLive.history.length - 1)];
-            if (stPt && typeof stPt.value === 'number') {
-              const mcapW = st.marketCapCr || 10000;
-              ewSum += stPt.value;
-              ewCount += 1;
-              mcapSum += stPt.value * mcapW;
-              mcapTotal += mcapW;
-            }
-          }
-        });
-        const ewVal = ewCount > 0 ? ewSum / ewCount : pt.value;
-        const mcapVal = mcapTotal > 0 ? mcapSum / mcapTotal : pt.value;
-        const activeVal = weightingMode === 'mcap' ? mcapVal : ewVal;
-        return {
-          date: pt.date,
-          value: parseFloat(activeVal.toFixed(2)),
-          equalWeightValue: parseFloat(ewVal.toFixed(2)),
-          mcapWeightValue: parseFloat(mcapVal.toFixed(2)),
-          volume: 4200000 + ((idx * 310000) % 3800000),
-        };
-      });
-    };
+    // A fixed cohort of constituents with real, date-aligned closes only.
+    const buildRealCompositeHistory = (stocksList: StockConstituent[]): HistoricalPricePoint[] =>
+      buildAlignedBasketHistory(stocksList, liveStocksData, weightingMode).history;
 
     if (activeTab === 'prebuilt') {
       const base =
@@ -346,12 +310,14 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const mc3M = computeWeightedAvg(enriched, 'change3M', 'mcap');
 
       const advancingCount1W = enriched.filter((s) => s.change1W > 0).length;
-      const realHistory = buildRealCompositeHistory(enriched, base.history);
+      const realHistory = buildRealCompositeHistory(enriched);
+      const basketCoverage = buildAlignedBasketHistory(enriched, liveStocksData, weightingMode).dataCoveragePct;
 
       return {
         ...base,
         stocks: enriched,
         history: realHistory,
+        dataCoveragePct: basketCoverage,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
         change1M: parseFloat(avg1M.toFixed(2)),
@@ -365,6 +331,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         ewMcapSpread1W: parseFloat((ew1W - mc1W).toFixed(2)),
         ewMcapSpread1M: parseFloat((ew1M - mc1M).toFixed(2)),
         currentReturn: parseFloat(avg1W.toFixed(2)),
+        rotationStatus: classifyPriceRotation(avg1W, avg3M, benchmarks.nifty500?.change1W ?? 0, benchmarks.nifty500?.change3M ?? 0, Math.round(100 * advancingCount1W / Math.max(enriched.length, 1))),
         breadthPositivePct: Math.round((advancingCount1W / (enriched.length || 1)) * 100),
       };
     } else {
@@ -392,7 +359,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const ew3M = computeWeightedAvg(enriched, 'change3M', 'equal');
       const mc3M = computeWeightedAvg(enriched, 'change3M', 'mcap');
 
-      const realHistory = buildRealCompositeHistory(enriched, PREBUILT_SECTOR_INDICES[0].history);
+      const realHistory = buildRealCompositeHistory(enriched);
+      const basketCoverage = buildAlignedBasketHistory(enriched, liveStocksData, weightingMode).dataCoveragePct;
 
       return {
         id: custom.id,
@@ -417,8 +385,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         breadthPositivePct: Math.round(
           (enriched.filter((s) => s.change1W > 0).length / (enriched.length || 1)) * 100
         ),
-        rotationStatus: avg1W > 5 ? ('Leading' as const) : ('Improving' as const),
+        rotationStatus: classifyPriceRotation(avg1W, avg3M, benchmarks.nifty500?.change1W ?? 0, benchmarks.nifty500?.change3M ?? 0, Math.round(100 * enriched.filter(st => st.change1W > 0).length / Math.max(enriched.length, 1))),
         history: realHistory,
+        dataCoveragePct: basketCoverage,
       };
     }
   }, [activeTab, selectedSectorId, customIndices, benchmarks, liveStocksData, weightingMode]);
@@ -468,90 +437,35 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     return null;
   }, [currentStock, liveStocksData]);
 
-  // Multi-stock normalized line data generator using REAL market historical closes + Benchmarks
+  // Join actual constituent and benchmark observations by trading date, never by array index.
+  // Missing prices are represented as null instead of simulated chart movements.
   const multiStockCoMovementData = useMemo(() => {
-    // If constituents have real history, synchronize timeline with the real dates
-    const sampleStockWithHistory = currentSector.stocks.find(
-      (s) => liveStocksData[s.ticker]?.history?.length
-    );
-    const dates = sampleStockWithHistory
-      ? liveStocksData[sampleStockWithHistory.ticker].history.map((h) => h.date)
-      : currentSector.history.map((h) => h.date);
-
-    const stocks = currentSector.stocks;
-
-    // Get benchmark base series mapped to dates
-    const n50History = benchmarks.nifty50?.history || FALLBACK_BENCHMARKS.nifty50.history;
-    const nMidHistory = benchmarks.niftyMidcap?.history || FALLBACK_BENCHMARKS.niftyMidcap.history;
-    const nSmlHistory = benchmarks.niftySmallcap?.history || FALLBACK_BENCHMARKS.niftySmallcap.history;
-    const n500History = benchmarks.nifty500?.history || FALLBACK_BENCHMARKS.nifty500.history;
-
-    const n50Start = n50History[0]?.value || 100;
-    const nMidStart = nMidHistory[0]?.value || 100;
-    const nSmlStart = nSmlHistory[0]?.value || 100;
-    const n500Start = n500History[0]?.value || 100;
-
-    const baseFirst = currentSector.history[0]?.value || 100;
-
-    return dates.map((date, idx) => {
-      const row: Record<string, any> = { date };
-      const basePoint = currentSector.history[Math.min(idx, currentSector.history.length - 1)]?.value || 100;
-      const normalizedSectorBase = parseFloat(((basePoint / baseFirst) * 100).toFixed(2));
-
-      // Add individual constituent stock lines using REAL historical closes (Base 100)
-      stocks.forEach((stock, sIdx) => {
-        const live = liveStocksData[stock.ticker] || liveStocksData[stock.ticker.toUpperCase()];
-        if (live && live.history && live.history.length > 0) {
-          const pt = live.history[Math.min(idx, live.history.length - 1)];
-          row[stock.ticker] = pt.value;
-        } else {
-          // Deterministic individual curve fallback scaled by stock's own 1W/1D return so lines never stack identically
-          const progress = idx / Math.max(1, dates.length - 1);
-          const stockDrift = (stock.change1W - currentSector.change1W) * progress;
-          const wave = Math.sin(idx * 0.35 + (sIdx + 1) * 1.7) * 0.85;
-          row[stock.ticker] = parseFloat((normalizedSectorBase + stockDrift + wave).toFixed(2));
-        }
-      });
-
-      // Calculate Composite Line (Equal-Weighted or Market-Cap Weighted)
-      if (currentSector.isBenchmark) {
-        row['selectedIndexLine'] = normalizedSectorBase;
-      } else {
-        let weightedSum = 0;
-        let weightTotal = 0;
-        stocks.forEach((s) => {
-          const val = row[s.ticker];
-          if (typeof val === 'number' && !isNaN(val)) {
-            const w = weightingMode === 'mcap' ? (s.marketCapCr || 10000) : 1;
-            weightedSum += val * w;
-            weightTotal += w;
-          }
-        });
-        if (weightTotal > 0) {
-          row['selectedIndexLine'] = parseFloat((weightedSum / weightTotal).toFixed(2));
-        } else {
-          row['selectedIndexLine'] = normalizedSectorBase;
-        }
+    const benchmarkKeys = ['nifty50','niftyMidcap','niftySmallcap','nifty500'] as const;
+    const benchmarkMaps = Object.fromEntries(benchmarkKeys.map(key => {
+      const bm = benchmarks[key] || FALLBACK_BENCHMARKS[key];
+      return [key, new Map((bm?.history || []).map(pt => [tradingDayKey(pt.date), pt.value]))];
+    })) as Record<string, Map<string | null, number>>;
+    const stockMaps = Object.fromEntries(currentSector.stocks.map(stock => {
+      const live = liveStocksData[stock.ticker] || liveStocksData[stock.ticker.toUpperCase()];
+      return [stock.ticker, new Map((live?.history || []).map(pt => [tradingDayKey(pt.date), pt.value]))];
+    })) as Record<string, Map<string | null, number>>;
+    const firstIndex = currentSector.history[0]?.value;
+    return currentSector.history.map(pt => {
+      const key = tradingDayKey(pt.date);
+      const row: Record<string, any> = {
+        date: pt.date,
+        selectedIndexLine: firstIndex && pt.value ? Number((100 * pt.value / firstIndex).toFixed(2)) : null
+      };
+      for (const stock of currentSector.stocks) {
+        row[stock.ticker] = key ? (stockMaps[stock.ticker].get(key) ?? null) : null;
       }
-
-      // Add Benchmark overlay lines if active and not the main selected index
-      if (activeBenchmarkOverlays.nifty50 && selectedSectorId !== 'benchmark-nifty50') {
-        const bPt = n50History[Math.min(idx, n50History.length - 1)]?.value || 100;
-        row['nifty50'] = parseFloat(((bPt / n50Start) * 100).toFixed(2));
+      for (const name of benchmarkKeys) {
+        if (!activeBenchmarkOverlays[name] || selectedSectorId === `benchmark-${name}`) continue;
+        const hist = benchmarks[name]?.history || FALLBACK_BENCHMARKS[name]?.history || [];
+        const first = hist[0]?.value;
+        const value = key ? benchmarkMaps[name].get(key) : undefined;
+        row[name] = first && value ? Number((100 * value / first).toFixed(2)) : null;
       }
-      if (activeBenchmarkOverlays.niftyMidcap && selectedSectorId !== 'benchmark-niftyMidcap') {
-        const bPt = nMidHistory[Math.min(idx, nMidHistory.length - 1)]?.value || 100;
-        row['niftyMidcap'] = parseFloat(((bPt / nMidStart) * 100).toFixed(2));
-      }
-      if (activeBenchmarkOverlays.niftySmallcap && selectedSectorId !== 'benchmark-niftySmallcap') {
-        const bPt = nSmlHistory[Math.min(idx, nSmlHistory.length - 1)]?.value || 100;
-        row['niftySmallcap'] = parseFloat(((bPt / nSmlStart) * 100).toFixed(2));
-      }
-      if (activeBenchmarkOverlays.nifty500 && selectedSectorId !== 'benchmark-nifty500') {
-        const bPt = n500History[Math.min(idx, n500History.length - 1)]?.value || 100;
-        row['nifty500'] = parseFloat(((bPt / n500Start) * 100).toFixed(2));
-      }
-
       return row;
     });
   }, [currentSector, activeBenchmarkOverlays, benchmarks, selectedSectorId, liveStocksData]);
@@ -1402,7 +1316,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 {!currentStock && !currentSector.isBenchmark && (
                   <span className="text-xs font-bold px-2.5 py-0.5 bg-[#10b981]/15 text-[#10b981] rounded-md font-display flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>{synchronyScore}% Cluster Co-Movement</span>
+                    <span>{synchronyScore}% Directional Agreement</span>
                   </span>
                 )}
                 {currentSector.isBenchmark && (
@@ -2153,7 +2067,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               <div className="flex items-center gap-2">
                 <Compass className="w-5 h-5 text-[#2563eb]" />
                 <h3 className="text-sm font-extrabold text-[#08090a] font-display">
-                  Institutional Sector Rotation Phase: {currentSector.name}
+                  Price-Based Sector Rotation Phase: {currentSector.name}
                 </h3>
               </div>
 
