@@ -1,10 +1,16 @@
 name: Refresh Committed Market Snapshot
 
+# Three and only three scheduled collection windows per Indian trading day.
+# GitHub cron uses UTC:
+#   13:00 UTC Monday-Friday = 18:30 IST Monday-Friday
+#   20:30 UTC Monday-Friday = 02:00 IST Tuesday-Saturday
+#   22:30 UTC Monday-Friday = 04:00 IST Tuesday-Saturday
+# GitHub schedules are best-effort: runs can be delayed or occasionally skipped.
 on:
-  workflow_dispatch:
   schedule:
-    # 19:00 IST on trading weekdays (13:30 UTC); exchange holidays still produce no new bar.
-    - cron: '30 13 * * 1-5'
+    - cron: '0 13 * * 1-5'
+    - cron: '30 20 * * 1-5'
+    - cron: '30 22 * * 1-5'
 
 permissions:
   contents: write
@@ -30,14 +36,16 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Fetch and validate listed stock closes
         run: npx tsx scripts/refresh-market-snapshot.ts
-      - name: Commit refreshed market snapshot
+      - name: Commit validated snapshot
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/data/verifiedLiveMarketData.json
-          if ! git diff --cached --quiet; then
-            git commit -m "data: update verified sector-rotation market snapshot [skip ci]"
-            git push origin HEAD:main
-          else
+          if git diff --cached --quiet; then
             echo "No snapshot changes to commit."
+            exit 0
           fi
+          git commit -m "data: record scheduled verified sector snapshot [skip ci]"
+          # Rebase onto any newer app commits to avoid clobbering them.
+          git pull --rebase origin main
+          git push origin HEAD:main
