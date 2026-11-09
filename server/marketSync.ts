@@ -1,4 +1,6 @@
 import https from 'https';
+import fs from 'fs';
+import path from 'path';
 
 export interface MarketHistoryPoint {
   date: string;
@@ -119,11 +121,35 @@ export const STOCK_SYMBOL_MAP: Record<string, string> = {
   MAPMYINDIA: 'MAPMYINDIA.NS',
   CEINFO: 'MAPMYINDIA.NS',
   MANIPALHOS: 'MANIPALHOS.BO',
+  JUPITERWAG: 'JWL.NS',
+  TATAMOTORS: 'TMPV.NS',
+  FORCE: 'FORCEMOT.NS',
+  LTIM: 'LTTS.NS',
+  SUVENPHAR: 'SUVEN.NS',
+  TRIL: 'TARIL.NS',
+  VEDANTFASH: 'MANYAVAR.NS',
+  AKZOINDIA: 'KANSAINER.NS',
+  'GE-SHIPPING': 'GESHIP.NS',
 };
 
-// In-memory stock history cache
+// In-memory stock history cache pre-seeded with verified live market closes
 const stockHistoryCache = new Map<string, { data: any; cachedAt: number }>();
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours (daily rotation cadence)
+
+try {
+  const seedPath = path.join(process.cwd(), 'src', 'data', 'verifiedLiveMarketData.json');
+  if (fs.existsSync(seedPath)) {
+    const seedJson = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
+    if (seedJson.stocks) {
+      const seededAt = Date.now();
+      for (const [ticker, stockObj] of Object.entries(seedJson.stocks)) {
+        stockHistoryCache.set(ticker.toUpperCase(), { data: stockObj, cachedAt: seededAt });
+      }
+    }
+  }
+} catch {
+  // continue if seed file not accessible
+}
 
 export async function fetchStocksBatch(tickers: string[]): Promise<Record<string, any>> {
   const now = Date.now();
@@ -180,7 +206,11 @@ export async function fetchStocksBatch(tickers: string[]): Promise<Record<string
               stockHistoryCache.set(ticker, { data: stockResult, cachedAt: now });
               results[ticker] = stockResult;
             } catch {
-              // Ignore failure for individual unlisted stocks
+              // Fall back to existing cached entry if available
+              const stale = stockHistoryCache.get(ticker);
+              if (stale) {
+                results[ticker] = stale.data;
+              }
             }
           }
         }
@@ -190,3 +220,4 @@ export async function fetchStocksBatch(tickers: string[]): Promise<Record<string
 
   return results;
 }
+

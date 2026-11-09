@@ -1,4 +1,20 @@
 import { BenchmarkItem, StockConstituent } from '../types/indexTracker';
+import verifiedLiveMarketData from '../data/verifiedLiveMarketData.json';
+
+// Pre-loaded verified real market closes (63 trading days) for all 196 NSE/BSE stocks across all 46 sectors
+export const INITIAL_LIVE_STOCKS_DATA: Record<
+  string,
+  {
+    ticker: string;
+    symbol: string;
+    price: number;
+    change1D: number;
+    change1W: number;
+    change3M: number;
+    history: { date: string; value: number }[];
+    rawHistory: { date: string; close: number }[];
+  }
+> = (verifiedLiveMarketData.stocks as any) || {};
 
 // Top constituent stocks for the major benchmarks (Real NSE Market Data)
 export const BENCHMARK_TOP_CONSTITUENTS: Record<string, StockConstituent[]> = {
@@ -38,85 +54,8 @@ export const BENCHMARK_TOP_CONSTITUENTS: Record<string, StockConstituent[]> = {
   ],
 };
 
-// Generates distinct, realistic daily points for a benchmark index with deterministic seeded curve
-function generateBenchmarkHistory(pointsCount = 64, startVal = 100, endVal = 105, volatility = 1.0, seed = 1) {
-  const points: { date: string; value: number }[] = [];
-  const startDate = new Date(2026, 7, 10);
-  let cur = startVal;
-  let s = seed;
-
-  const pseudoRandom = () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-
-  const step = (endVal - startVal) / pointsCount;
-
-  for (let i = 0; i < pointsCount; i++) {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + Math.floor(i * 1.4));
-    if (d.getDay() === 0 || d.getDay() === 6) continue;
-
-    const noise = (pseudoRandom() - 0.48) * volatility;
-    cur = cur + step + noise;
-
-    const monthNames = ['Aug', 'Sep', 'Oct', 'Nov'];
-    const month = monthNames[Math.min(3, Math.floor(i / 16))];
-    const day = (10 + (i % 20));
-    points.push({
-      date: `${day} ${month}`,
-      value: parseFloat(cur.toFixed(2)),
-    });
-  }
-  return points;
-}
-
-export const FALLBACK_BENCHMARKS: Record<string, BenchmarkItem> = {
-  nifty50: {
-    key: 'nifty50',
-    symbol: '^NSEI',
-    name: 'NIFTY 50',
-    category: 'Large Cap Benchmark (Top 50 Giants)',
-    price: 25030.35,
-    change1D: 1.60,
-    change1W: 8.58,
-    change3M: 1.60,
-    history: generateBenchmarkHistory(64, 100, 108.58, 0.7, 101),
-  },
-  niftyMidcap: {
-    key: 'niftyMidcap',
-    symbol: 'MOM100.NS',
-    name: 'NIFTY Midcap 100',
-    category: 'Mid Cap Benchmark (Next 100 Growth Leaders)',
-    price: 60606.65,
-    change1D: -0.80,
-    change1W: 5.45,
-    change3M: 6.80,
-    history: generateBenchmarkHistory(64, 100, 105.45, 1.2, 202),
-  },
-  niftySmallcap: {
-    key: 'niftySmallcap',
-    symbol: 'SML100CASE.NS',
-    name: 'NIFTY Smallcap 100',
-    category: 'Small Cap Benchmark (High-Beta Emerging 100)',
-    price: 18975.05,
-    change1D: -1.20,
-    change1W: 2.38,
-    change3M: 4.50,
-    history: generateBenchmarkHistory(64, 100, 102.38, 1.6, 303),
-  },
-  nifty500: {
-    key: 'nifty500',
-    symbol: '^CRSLDX',
-    name: 'NIFTY 500',
-    category: 'Broad Market Universe (94%+ Total Market Cap)',
-    price: 23456.95,
-    change1D: -1.15,
-    change1W: 7.13,
-    change3M: 2.40,
-    history: generateBenchmarkHistory(64, 100, 107.13, 0.9, 404),
-  },
-};
+export const FALLBACK_BENCHMARKS: Record<string, BenchmarkItem> =
+  verifiedLiveMarketData.benchmarks as Record<string, BenchmarkItem>;
 
 export async function fetchLiveBenchmarks(): Promise<Record<string, BenchmarkItem>> {
   try {
