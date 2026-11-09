@@ -538,6 +538,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             change1D: live.change1D,
             change1W: live.change1W,
             change1M: calc1M,
+            change3M: live.change3M ?? 0,
           };
         }
         return {
@@ -561,6 +562,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const mc1M =
         enrichedStocks.reduce((acc, s) => acc + (s.change1M ?? 0) * (s.marketCapCr || 10000), 0) / totalMcap;
 
+      const ew3M = enrichedStocks.reduce((sum, st) => sum + (st.change3M ?? 0), 0) / (enrichedStocks.length || 1);
+      const mc3M = enrichedStocks.reduce((sum, st) => sum + (st.change3M ?? 0) * (st.marketCapCr || 10000), 0) / totalMcap;
+      const avg3M = weightingMode === 'mcap' ? mc3M : ew3M;
       const avg1D = weightingMode === 'mcap' ? mc1D : ew1D;
       const avg1W = weightingMode === 'mcap' ? mc1W : ew1W;
       const avg1M = weightingMode === 'mcap' ? mc1M : ew1M;
@@ -572,6 +576,10 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
         change1M: parseFloat(avg1M.toFixed(2)),
+        change3M: parseFloat(avg3M.toFixed(2)),
+        equalWt3M: parseFloat(ew3M.toFixed(2)),
+        mcapWt3M: parseFloat(mc3M.toFixed(2)),
+        rotationStatus: classifyPriceRotation(avg1W, avg3M, benchmarks.nifty500?.change1W ?? 0, benchmarks.nifty500?.change3M ?? 0, Math.round(100 * enrichedStocks.filter(st => st.change1W > 0).length / Math.max(1, enrichedStocks.length))),
         equalWt1W: parseFloat(ew1W.toFixed(2)),
         mcapWt1W: parseFloat(mc1W.toFixed(2)),
         equalWt1M: parseFloat(ew1M.toFixed(2)),
@@ -582,7 +590,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         dataCoveragePct: Math.round(100 * enrichedStocks.length / Math.max(1, sector.stocks.length)),
       };
     });
-  }, [liveStocksData, weightingMode]);
+  }, [liveStocksData, weightingMode, benchmarks]);
 
   // Filter and sort sidebar list
   const filteredIndices = useMemo(() => {
