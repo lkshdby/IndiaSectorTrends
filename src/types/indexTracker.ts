@@ -42,6 +42,7 @@ export interface SectorIndexData {
   ewMcapSpread1W?: number; // Equal-Wt 1W minus MCap-Wt 1W
   currentReturn: number; // % return for active timeframe (e.g. -5.76%)
   history: HistoricalPricePoint[];
+  dataCoveragePct?: number; // percentage of basket constituents with aligned observed histories
   stocks: StockConstituent[];
   breadthPositivePct: number; // % of stocks in green
    rotationStatus: 'Leading' | 'Improving' | 'Weakening' | 'Lagging';
