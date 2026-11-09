@@ -5,6 +5,7 @@ export interface StockConstituent {
   change1D: number; // percentage e.g. +0.90
   change1W: number; // percentage e.g. -0.02
   change1M?: number; // 21-trading-day percentage return
+  change3M?: number; // 63-trading-day percentage return
   marketCapCr: number;
   pe: number;
   volume: number;
@@ -15,6 +16,8 @@ export interface StockConstituent {
 export interface HistoricalPricePoint {
   date: string;
   value: number; // normalized index level (e.g. 108.0 to 130.0)
+  equalWeightValue?: number;
+  mcapWeightValue?: number;
   volume: number; // in volume units
   changePct?: number;
 }
@@ -26,13 +29,22 @@ export interface SectorIndexData {
   companiesCount: number;
   change1D: number; // % e.g. -0.74
   change1W: number; // % e.g. +4.91
-  change1M: number;
+  change1M: number; // 21-trading-day % return
+  change3M?: number; // 63-trading-day % return
   change1Y: number;
+  equalWt1W?: number;
+  mcapWt1W?: number;
+  equalWt1M?: number;
+  mcapWt1M?: number;
+  equalWt3M?: number;
+  mcapWt3M?: number;
+  ewMcapSpread1M?: number; // Equal-Wt 1M minus MCap-Wt 1M
+  ewMcapSpread1W?: number; // Equal-Wt 1W minus MCap-Wt 1W
   currentReturn: number; // % return for active timeframe (e.g. -5.76%)
   history: HistoricalPricePoint[];
   stocks: StockConstituent[];
-  breadthPositivePct: number; // % of stocks in green today
-  rotationStatus: 'Leading' | 'Improving' | 'Weakening' | 'Lagging';
+  breadthPositivePct: number; // % of stocks in green
+   rotationStatus: 'Leading' | 'Improving' | 'Weakening' | 'Lagging';
   isBenchmark?: boolean;
 }
 

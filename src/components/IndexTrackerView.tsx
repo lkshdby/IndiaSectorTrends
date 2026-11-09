@@ -88,8 +88,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [weightingMode, setWeightingMode] = useState<'equal' | 'mcap'>('equal');
-  const [sortField, setSortField] = useState<'name' | '1d' | '1w' | '1m' | 'breadth'>('1w');
+  const [sortField, setSortField] = useState<'name' | '1d' | '1w' | '1m' | 'smid' | 'breadth'>('1w');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [signalHorizon, setSignalHorizon] = useState<'1W' | '1M' | '3M'>('1M');
   const [expandedSectors, setExpandedSectors] = useState<Record<string, boolean>>({
     'quick-commerce-consumer-tech': true,
     hospitals: true,
@@ -190,18 +191,23 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
   // Find currently selected sector or benchmark
   const currentSector = useMemo<SectorIndexData>(() => {
-    // Helper to enrich stock constituents with real live quotes (1D, 1W, and 21-trading-day 1M)
+    // Helper to enrich stock constituents with real live quotes (1D, 1W, 21-day 1M, and 63-day 3M)
     const enrichStocks = (stocksList: StockConstituent[]) => {
       return stocksList.map((s) => {
         const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
         if (live) {
           let calc1M = s.change1M ?? parseFloat((live.change1W * 2.1).toFixed(2));
+          let calc3M = live.change3M ?? parseFloat((live.change1W * 3.4).toFixed(2));
           if (live.rawHistory && live.rawHistory.length >= 2) {
             const latestClose = live.price || live.rawHistory[live.rawHistory.length - 1].close;
             const idx1M = Math.max(0, live.rawHistory.length - 22);
             const close1M = live.rawHistory[idx1M]?.close || latestClose;
             if (close1M > 0) {
               calc1M = parseFloat((((latestClose - close1M) / close1M) * 100).toFixed(2));
+            }
+            const firstClose = live.rawHistory[0]?.close || latestClose;
+            if (firstClose > 0) {
+              calc3M = parseFloat((((latestClose - firstClose) / firstClose) * 100).toFixed(2));
             }
           } else if (live.history && live.history.length >= 2) {
             const latestVal = live.history[live.history.length - 1].value;
@@ -210,6 +216,10 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             if (val1M > 0) {
               calc1M = parseFloat((((latestVal - val1M) / val1M) * 100).toFixed(2));
             }
+            const firstVal = live.history[0]?.value || 100;
+            if (firstVal > 0) {
+              calc3M = parseFloat((((latestVal - firstVal) / firstVal) * 100).toFixed(2));
+            }
           }
           return {
             ...s,
@@ -217,11 +227,13 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             change1D: live.change1D,
             change1W: live.change1W,
             change1M: calc1M,
+            change3M: calc3M,
           };
         }
         return {
           ...s,
           change1M: s.change1M ?? parseFloat((s.change1W * 2.1).toFixed(2)),
+          change3M: s.change3M ?? parseFloat((s.change1W * 3.4).toFixed(2)),
         };
       });
     };
@@ -257,18 +269,25 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     }
 
     // Helper to compute Equal-Weighted or Market-Cap Weighted average of a metric
-    const computeWeightedAvg = (stocksList: StockConstituent[], field: 'change1D' | 'change1W') => {
+    const computeWeightedAvg = (
+      stocksList: StockConstituent[],
+      field: 'change1D' | 'change1W' | 'change1M' | 'change3M',
+      mode: 'equal' | 'mcap' = weightingMode
+    ) => {
       if (stocksList.length === 0) return 0;
-      if (weightingMode === 'mcap') {
+      if (mode === 'mcap') {
         const totalMcap = stocksList.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0);
         if (totalMcap > 0) {
-          return stocksList.reduce((acc, s) => acc + s[field] * ((s.marketCapCr || 10000) / totalMcap), 0);
+          return stocksList.reduce(
+            (acc, s) => acc + ((s[field] as number) || 0) * ((s.marketCapCr || 10000) / totalMcap),
+            0
+          );
         }
       }
-      return stocksList.reduce((acc, s) => acc + s[field], 0) / stocksList.length;
+      return stocksList.reduce((acc, s) => acc + ((s[field] as number) || 0), 0) / stocksList.length;
     };
 
-    // Helper to build real 63-day composite history (Equal-Weighted or Market-Cap Weighted) from constituent stocks
+    // Helper to build real 63-day composite history (storing BOTH Equal-Weight and MCap-Weight curves)
     const buildRealCompositeHistory = (
       stocksList: StockConstituent[],
       fallbackHistory: HistoricalPricePoint[]
@@ -279,23 +298,31 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       if (!sample) return fallbackHistory;
       const sampleHistory = (liveStocksData[sample.ticker] || liveStocksData[sample.ticker.toUpperCase()]).history;
       return sampleHistory.map((pt, idx) => {
-        let weightedSum = 0;
-        let weightTotal = 0;
+        let ewSum = 0;
+        let ewCount = 0;
+        let mcapSum = 0;
+        let mcapTotal = 0;
         stocksList.forEach((st) => {
           const stLive = liveStocksData[st.ticker] || liveStocksData[st.ticker.toUpperCase()];
           if (stLive?.history?.length) {
             const stPt = stLive.history[Math.min(idx, stLive.history.length - 1)];
             if (stPt && typeof stPt.value === 'number') {
-              const w = weightingMode === 'mcap' ? (st.marketCapCr || 10000) : 1;
-              weightedSum += stPt.value * w;
-              weightTotal += w;
+              const mcapW = st.marketCapCr || 10000;
+              ewSum += stPt.value;
+              ewCount += 1;
+              mcapSum += stPt.value * mcapW;
+              mcapTotal += mcapW;
             }
           }
         });
-        const avgVal = weightTotal > 0 ? weightedSum / weightTotal : pt.value;
+        const ewVal = ewCount > 0 ? ewSum / ewCount : pt.value;
+        const mcapVal = mcapTotal > 0 ? mcapSum / mcapTotal : pt.value;
+        const activeVal = weightingMode === 'mcap' ? mcapVal : ewVal;
         return {
           date: pt.date,
-          value: parseFloat(avgVal.toFixed(2)),
+          value: parseFloat(activeVal.toFixed(2)),
+          equalWeightValue: parseFloat(ewVal.toFixed(2)),
+          mcapWeightValue: parseFloat(mcapVal.toFixed(2)),
           volume: 4200000 + ((idx * 310000) % 3800000),
         };
       });
@@ -308,12 +335,18 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const enriched = enrichStocks(base.stocks);
       const avg1D = computeWeightedAvg(enriched, 'change1D');
       const avg1W = computeWeightedAvg(enriched, 'change1W');
+      const avg1M = computeWeightedAvg(enriched, 'change1M');
+      const avg3M = computeWeightedAvg(enriched, 'change3M');
+
+      const ew1W = computeWeightedAvg(enriched, 'change1W', 'equal');
+      const mc1W = computeWeightedAvg(enriched, 'change1W', 'mcap');
+      const ew1M = computeWeightedAvg(enriched, 'change1M', 'equal');
+      const mc1M = computeWeightedAvg(enriched, 'change1M', 'mcap');
+      const ew3M = computeWeightedAvg(enriched, 'change3M', 'equal');
+      const mc3M = computeWeightedAvg(enriched, 'change3M', 'mcap');
+
       const advancingCount1W = enriched.filter((s) => s.change1W > 0).length;
       const realHistory = buildRealCompositeHistory(enriched, base.history);
-      const real3M =
-        realHistory.length > 1
-          ? parseFloat((realHistory[realHistory.length - 1].value - 100).toFixed(2))
-          : base.change1M;
 
       return {
         ...base,
@@ -321,7 +354,16 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         history: realHistory,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
-        change1M: real3M,
+        change1M: parseFloat(avg1M.toFixed(2)),
+        change3M: parseFloat(avg3M.toFixed(2)),
+        equalWt1W: parseFloat(ew1W.toFixed(2)),
+        mcapWt1W: parseFloat(mc1W.toFixed(2)),
+        equalWt1M: parseFloat(ew1M.toFixed(2)),
+        mcapWt1M: parseFloat(mc1M.toFixed(2)),
+        equalWt3M: parseFloat(ew3M.toFixed(2)),
+        mcapWt3M: parseFloat(mc3M.toFixed(2)),
+        ewMcapSpread1W: parseFloat((ew1W - mc1W).toFixed(2)),
+        ewMcapSpread1M: parseFloat((ew1M - mc1M).toFixed(2)),
         currentReturn: parseFloat(avg1W.toFixed(2)),
         breadthPositivePct: Math.round((advancingCount1W / (enriched.length || 1)) * 100),
       };
@@ -341,11 +383,16 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const enriched = enrichStocks(matchedStocks);
       const avg1D = computeWeightedAvg(enriched, 'change1D');
       const avg1W = computeWeightedAvg(enriched, 'change1W');
+      const avg1M = computeWeightedAvg(enriched, 'change1M');
+      const avg3M = computeWeightedAvg(enriched, 'change3M');
+      const ew1W = computeWeightedAvg(enriched, 'change1W', 'equal');
+      const mc1W = computeWeightedAvg(enriched, 'change1W', 'mcap');
+      const ew1M = computeWeightedAvg(enriched, 'change1M', 'equal');
+      const mc1M = computeWeightedAvg(enriched, 'change1M', 'mcap');
+      const ew3M = computeWeightedAvg(enriched, 'change3M', 'equal');
+      const mc3M = computeWeightedAvg(enriched, 'change3M', 'mcap');
+
       const realHistory = buildRealCompositeHistory(enriched, PREBUILT_SECTOR_INDICES[0].history);
-      const real3M =
-        realHistory.length > 1
-          ? parseFloat((realHistory[realHistory.length - 1].value - 100).toFixed(2))
-          : parseFloat((avg1W * 2.2).toFixed(2));
 
       return {
         id: custom.id,
@@ -354,7 +401,16 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         companiesCount: enriched.length,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
-        change1M: real3M,
+        change1M: parseFloat(avg1M.toFixed(2)),
+        change3M: parseFloat(avg3M.toFixed(2)),
+        equalWt1W: parseFloat(ew1W.toFixed(2)),
+        mcapWt1W: parseFloat(mc1W.toFixed(2)),
+        equalWt1M: parseFloat(ew1M.toFixed(2)),
+        mcapWt1M: parseFloat(mc1M.toFixed(2)),
+        equalWt3M: parseFloat(ew3M.toFixed(2)),
+        mcapWt3M: parseFloat(mc3M.toFixed(2)),
+        ewMcapSpread1W: parseFloat((ew1W - mc1W).toFixed(2)),
+        ewMcapSpread1M: parseFloat((ew1M - mc1M).toFixed(2)),
         change1Y: 28.5,
         currentReturn: parseFloat(avg1W.toFixed(2)),
         stocks: enriched,
@@ -541,18 +597,19 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         enrichedStocks.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0)
       );
 
-      const avg1D =
-        weightingMode === 'mcap'
-          ? enrichedStocks.reduce((acc, s) => acc + s.change1D * (s.marketCapCr || 10000), 0) / totalMcap
-          : enrichedStocks.reduce((a, b) => a + b.change1D, 0) / (enrichedStocks.length || 1);
-      const avg1W =
-        weightingMode === 'mcap'
-          ? enrichedStocks.reduce((acc, s) => acc + s.change1W * (s.marketCapCr || 10000), 0) / totalMcap
-          : enrichedStocks.reduce((a, b) => a + b.change1W, 0) / (enrichedStocks.length || 1);
-      const avg1M =
-        weightingMode === 'mcap'
-          ? enrichedStocks.reduce((acc, s) => acc + (s.change1M ?? 0) * (s.marketCapCr || 10000), 0) / totalMcap
-          : enrichedStocks.reduce((a, b) => a + (b.change1M ?? 0), 0) / (enrichedStocks.length || 1);
+      const ew1D = enrichedStocks.reduce((a, b) => a + b.change1D, 0) / (enrichedStocks.length || 1);
+      const mc1D = enrichedStocks.reduce((acc, s) => acc + s.change1D * (s.marketCapCr || 10000), 0) / totalMcap;
+
+      const ew1W = enrichedStocks.reduce((a, b) => a + b.change1W, 0) / (enrichedStocks.length || 1);
+      const mc1W = enrichedStocks.reduce((acc, s) => acc + s.change1W * (s.marketCapCr || 10000), 0) / totalMcap;
+
+      const ew1M = enrichedStocks.reduce((a, b) => a + (b.change1M ?? 0), 0) / (enrichedStocks.length || 1);
+      const mc1M =
+        enrichedStocks.reduce((acc, s) => acc + (s.change1M ?? 0) * (s.marketCapCr || 10000), 0) / totalMcap;
+
+      const avg1D = weightingMode === 'mcap' ? mc1D : ew1D;
+      const avg1W = weightingMode === 'mcap' ? mc1W : ew1W;
+      const avg1M = weightingMode === 'mcap' ? mc1M : ew1M;
       const advancingCount1W = enrichedStocks.filter((s) => s.change1W > 0).length;
 
       return {
@@ -561,6 +618,12 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
         change1M: parseFloat(avg1M.toFixed(2)),
+        equalWt1W: parseFloat(ew1W.toFixed(2)),
+        mcapWt1W: parseFloat(mc1W.toFixed(2)),
+        equalWt1M: parseFloat(ew1M.toFixed(2)),
+        mcapWt1M: parseFloat(mc1M.toFixed(2)),
+        ewMcapSpread1W: parseFloat((ew1W - mc1W).toFixed(2)),
+        ewMcapSpread1M: parseFloat((ew1M - mc1M).toFixed(2)),
         breadthPositivePct: Math.round((advancingCount1W / (enrichedStocks.length || 1)) * 100),
       };
     });
@@ -599,6 +662,11 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       if (sortField === '1m') {
         return sortOrder === 'asc' ? a.change1M - b.change1M : b.change1M - a.change1M;
       }
+      if (sortField === 'smid') {
+        const spA = a.ewMcapSpread1M ?? 0;
+        const spB = b.ewMcapSpread1M ?? 0;
+        return sortOrder === 'asc' ? spA - spB : spB - spA;
+      }
       if (sortField === 'breadth') {
         return sortOrder === 'asc'
           ? a.breadthPositivePct - b.breadthPositivePct
@@ -609,7 +677,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   }, [enrichedPrebuiltIndices, selectedCategory, searchQuery, sortField, sortOrder]);
 
   // Handle Sort Toggle
-  const toggleSort = (field: 'name' | '1d' | '1w' | '1m' | 'breadth') => {
+  const toggleSort = (field: 'name' | '1d' | '1w' | '1m' | 'smid' | 'breadth') => {
     if (sortField === field) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -661,6 +729,224 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const synchronyScore = Math.round(
     (Math.max(advancingCount1W, decliningCount1W) / (currentSector.stocks.length || 1)) * 100
   );
+
+  // ================= 4-SIGNAL INSTITUTIONAL ROTATION & SMID DIVERGENCE ENGINE =================
+  const fourSignalDiagnostics = useMemo(() => {
+    const stocks = currentSector.stocks;
+    const n = stocks.length || 1;
+
+    // Helper to extract benchmark 1W, 1M (21D), and 3M (63D) returns from its 63-day history
+    const getBenchmarkReturns = (bKey: string) => {
+      const bm = benchmarks[bKey] || FALLBACK_BENCHMARKS[bKey] || FALLBACK_BENCHMARKS.nifty500;
+      const hist = bm.history || [];
+      let ret1M = parseFloat((bm.change1W * 2.1).toFixed(2));
+      if (hist.length >= 2) {
+        const latest = hist[hist.length - 1].value;
+        const idx21 = Math.max(0, hist.length - 22);
+        const val21 = hist[idx21]?.value || latest;
+        if (val21 > 0) {
+          ret1M = parseFloat((((latest - val21) / val21) * 100).toFixed(2));
+        }
+      }
+      return {
+        name: bm.name,
+        change1W: bm.change1W,
+        change1M: ret1M,
+        change3M: bm.change3M,
+      };
+    };
+
+    const nifty500Stats = getBenchmarkReturns('nifty500');
+
+    // Determine Size-Matched Benchmark from median constituent market cap
+    const sortedMcaps = [...stocks].map((s) => s.marketCapCr || 10000).sort((a, b) => a - b);
+    const medianMcap = sortedMcaps[Math.floor(sortedMcaps.length / 2)] || 20000;
+    const sizeBenchmarkKey =
+      medianMcap >= 55000 ? 'nifty50' : medianMcap >= 18000 ? 'niftyMidcap' : 'niftySmallcap';
+    const sizeBenchmarkStats = getBenchmarkReturns(sizeBenchmarkKey);
+
+    // Get Stock return for selected signalHorizon ('1W' | '1M' | '3M')
+    const getStockHorizonReturn = (s: StockConstituent) => {
+      if (signalHorizon === '1W') return s.change1W;
+      if (signalHorizon === '3M') return s.change3M ?? (s.change1M ?? s.change1W * 2) * 1.6;
+      return s.change1M ?? s.change1W * 2.1;
+    };
+
+    const n500HorizonReturn =
+      signalHorizon === '1W'
+        ? nifty500Stats.change1W
+        : signalHorizon === '3M'
+        ? nifty500Stats.change3M
+        : nifty500Stats.change1M;
+
+    const sizeBmHorizonReturn =
+      signalHorizon === '1W'
+        ? sizeBenchmarkStats.change1W
+        : signalHorizon === '3M'
+        ? sizeBenchmarkStats.change3M
+        : sizeBenchmarkStats.change1M;
+
+    // Equal-Weight vs MCap-Weight Returns for selected horizon
+    const ewReturn =
+      signalHorizon === '1W'
+        ? (currentSector.equalWt1W ?? currentSector.change1W)
+        : signalHorizon === '3M'
+        ? (currentSector.equalWt3M ?? currentSector.change3M ?? currentSector.change1M)
+        : (currentSector.equalWt1M ?? currentSector.change1M);
+
+    const mcapReturn =
+      signalHorizon === '1W'
+        ? (currentSector.mcapWt1W ?? currentSector.change1W)
+        : signalHorizon === '3M'
+        ? (currentSector.mcapWt3M ?? currentSector.change3M ?? currentSector.change1M)
+        : (currentSector.mcapWt1M ?? currentSector.change1M);
+
+    const activeSectorReturn = weightingMode === 'mcap' ? mcapReturn : ewReturn;
+
+    // SIGNAL 1: Relative Strength (vs Nifty 500 & Size-Matched Benchmark)
+    const rsVsNifty500 = parseFloat((activeSectorReturn - n500HorizonReturn).toFixed(2));
+    const rsVsSizeBm = parseFloat((activeSectorReturn - sizeBmHorizonReturn).toFixed(2));
+
+    // SIGNAL 2: Dual Breadth (Absolute Rising % + Beating Nifty 500 %)
+    const risingStocksCount = stocks.filter((s) => getStockHorizonReturn(s) > 0).length;
+    const beatingN500Count = stocks.filter((s) => getStockHorizonReturn(s) > n500HorizonReturn).length;
+    const risingBreadthPct = Math.round((risingStocksCount / n) * 100);
+    const beatingN500BreadthPct = Math.round((beatingN500Count / n) * 100);
+
+    // SIGNAL 3: Equal-Weight vs MCap-Weight Divergence + Outlier / Thin-Trade Filter
+    const ewMcapSpread = parseFloat((ewReturn - mcapReturn).toFixed(2));
+    const sortedReturns = [...stocks].map(getStockHorizonReturn).sort((a, b) => a - b);
+    const medianReturn = parseFloat((sortedReturns[Math.floor(sortedReturns.length / 2)] || 0).toFixed(2));
+    const meanMedianGap = parseFloat(Math.abs(ewReturn - medianReturn).toFixed(2));
+
+    // Check top-1 stock contribution & thin-cap risk
+    const sortedByRetDesc = [...stocks].sort((a, b) => getStockHorizonReturn(b) - getStockHorizonReturn(a));
+    const topGainer = sortedByRetDesc[0];
+    const topGainerRet = topGainer ? getStockHorizonReturn(topGainer) : 0;
+    const sumPositiveReturns = stocks.reduce((acc, s) => acc + Math.max(0, getStockHorizonReturn(s)), 0);
+    const top1ContributionShare =
+      sumPositiveReturns > 0 ? Math.round((Math.max(0, topGainerRet) / sumPositiveReturns) * 100) : 0;
+
+    // Check if smaller constituents (< median MCap) are broadly participating or if thin-cap/outlier skew dominates
+    const smidStocks = stocks.filter((s) => (s.marketCapCr || 10000) <= medianMcap * 1.15);
+    const smidAdvancingPct = Math.round(
+      (smidStocks.filter((s) => getStockHorizonReturn(s) > 0).length / Math.max(1, smidStocks.length)) * 100
+    );
+    const hasThinCapOutlier =
+      topGainer && (topGainer.marketCapCr < 3500 || top1ContributionShare >= 42 || meanMedianGap >= 3.8);
+
+    let divergenceVerdict: {
+      title: string;
+      tone: 'emerald' | 'amber' | 'blue' | 'slate';
+      explanation: string;
+      cautionFlag: string | null;
+    };
+
+    if (ewMcapSpread >= 1.25) {
+      if (hasThinCapOutlier || risingBreadthPct < 55) {
+        divergenceVerdict = {
+          title: 'SMID Spread Positive — Outlier / Thin-Trade Caution',
+          tone: 'amber',
+          explanation: `Equal-Weight (+${ewReturn.toFixed(1)}%) beats MCap-Weight (+${mcapReturn.toFixed(1)}%), but ${topGainer?.ticker || 'top outlier'} (${topGainerRet >= 0 ? '+' : ''}${topGainerRet.toFixed(1)}%, ₹${(topGainer?.marketCapCr || 0).toLocaleString('en-IN')} Cr MCap) accounts for ${top1ContributionShare}% of gains (Median: ${medianReturn >= 0 ? '+' : ''}${medianReturn.toFixed(1)}%).`,
+          cautionFlag: `Verify liquidity & corporate actions in ${topGainer?.ticker} before treating as broad SMID breakout.`,
+        };
+      } else {
+        divergenceVerdict = {
+          title: 'Verified SMID Leadership (Broad Small/Mid Inflow)',
+          tone: 'emerald',
+          explanation: `Equal-Weight (${ewReturn >= 0 ? '+' : ''}${ewReturn.toFixed(1)}%) leads MCap-Weight (${mcapReturn >= 0 ? '+' : ''}${mcapReturn.toFixed(1)}%) by +${ewMcapSpread.toFixed(1)}% with ${smidAdvancingPct}% of SMIDs rising and Median Return at ${medianReturn >= 0 ? '+' : ''}${medianReturn.toFixed(1)}%.`,
+          cautionFlag: null,
+        };
+      }
+    } else if (ewMcapSpread <= -1.25) {
+      divergenceVerdict = {
+        title: 'Large-Cap Dominated (SMIDs Lagging)',
+        tone: 'blue',
+        explanation: `MCap-Weight (${mcapReturn >= 0 ? '+' : ''}${mcapReturn.toFixed(1)}%) leads Equal-Weight (${ewReturn >= 0 ? '+' : ''}${ewReturn.toFixed(1)}%) by +${Math.abs(ewMcapSpread).toFixed(1)}%. Index heavyweights are carrying the basket while smaller constituents lag.`,
+        cautionFlag: 'Institutional flow is concentrated in mega/large-cap leaders rather than broad SMIDs.',
+      };
+    } else {
+      divergenceVerdict = {
+        title: 'Balanced Size Participation (In-Line)',
+        tone: 'slate',
+        explanation: `Equal-Weight (${ewReturn >= 0 ? '+' : ''}${ewReturn.toFixed(1)}%) and MCap-Weight (${mcapReturn >= 0 ? '+' : ''}${mcapReturn.toFixed(1)}%) are moving in lockstep (Spread: ${ewMcapSpread >= 0 ? '+' : ''}${ewMcapSpread.toFixed(1)}%, Median: ${medianReturn >= 0 ? '+' : ''}${medianReturn.toFixed(1)}%).`,
+        cautionFlag: null,
+      };
+    }
+
+    // SIGNAL 4: Momentum Persistence across 1W, 1M, and 3M
+    const r1W = weightingMode === 'mcap' ? (currentSector.mcapWt1W ?? currentSector.change1W) : (currentSector.equalWt1W ?? currentSector.change1W);
+    const r1M = weightingMode === 'mcap' ? (currentSector.mcapWt1M ?? currentSector.change1M) : (currentSector.equalWt1M ?? currentSector.change1M);
+    const r3M = weightingMode === 'mcap' ? (currentSector.mcapWt3M ?? currentSector.change3M ?? r1M) : (currentSector.equalWt3M ?? currentSector.change3M ?? r1M);
+
+    const alpha1W = parseFloat((r1W - nifty500Stats.change1W).toFixed(2));
+    const alpha1M = parseFloat((r1M - nifty500Stats.change1M).toFixed(2));
+    const alpha3M = parseFloat((r3M - nifty500Stats.change3M).toFixed(2));
+
+    const positiveHorizons = [r1W > 0, r1M > 0, r3M > 0].filter(Boolean).length;
+    const outperformingHorizons = [alpha1W > 0, alpha1M > 0, alpha3M > 0].filter(Boolean).length;
+
+    let persistenceRegime = {
+      label: 'Mixed / Transitional',
+      tone: 'slate' as 'emerald' | 'blue' | 'amber' | 'rose' | 'slate',
+      summary: `${positiveHorizons}/3 horizons positive · ${outperformingHorizons}/3 beating Nifty 500`,
+    };
+
+    if (r1W > 0 && r1M > 0 && r3M > 0) {
+      persistenceRegime = {
+        label: '3/3 Horizon Persistence (Sustained Leaders)',
+        tone: 'emerald',
+        summary: `Consistent gains across 1W (+${r1W.toFixed(1)}%), 1M (+${r1M.toFixed(1)}%), and 3M (+${r3M.toFixed(1)}%)`,
+      };
+    } else if (r3M <= 0 && r1M > 0 && r1W > 0) {
+      persistenceRegime = {
+        label: 'Fresh Bullish Inflection (1M & 1W Reversal)',
+        tone: 'blue',
+        summary: `Turning up strongly on 1M (+${r1M.toFixed(1)}%) & 1W (+${r1W.toFixed(1)}%) out of 3M base (${r3M.toFixed(1)}%)`,
+      };
+    } else if (r3M > 0 && r1M > 0 && r1W <= 0) {
+      persistenceRegime = {
+        label: 'Short-Term Pullback in Uptrend',
+        tone: 'amber',
+        summary: `3M (+${r3M.toFixed(1)}%) & 1M (+${r1M.toFixed(1)}%) strong, digesting gains on 1W (${r1W.toFixed(1)}%)`,
+      };
+    } else if (r1W <= 0 && r1M <= 0) {
+      persistenceRegime = {
+        label: 'Multi-Horizon Lagging / Distribution',
+        tone: 'rose',
+        summary: `Persistent weakness across 1W (${r1W.toFixed(1)}%) and 1M (${r1M.toFixed(1)}%)`,
+      };
+    }
+
+    return {
+      nifty500Stats,
+      sizeBenchmarkStats,
+      medianMcap,
+      ewReturn: parseFloat(ewReturn.toFixed(2)),
+      mcapReturn: parseFloat(mcapReturn.toFixed(2)),
+      activeSectorReturn: parseFloat(activeSectorReturn.toFixed(2)),
+      rsVsNifty500,
+      rsVsSizeBm,
+      risingStocksCount,
+      beatingN500Count,
+      risingBreadthPct,
+      beatingN500BreadthPct,
+      ewMcapSpread,
+      medianReturn,
+      topGainer,
+      topGainerRet: parseFloat(topGainerRet.toFixed(2)),
+      top1ContributionShare,
+      smidAdvancingPct,
+      divergenceVerdict,
+      r1W: parseFloat(r1W.toFixed(2)),
+      r1M: parseFloat(r1M.toFixed(2)),
+      r3M: parseFloat(r3M.toFixed(2)),
+      alpha1W,
+      alpha1M,
+      alpha3M,
+      persistenceRegime,
+    };
+  }, [currentSector, benchmarks, signalHorizon, weightingMode]);
 
   return (
     <div className="flex flex-col lg:flex-row items-stretch bg-white border border-[#b1ada1]/30 rounded-[24px] shadow-sm overflow-hidden">
@@ -796,7 +1082,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Table Header: Name ⇅ | 1D | 1W | 1M */}
+        {/* Table Header: Name ⇅ | 1D | 1W | 1M | SMID */}
         <div className="px-3 py-2.5 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9] shrink-0">
           <button
             onClick={() => toggleSort('name')}
@@ -810,11 +1096,23 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             </span>
           </button>
 
-          <div className="flex items-center gap-1.5 pr-0.5 font-mono">
+          <div className="flex items-center gap-1 pr-0.5 font-mono">
+            <button
+              onClick={() => toggleSort('smid')}
+              title="Sort by 1M Equal-Weight minus MCap-Weight Divergence (SMID Leadership Spread)"
+              className={`text-[10px] flex items-center justify-end gap-0.5 cursor-pointer px-1.5 py-0.5 rounded border transition-colors ${
+                sortField === 'smid'
+                  ? 'text-[#2563eb] font-extrabold bg-[#2563eb]/10 border-[#2563eb]/30'
+                  : 'text-[#08090a]/65 border-[#b1ada1]/30 hover:text-[#08090a] bg-white'
+              }`}
+            >
+              <span>EW-MCap</span>
+              {sortField === 'smid' && <span className="text-[9px]">{sortOrder === 'desc' ? '⌄' : '⌃'}</span>}
+            </button>
             <button
               onClick={() => toggleSort('1d')}
               title="Sort by 1-Day Session Return (Equal/MCap Avg of Constituents)"
-              className={`w-12 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
+              className={`w-11 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
                 sortField === '1d' ? 'text-[#2563eb] font-extrabold bg-[#2563eb]/8' : 'hover:text-[#08090a]'
               }`}
             >
@@ -824,7 +1122,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             <button
               onClick={() => toggleSort('1w')}
               title="Sort by 1-Week (5 Trading Sessions) Rolling Return"
-              className={`w-12 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
+              className={`w-11 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
                 sortField === '1w' ? 'text-[#2563eb] font-extrabold bg-[#2563eb]/8' : 'hover:text-[#08090a]'
               }`}
             >
@@ -834,7 +1132,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             <button
               onClick={() => toggleSort('1m')}
               title="Sort by 1-Month (21 Trading Sessions) Rolling Return"
-              className={`w-13 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
+              className={`w-12 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
                 sortField === '1m' ? 'text-[#2563eb] font-extrabold bg-[#2563eb]/8' : 'hover:text-[#08090a]'
               }`}
             >
@@ -863,6 +1161,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               filteredIndices.map((sector) => {
                 const isSelected = selectedSectorId === sector.id && !selectedStockTicker;
                 const isExpanded = !!expandedSectors[sector.id];
+                const smidSpread = sector.ewMcapSpread1M ?? 0;
 
                 return (
                   <div key={sector.id} className="group">
@@ -894,15 +1193,27 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                           >
                             {sector.name}
                           </span>
-                          <span className="text-[10px] text-[#08090a]/50 font-medium">
-                            {sector.stocks.length} stocks · {sector.breadthPositivePct}% breadth
-                          </span>
+                          <div className="flex items-center gap-1.5 text-[10px] text-[#08090a]/50 font-medium">
+                            <span>{sector.stocks.length} stks · {sector.breadthPositivePct}% brdth</span>
+                            <span
+                              className={`font-mono font-bold ${
+                                smidSpread >= 1.25
+                                  ? 'text-[#10b981]'
+                                  : smidSpread <= -1.25
+                                  ? 'text-[#2563eb]'
+                                  : 'text-[#08090a]/45'
+                              }`}
+                              title="1M Equal-Weight minus MCap-Weight Spread"
+                            >
+                              · EW-MC:{smidSpread >= 0 ? '+' : ''}{smidSpread.toFixed(1)}%
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-1.5 text-[11px] font-mono shrink-0">
                         <span
-                          className={`w-12 text-right ${
+                          className={`w-11 text-right ${
                             sortField === '1d' ? 'font-bold' : 'font-medium'
                           } ${sector.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
                         >
@@ -910,7 +1221,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                           {sector.change1D.toFixed(1)}%
                         </span>
                         <span
-                          className={`w-12 text-right ${
+                          className={`w-11 text-right ${
                             sortField === '1w' ? 'font-bold' : 'font-medium'
                           } ${sector.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
                         >
@@ -918,7 +1229,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                           {sector.change1W.toFixed(1)}%
                         </span>
                         <span
-                          className={`w-13 text-right ${
+                          className={`w-12 text-right ${
                             sortField === '1m' ? 'font-bold' : 'font-medium'
                           } ${sector.change1M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
                         >
@@ -1247,60 +1558,316 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* DEFINITIVE PROOF BAR */}
+        {/* ================= 4-SIGNAL INSTITUTIONAL ROTATION & SMID DIVERGENCE DIAGNOSTIC PANEL ================= */}
         {!currentSector.isBenchmark && (
-          <div className="px-6 py-3 bg-[#fafaf9] border-b border-[#b1ada1]/25 flex flex-wrap items-center justify-between gap-4 text-xs shrink-0">
-            <div className="flex items-center gap-4 flex-wrap">
-              <div>
-                <span className="text-[#08090a]/60 block font-semibold text-[11px]">1W Advance / Decline:</span>
-                <span className="font-extrabold text-[#08090a] font-display text-sm">
-                  <span className="text-[#10b981]">{advancingCount1W} Advancing</span> /{' '}
-                  <span className={decliningCount1W > 0 ? 'text-[#f43f5e]' : 'text-[#08090a]/40'}>
-                    {decliningCount1W} Declining
-                  </span>
+          <div className="px-6 py-4 bg-[#fafaf9] border-b border-[#b1ada1]/25 space-y-3 shrink-0">
+            {/* Top Bar: Title + Horizon Selector (1W | 1M | 3M) */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-[#08090a] font-display uppercase tracking-wider">
+                  4-Signal Institutional Rotation & SMID Divergence Engine
+                </span>
+                <span className="text-[11px] text-[#08090a]/55 font-mono">
+                  · Median Constituent MCap: ₹{Math.round(fourSignalDiagnostics.medianMcap).toLocaleString('en-IN')} Cr
                 </span>
               </div>
 
-              <div className="h-7 w-px bg-[#b1ada1]/30 hidden sm:block" />
-
-              <div>
-                <span className="text-[#08090a]/60 block font-semibold text-[11px]">Cluster Breadth (1W):</span>
-                <span className="font-extrabold text-[#10b981] font-display text-sm">
-                  {currentSector.breadthPositivePct}% Inflow ({advancingCount1W}/{currentSector.stocks.length})
-                </span>
-              </div>
-
-              <div className="h-7 w-px bg-[#b1ada1]/30 hidden sm:block" />
-
-              <div>
-                <span className="text-[#08090a]/60 block font-semibold text-[11px]">1D Session:</span>
-                <span className="font-mono font-bold text-xs">
-                  <span className={advancingCount1D > 0 ? 'text-[#10b981]' : 'text-[#08090a]/60'}>{advancingCount1D} Up</span> / <span className={decliningCount1D > 0 ? 'text-[#f43f5e]' : 'text-[#08090a]/60'}>{decliningCount1D} Down</span>
-                </span>
-              </div>
-
-              <div className="h-7 w-px bg-[#b1ada1]/30 hidden sm:block" />
-
-              <div>
-                <span className="text-[#08090a]/60 block font-semibold text-[11px]">Synchrony Verdict:</span>
-                <span className="font-bold text-[#08090a] font-display text-xs flex items-center gap-1">
-                  {synchronyScore >= 75 ? (
-                    <>
-                      <Flame className="w-3.5 h-3.5 text-[#10b981]" />
-                      <span className="text-[#10b981]">{synchronyScore}% Institutional Co-Movement</span>
-                    </>
-                  ) : (
-                    <>
-                      <Activity className="w-3.5 h-3.5 text-[#f59e0b]" />
-                      <span className="text-[#f59e0b]">{synchronyScore}% Mixed Dispersion</span>
-                    </>
-                  )}
-                </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[#08090a]/60 font-semibold">Signal Horizon:</span>
+                <div className="flex items-center bg-white p-0.5 rounded-lg border border-[#b1ada1]/35">
+                  {(['1W', '1M', '3M'] as const).map((h) => (
+                    <button
+                      key={h}
+                      onClick={() => setSignalHorizon(h)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold cursor-pointer transition-colors ${
+                        signalHorizon === h
+                          ? 'bg-[#08090a] text-white'
+                          : 'text-[#08090a]/65 hover:text-[#08090a]'
+                      }`}
+                    >
+                      {h}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="text-right text-[11px] text-[#08090a]/60 font-medium">
-              Timeframe: <span className="font-bold text-[#08090a]">3 Months Normalized (Base 100)</span>
+            {/* 4-Signal Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              {/* SIGNAL 1: Relative Strength */}
+              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
+                    <span>1. Relative Strength ({signalHorizon})</span>
+                    <span
+                      className={`font-mono font-bold ${
+                        fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'Outperforming' : 'Lagging'}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">vs NIFTY 500:</span>
+                    <span
+                      className={`text-sm font-mono font-extrabold ${
+                        fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.rsVsNifty500 >= 0 ? '+' : ''}
+                      {fourSignalDiagnostics.rsVsNifty500.toFixed(2)}% Alpha
+                    </span>
+                  </div>
+
+                  <div className="mt-1 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">
+                      vs {fourSignalDiagnostics.sizeBenchmarkStats.name.replace('NIFTY ', '')}:
+                    </span>
+                    <span
+                      className={`text-xs font-mono font-bold ${
+                        fourSignalDiagnostics.rsVsSizeBm >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.rsVsSizeBm >= 0 ? '+' : ''}
+                      {fourSignalDiagnostics.rsVsSizeBm.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-[#b1ada1]/15 text-[10px] text-[#08090a]/60 font-mono flex items-center justify-between">
+                  <span>Sector ({weightingMode === 'mcap' ? 'MCap' : 'EW'}):</span>
+                  <span className="font-bold text-[#08090a]">
+                    {fourSignalDiagnostics.activeSectorReturn >= 0 ? '+' : ''}
+                    {fourSignalDiagnostics.activeSectorReturn.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+
+              {/* SIGNAL 2: Dual Breadth */}
+              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
+                    <span>2. Constituent Breadth ({signalHorizon})</span>
+                    <span className="font-mono font-bold text-[#08090a]">
+                      {currentSector.stocks.length} Stocks
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">Absolute Rising (&gt;0%):</span>
+                    <span
+                      className={`text-sm font-mono font-extrabold ${
+                        fourSignalDiagnostics.risingBreadthPct >= 60 ? 'text-[#10b981]' : 'text-[#f59e0b]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.risingBreadthPct}% ({fourSignalDiagnostics.risingStocksCount}/{currentSector.stocks.length})
+                    </span>
+                  </div>
+
+                  <div className="mt-1 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">Beating NIFTY 500:</span>
+                    <span
+                      className={`text-xs font-mono font-bold ${
+                        fourSignalDiagnostics.beatingN500BreadthPct >= 55 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.beatingN500BreadthPct}% ({fourSignalDiagnostics.beatingN500Count}/{currentSector.stocks.length})
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-[#b1ada1]/15 text-[10px] text-[#08090a]/60 font-mono flex items-center justify-between">
+                  <span>1D Session A/D:</span>
+                  <span>
+                    <strong className="text-[#10b981]">{advancingCount1D} Up</strong> /{' '}
+                    <strong className="text-[#f43f5e]">{decliningCount1D} Down</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* SIGNAL 3: Equal-Weight vs MCap-Weight Divergence (SMID Leadership vs Outlier Check) */}
+              <div
+                className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+                  fourSignalDiagnostics.divergenceVerdict.tone === 'emerald'
+                    ? 'bg-[#10b981]/5 border-[#10b981]/40'
+                    : fourSignalDiagnostics.divergenceVerdict.tone === 'amber'
+                    ? 'bg-[#f59e0b]/5 border-[#f59e0b]/40'
+                    : fourSignalDiagnostics.divergenceVerdict.tone === 'blue'
+                    ? 'bg-[#2563eb]/5 border-[#2563eb]/35'
+                    : 'bg-white border-[#b1ada1]/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/65 font-display">
+                    <span>3. EW vs MCap Divergence ({signalHorizon})</span>
+                    <span
+                      className={`font-mono font-extrabold ${
+                        fourSignalDiagnostics.ewMcapSpread >= 1.25
+                          ? 'text-[#10b981]'
+                          : fourSignalDiagnostics.ewMcapSpread <= -1.25
+                          ? 'text-[#2563eb]'
+                          : 'text-[#08090a]'
+                      }`}
+                    >
+                      Spread: {fourSignalDiagnostics.ewMcapSpread >= 0 ? '+' : ''}
+                      {fourSignalDiagnostics.ewMcapSpread.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  {/* Side-by-side Equal-Weight vs MCap-Weight Return Boxes */}
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="bg-white/90 px-2.5 py-1.5 rounded-lg border border-[#b1ada1]/25">
+                      <span className="text-[9px] font-bold uppercase text-[#08090a]/55 block">
+                        Equal-Weight
+                      </span>
+                      <span
+                        className={`text-sm font-mono font-extrabold ${
+                          fourSignalDiagnostics.ewReturn >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.ewReturn >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.ewReturn.toFixed(1)}%
+                      </span>
+                      <span className="text-[9px] text-[#08090a]/50 block truncate">
+                        SMIDs equal voice
+                      </span>
+                    </div>
+
+                    <div className="bg-white/90 px-2.5 py-1.5 rounded-lg border border-[#b1ada1]/25">
+                      <span className="text-[9px] font-bold uppercase text-[#08090a]/55 block">
+                        MCap-Weight
+                      </span>
+                      <span
+                        className={`text-sm font-mono font-extrabold ${
+                          fourSignalDiagnostics.mcapReturn >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.mcapReturn >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.mcapReturn.toFixed(1)}%
+                      </span>
+                      <span className="text-[9px] text-[#08090a]/50 block truncate">
+                        Large caps dominate
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-1.5 border-t border-[#b1ada1]/20 text-[10px]">
+                  <span
+                    className={`font-bold block ${
+                      fourSignalDiagnostics.divergenceVerdict.tone === 'emerald'
+                        ? 'text-[#10b981]'
+                        : fourSignalDiagnostics.divergenceVerdict.tone === 'amber'
+                        ? 'text-[#d97706]'
+                        : fourSignalDiagnostics.divergenceVerdict.tone === 'blue'
+                        ? 'text-[#2563eb]'
+                        : 'text-[#08090a]'
+                    }`}
+                  >
+                    {fourSignalDiagnostics.divergenceVerdict.title}
+                  </span>
+                  <span className="text-[#08090a]/65 font-mono text-[9px] block mt-0.5">
+                    Median: {fourSignalDiagnostics.medianReturn >= 0 ? '+' : ''}
+                    {fourSignalDiagnostics.medianReturn.toFixed(1)}% · Top1 Share:{' '}
+                    {fourSignalDiagnostics.top1ContributionShare}% ({fourSignalDiagnostics.topGainer?.ticker})
+                  </span>
+                </div>
+              </div>
+
+              {/* SIGNAL 4: Momentum Persistence (1W, 1M, 3M) */}
+              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
+                    <span>4. Momentum Persistence</span>
+                    <span className="font-mono text-[10px] text-[#08090a]/60">1W → 1M → 3M</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 mt-2 text-center font-mono">
+                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
+                      <span className="text-[9px] text-[#08090a]/55 block">1W</span>
+                      <span
+                        className={`text-xs font-extrabold ${
+                          fourSignalDiagnostics.r1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.r1W >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.r1W.toFixed(1)}%
+                      </span>
+                      <span className="text-[8px] text-[#08090a]/50 block">
+                        α:{fourSignalDiagnostics.alpha1W >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.alpha1W.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
+                      <span className="text-[9px] text-[#08090a]/55 block">1M</span>
+                      <span
+                        className={`text-xs font-extrabold ${
+                          fourSignalDiagnostics.r1M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.r1M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.r1M.toFixed(1)}%
+                      </span>
+                      <span className="text-[8px] text-[#08090a]/50 block">
+                        α:{fourSignalDiagnostics.alpha1M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.alpha1M.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
+                      <span className="text-[9px] text-[#08090a]/55 block">3M</span>
+                      <span
+                        className={`text-xs font-extrabold ${
+                          fourSignalDiagnostics.r3M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.r3M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.r3M.toFixed(1)}%
+                      </span>
+                      <span className="text-[8px] text-[#08090a]/50 block">
+                        α:{fourSignalDiagnostics.alpha3M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.alpha3M.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-1.5 border-t border-[#b1ada1]/15 text-[10px]">
+                  <span
+                    className={`font-bold block ${
+                      fourSignalDiagnostics.persistenceRegime.tone === 'emerald'
+                        ? 'text-[#10b981]'
+                        : fourSignalDiagnostics.persistenceRegime.tone === 'blue'
+                        ? 'text-[#2563eb]'
+                        : fourSignalDiagnostics.persistenceRegime.tone === 'amber'
+                        ? 'text-[#d97706]'
+                        : fourSignalDiagnostics.persistenceRegime.tone === 'rose'
+                        ? 'text-[#f43f5e]'
+                        : 'text-[#08090a]'
+                    }`}
+                  >
+                    {fourSignalDiagnostics.persistenceRegime.label}
+                  </span>
+                  <span className="text-[9px] text-[#08090a]/60 block truncate">
+                    {fourSignalDiagnostics.persistenceRegime.summary}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Diagnostic Callout Banner Explaining EW vs MCap & Outlier/Liquidity Nuance */}
+            <div className="px-3.5 py-2 rounded-xl bg-white border border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <div className="text-[#08090a]/80">
+                <strong className="text-[#08090a] font-display">SMID Divergence Diagnostic: </strong>
+                {fourSignalDiagnostics.divergenceVerdict.explanation}
+              </div>
+              {fourSignalDiagnostics.divergenceVerdict.cautionFlag && (
+                <span className="text-[10px] font-mono font-bold text-[#d97706] bg-[#f59e0b]/10 px-2 py-0.5 rounded border border-[#f59e0b]/30">
+                  ⚠ {fourSignalDiagnostics.divergenceVerdict.cautionFlag}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -1327,7 +1894,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 </div>
 
                 <div className="text-xs font-mono font-bold text-[#10b981] bg-[#10b981]/15 px-2.5 py-1 rounded-lg">
-                  1W Return: +{currentSector.change1W.toFixed(2)}%
+                  1W: {currentSector.change1W >= 0 ? '+' : ''}{currentSector.change1W.toFixed(2)}% · 1M: {currentSector.change1M >= 0 ? '+' : ''}{currentSector.change1M.toFixed(2)}%
                 </div>
               </div>
 
@@ -1364,7 +1931,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                     <Line
                       type="monotone"
                       dataKey="selectedIndexLine"
-                      name={`${currentSector.name} (Base)`}
+                      name={`${currentSector.name} (${weightingMode === 'mcap' ? 'MCap Wt' : 'Equal Wt'})`}
                       stroke={
                         currentSector.isBenchmark
                           ? (BENCHMARK_COLORS[selectedSectorId.replace('benchmark-', '')] || '#2563eb')
@@ -1466,21 +2033,21 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               )}
             </div>
           ) : viewProofMode === 'composite' ? (
-            // ================= COMPOSITE EQUAL-WEIGHTED AREA CHART =================
+            // ================= COMPOSITE EQUAL-WEIGHTED VS MCAP-WEIGHTED AREA CHART =================
             <div className="bg-white p-5 rounded-[22px] border border-[#b1ada1]/30 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h3 className="text-sm font-extrabold text-[#08090a] font-display">
                     {currentStock
                       ? `${currentStock.name} (${currentStock.ticker}) Price Action (₹)`
-                      : `${currentSector.name} ${currentSector.isBenchmark ? 'Benchmark Index' : 'Equal-Weighted Composite Index'} (Base 100)`}
+                      : `${currentSector.name} — Equal-Weight vs. Market-Cap Weight Composite (Base 100)`}
                   </h3>
                   <p className="text-xs text-[#08090a]/60">
                     {currentStock
                       ? `Real daily market closes on NSE from ₹${(singleStockSeries?.[0]?.value || currentStock.price).toLocaleString('en-IN')} to ₹${currentStock.price.toLocaleString('en-IN')}`
                       : currentSector.isBenchmark
-                      ? 'Official historical index trendline normalized across 64 trading sessions'
-                      : 'Smooth aggregate trendline filtering individual stock noise'}
+                      ? 'Official historical index trendline normalized across 63 trading sessions'
+                      : 'Solid Line = Equal-Weighted Index (SMID participation) · Dashed Purple Line = Market-Cap Weighted Index (Large-cap leadership)'}
                   </p>
                 </div>
                 <div
@@ -1494,7 +2061,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                     </span>
                   ) : (
                     <span>
-                      1W: {currentSector.change1W >= 0 ? '+' : ''}{currentSector.change1W.toFixed(2)}% | 3M: {currentSector.change1M >= 0 ? '+' : ''}{currentSector.change1M.toFixed(2)}%
+                      EW 3M: {(currentSector.equalWt3M ?? 0) >= 0 ? '+' : ''}{(currentSector.equalWt3M ?? 0).toFixed(1)}% | MCap 3M: {(currentSector.mcapWt3M ?? 0) >= 0 ? '+' : ''}{(currentSector.mcapWt3M ?? 0).toFixed(1)}%
                     </span>
                   )}
                 </div>
@@ -1523,12 +2090,6 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                       tick={{ fontSize: 11, fill: '#08090a', opacity: 0.6 }}
                     />
                     <Tooltip
-                      formatter={(val: any) => [
-                        currentStock
-                          ? `₹${parseFloat(val).toLocaleString('en-IN')}`
-                          : `${parseFloat(val).toFixed(2)} pts`,
-                        currentStock ? `${currentStock.ticker} Price` : 'Composite Index',
-                      ]}
                       contentStyle={{
                         backgroundColor: '#08090a',
                         borderColor: '#2563eb',
@@ -1537,14 +2098,38 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                         fontSize: '12px',
                       }}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke={chartStrokeColor}
-                      strokeWidth={2.5}
-                      fillOpacity={1}
-                      fill="url(#colorCompVal)"
-                    />
+                    {currentStock || currentSector.isBenchmark ? (
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        name={currentStock ? `${currentStock.ticker} Price (₹)` : 'Benchmark Index'}
+                        stroke={chartStrokeColor}
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#colorCompVal)"
+                      />
+                    ) : (
+                      <>
+                        <Area
+                          type="monotone"
+                          dataKey="equalWeightValue"
+                          name="Equal-Weight Index (SMIDs Equal)"
+                          stroke="#10b981"
+                          strokeWidth={2.8}
+                          fillOpacity={1}
+                          fill="url(#colorCompVal)"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="mcapWeightValue"
+                          name="MCap-Weight Index (Large Caps)"
+                          stroke="#7c3aed"
+                          strokeWidth={2.2}
+                          strokeDasharray="5 3"
+                          fillOpacity={0}
+                        />
+                      </>
+                    )}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
