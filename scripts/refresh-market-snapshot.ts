@@ -29,7 +29,9 @@ async function main() {
     const benchmark = snapshot.benchmarks?.[key];
     return !benchmark || !Array.isArray(benchmark.history) ||
       benchmark.history.length < 40 ||
-      !Number.isFinite(benchmark.history.at(-1)?.value);
+      !Number.isFinite(benchmark.history.at(-1)?.value) ||
+      !Number.isFinite(Date.parse(benchmark.fetchedAt)) ||
+      Date.parse(benchmark.fetchedAt) < startedAt;
   });
 
   // Avoid falsely updating all index rankings when an entire core basket
