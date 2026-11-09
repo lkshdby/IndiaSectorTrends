@@ -450,6 +450,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       return [stock.ticker, new Map((live?.history || []).map(pt => [tradingDayKey(pt.date), pt.value]))];
     })) as Record<string, Map<string | null, number>>;
     const firstIndex = currentSector.history[0]?.value;
+    const anchorDay = tradingDayKey(currentSector.history[0]?.date || '');
     return currentSector.history.map(pt => {
       const key = tradingDayKey(pt.date);
       const row: Record<string, any> = {
@@ -457,12 +458,15 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         selectedIndexLine: firstIndex && pt.value ? Number((100 * pt.value / firstIndex).toFixed(2)) : null
       };
       for (const stock of currentSector.stocks) {
-        row[stock.ticker] = key ? (stockMaps[stock.ticker].get(key) ?? null) : null;
+        const series = stockMaps[stock.ticker];
+        const anchor = anchorDay ? series.get(anchorDay) : undefined;
+        const value = key ? series.get(key) : undefined;
+        row[stock.ticker] = anchor && value ? Number((100 * value / anchor).toFixed(2)) : null;
       }
       for (const name of benchmarkKeys) {
         if (!activeBenchmarkOverlays[name] || selectedSectorId === `benchmark-${name}`) continue;
         const hist = benchmarks[name]?.history || FALLBACK_BENCHMARKS[name]?.history || [];
-        const first = hist[0]?.value;
+        const first = anchorDay ? benchmarkMaps[name].get(anchorDay) : undefined;
         const value = key ? benchmarkMaps[name].get(key) : undefined;
         row[name] = first && value ? Number((100 * value / first).toFixed(2)) : null;
       }
@@ -766,7 +770,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         };
       } else {
         divergenceVerdict = {
-          title: 'Verified SMID Leadership (Broad Small/Mid Inflow)',
+          title: 'Broad SMID Price Leadership (Check Liquidity)',
           tone: 'emerald',
           explanation: `Equal-Weight (${ewReturn >= 0 ? '+' : ''}${ewReturn.toFixed(1)}%) leads MCap-Weight (${mcapReturn >= 0 ? '+' : ''}${mcapReturn.toFixed(1)}%) by +${ewMcapSpread.toFixed(1)}% with ${smidAdvancingPct}% of SMIDs rising and Median Return at ${medianReturn >= 0 ? '+' : ''}${medianReturn.toFixed(1)}%.`,
           cautionFlag: null,
@@ -777,7 +781,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         title: 'Large-Cap Dominated (SMIDs Lagging)',
         tone: 'blue',
         explanation: `MCap-Weight (${mcapReturn >= 0 ? '+' : ''}${mcapReturn.toFixed(1)}%) leads Equal-Weight (${ewReturn >= 0 ? '+' : ''}${ewReturn.toFixed(1)}%) by +${Math.abs(ewMcapSpread).toFixed(1)}%. Index heavyweights are carrying the basket while smaller constituents lag.`,
-        cautionFlag: 'Institutional flow is concentrated in mega/large-cap leaders rather than broad SMIDs.',
+        cautionFlag: 'Price strength is concentrated in larger constituents rather than smaller ones.',
       };
     } else {
       divergenceVerdict = {
@@ -2081,7 +2085,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 >
                   <span className="block font-bold text-[#10b981] mb-1 font-display">1. Leading Phase</span>
                   <p className="text-[11px] text-[#08090a]/70">
-                    High relative strength vs Nifty 50 with sustained multi-week capital inflows.
+                    High relative strength vs Nifty 50 with sustained multi-week price outperformance.
                   </p>
                 </div>
 
@@ -2107,7 +2111,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 >
                   <span className="block font-bold text-[#f43f5e] mb-1 font-display">3. Lagging Phase</span>
                   <p className="text-[11px] text-[#08090a]/70">
-                    Heavy institutional selling, majority of constituents making lower lows.
+                    Price underperformance; verify trend and breadth before inferring selling.
                   </p>
                 </div>
 
@@ -2120,7 +2124,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 >
                   <span className="block font-bold text-[#2563eb] mb-1 font-display">4. Improving Phase</span>
                   <p className="text-[11px] text-[#08090a]/70">
-                    V-shaped accumulation out of base lows. Cluster breadth turning green.
+                    Prices recovering from a weak base with improving breadth.
                   </p>
                 </div>
               </div>
@@ -2135,7 +2139,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   1-Week Return Dispersion Spectrum (Cluster Tightness)
                 </span>
                 <span className="text-[#08090a]/60 text-[11px]">
-                  Tight grouping in green = Authentic Sector Inflow
+                  Positive returns indicate participation, not verified capital inflows
                 </span>
               </div>
 
