@@ -74,7 +74,7 @@ export async function fetchLiveBenchmarks(): Promise<Record<string, BenchmarkIte
     if (res.ok) {
       const data = await res.json();
       if (data.success && data.benchmarks && Object.keys(data.benchmarks).length > 0) {
-        return data.benchmarks;
+        return { ...FALLBACK_BENCHMARKS, ...data.benchmarks };
       }
     }
   } catch (err) {
