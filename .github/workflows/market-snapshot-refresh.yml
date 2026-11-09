@@ -1,16 +1,16 @@
 name: Refresh Committed Market Snapshot
 
-# Three and only three scheduled collection windows per Indian trading day.
+# Three and only three scheduled collection windows per IST calendar day.
 # GitHub cron uses UTC:
-#   13:00 UTC Monday-Friday = 18:30 IST Monday-Friday
-#   20:30 UTC Monday-Friday = 02:00 IST Tuesday-Saturday
-#   22:30 UTC Monday-Friday = 04:00 IST Tuesday-Saturday
+#   13:00 UTC every day = 18:30 IST every day
+#   20:30 UTC every day = 02:00 IST the following day
+#   22:30 UTC every day = 04:00 IST the following day
 # GitHub schedules are best-effort: runs can be delayed or occasionally skipped.
 on:
   schedule:
-    - cron: '0 13 * * 1-5'
-    - cron: '30 20 * * 1-5'
-    - cron: '30 22 * * 1-5'
+    - cron: '0 13 * * *'
+    - cron: '30 20 * * *'
+    - cron: '30 22 * * *'
 
 permissions:
   contents: write
