@@ -336,7 +336,27 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
   }
 }
 
+/**
+ * Ensures that if the Cloud Run container slept through the 2:00 AM / 4:00 AM IST window,
+ * it automatically triggers a catch-up background pull as soon as the server wakes up.
+ */
+export function ensureFreshDailySync() {
+  if (isSyncInProgress) return;
+  try {
+    const lastMs = lastSyncAt ? new Date(lastSyncAt).getTime() : 0;
+    const ageHours = (Date.now() - lastMs) / (1000 * 60 * 60);
+    if (!lastMs || ageHours >= 6) {
+      runFullUniverseSync('Auto Wake-Up Catch-Up Sync (IST)').catch((err) =>
+        console.warn('Auto wake-up sync error:', err)
+      );
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function getMarketSyncStatus(): SyncSchedulerStatus {
+  ensureFreshDailySync();
   return {
     timezone: 'Asia/Kolkata (IST)',
     scheduledTimesIST: [
@@ -356,6 +376,7 @@ export function getMarketSyncStatus(): SyncSchedulerStatus {
  * 1) 18:30 IST (6:30 PM) - Right after NSE/BSE final closing settlement & Bhavcopy release
  * 2) 02:00 IST (2:00 AM) - Overnight full-universe pull
  * 3) 04:00 IST (4:00 AM) - Pre-market verification & corporate action adjustment pull
+ * Plus an automatic wake-up catch-up check if the container was idle overnight.
  */
 export function startMarketSyncScheduler() {
   const TARGET_SLOTS: Record<string, string> = {
@@ -363,6 +384,11 @@ export function startMarketSyncScheduler() {
     '02:00': '02:00 IST Overnight Primary Pull',
     '04:00': '04:00 IST Pre-Market Verification Pull',
   };
+
+  // Run an initial freshness check shortly after server boot
+  setTimeout(() => {
+    ensureFreshDailySync();
+  }, 5000);
 
   setInterval(() => {
     try {
@@ -389,5 +415,6 @@ export function startMarketSyncScheduler() {
     }
   }, 30 * 1000);
 }
+
 
 
