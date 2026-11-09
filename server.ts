@@ -16,6 +16,7 @@ import {
   startMarketSyncScheduler,
   getMarketSyncStatus,
   runFullUniverseSync,
+  getVerifiedStockSnapshot,
 } from './server/marketSync';
 import { scrapeScreenerMarket } from './server/screenerScraper';
 
@@ -105,6 +106,12 @@ async function startServer() {
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
+  });
+
+  // Return every validated in-memory quote for consistent all-sector refresh.
+  app.get('/api/stocks-snapshot', (_req, res) => {
+    const snap = getVerifiedStockSnapshot();
+    res.json({ success: true, fetchedAt: snap.fetchedAt, count: Object.keys(snap.stocks).length, stocks: snap.stocks });
   });
 
   // Automated IST Sync Status & Full Universe Manual Trigger
