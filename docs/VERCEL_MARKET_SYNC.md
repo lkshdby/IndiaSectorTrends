@@ -12,14 +12,14 @@ trading day**, following the originally requested schedule.
 
 | IST slot | UTC GitHub Actions schedule | Days |
 | --- | --- | --- |
-| **18:30 IST** | 13:00 UTC | Monday–Friday |
-| **02:00 IST** | 20:30 UTC on the previous calendar day | Tuesday–Saturday |
+| **18:30 IST** | 13:00 UTC | Every day |
+| **02:00 IST** | 20:30 UTC on the previous calendar day | Every day |
 | **04:00 IST** | 22:30 UTC on the previous calendar day | Tuesday–Saturday |
 
-All three entries use weekday UTC crons to cover a Monday–Friday session
-and its following overnight checks. **There is no extra scheduled run and
-no browser-triggered collection.** On an exchange holiday, these may still
-run, but prices will ordinarily remain at the latest completed session.
+All three entries run daily, matching the application's original 6:30 PM,
+2:00 AM and 4:00 AM IST schedule (including weekends). **There is no extra
+scheduled run and no browser-triggered collection.** On weekends or exchange
+holidays, prices will ordinarily remain at the latest completed session.
 
 GitHub Actions cron is best-effort: especially during high service load, jobs
 can start late or occasionally be skipped. The original time slots are
