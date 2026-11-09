@@ -233,6 +233,34 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       };
     }
 
+    // Helper to build real equal-weighted 63-day composite history from constituent stocks
+    const buildRealCompositeHistory = (
+      stocksList: StockConstituent[],
+      fallbackHistory: HistoricalPricePoint[]
+    ): HistoricalPricePoint[] => {
+      const sample = stocksList.find(
+        (s) => (liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()])?.history?.length
+      );
+      if (!sample) return fallbackHistory;
+      const sampleHistory = (liveStocksData[sample.ticker] || liveStocksData[sample.ticker.toUpperCase()]).history;
+      return sampleHistory.map((pt, idx) => {
+        const vals: number[] = [];
+        stocksList.forEach((st) => {
+          const stLive = liveStocksData[st.ticker] || liveStocksData[st.ticker.toUpperCase()];
+          if (stLive?.history?.length) {
+            const stPt = stLive.history[Math.min(idx, stLive.history.length - 1)];
+            if (stPt && typeof stPt.value === 'number') vals.push(stPt.value);
+          }
+        });
+        const avgVal = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : pt.value;
+        return {
+          date: pt.date,
+          value: parseFloat(avgVal.toFixed(2)),
+          volume: 4200000 + ((idx * 310000) % 3800000),
+        };
+      });
+    };
+
     if (activeTab === 'prebuilt') {
       const base =
         PREBUILT_SECTOR_INDICES.find((s) => s.id === selectedSectorId) ||
@@ -241,12 +269,19 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const avg1D = enriched.reduce((a, b) => a + b.change1D, 0) / (enriched.length || 1);
       const avg1W = enriched.reduce((a, b) => a + b.change1W, 0) / (enriched.length || 1);
       const advancingCount1W = enriched.filter((s) => s.change1W > 0).length;
+      const realHistory = buildRealCompositeHistory(enriched, base.history);
+      const real3M =
+        realHistory.length > 1
+          ? parseFloat((realHistory[realHistory.length - 1].value - 100).toFixed(2))
+          : base.change1M;
 
       return {
         ...base,
         stocks: enriched,
+        history: realHistory,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
+        change1M: real3M,
         currentReturn: parseFloat(avg1W.toFixed(2)),
         breadthPositivePct: Math.round((advancingCount1W / (enriched.length || 1)) * 100),
       };
@@ -266,6 +301,11 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const enriched = enrichStocks(matchedStocks);
       const avg1D = enriched.length > 0 ? enriched.reduce((a, b) => a + b.change1D, 0) / enriched.length : 0;
       const avg1W = enriched.length > 0 ? enriched.reduce((a, b) => a + b.change1W, 0) / enriched.length : 0;
+      const realHistory = buildRealCompositeHistory(enriched, PREBUILT_SECTOR_INDICES[0].history);
+      const real3M =
+        realHistory.length > 1
+          ? parseFloat((realHistory[realHistory.length - 1].value - 100).toFixed(2))
+          : parseFloat((avg1W * 2.2).toFixed(2));
 
       return {
         id: custom.id,
@@ -274,15 +314,15 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         companiesCount: enriched.length,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
-        change1M: parseFloat((avg1W * 2.2).toFixed(2)),
+        change1M: real3M,
         change1Y: 28.5,
         currentReturn: parseFloat(avg1W.toFixed(2)),
         stocks: enriched,
         breadthPositivePct: Math.round(
-          (enriched.filter((s) => s.change1D > 0).length / (enriched.length || 1)) * 100
+          (enriched.filter((s) => s.change1W > 0).length / (enriched.length || 1)) * 100
         ),
         rotationStatus: avg1W > 5 ? ('Leading' as const) : ('Improving' as const),
-        history: PREBUILT_SECTOR_INDICES[0].history,
+        history: realHistory,
       };
     }
   }, [activeTab, selectedSectorId, customIndices, benchmarks, liveStocksData]);
@@ -532,7 +572,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   return (
     <div className="flex flex-col lg:flex-row items-stretch bg-white border border-[#b1ada1]/30 rounded-[24px] shadow-sm overflow-hidden">
       {/* ================= LEFT SIDEBAR (BENCHMARKS + PREBUILT 46 + MY INDEX) ================= */}
-      <div className="w-full lg:w-[380px] border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 bg-[#fafaf9] shrink-0">
+      <div className="w-full lg:w-[380px] flex flex-col border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 bg-white shrink-0">
         {/* Top Tabs */}
         <div className="flex items-center border-b border-[#b1ada1]/30 bg-white shrink-0">
           <button
@@ -666,12 +706,21 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Scrollable Sector Rows with Classic Browser Scrollbar (Strict 675px Block Height) */}
-        <div
-          ref={sectorListRef}
-          style={{ height: '675px', maxHeight: '675px', overflowY: 'scroll' }}
-          className="w-full divide-y divide-[#b1ada1]/15 classic-scrollbar bg-white"
-        >
+        {/* Scrollable Sector Rows with Classic Browser Scrollbar stretching to exact bottom of sidebar */}
+        <div className="relative w-full flex-1 min-h-[680px] bg-white">
+          <div
+            ref={sectorListRef}
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              overflowY: 'scroll',
+              overflowX: 'hidden',
+            }}
+            className="w-full divide-y divide-[#b1ada1]/15 classic-scrollbar bg-white"
+          >
             {activeTab === 'prebuilt' ? (
               filteredIndices.map((sector) => {
                 const isSelected = selectedSectorId === sector.id && !selectedStockTicker;
@@ -840,7 +889,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   </div>
                 )}
               </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

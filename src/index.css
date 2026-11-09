@@ -42,16 +42,13 @@
   background: rgba(8, 9, 10, 0.4);
 }
 
-/* Classic standard browser scrollbar for sector list with strict 675px block height */
+/* Classic standard browser scrollbar for sector list stretching to bottom of sidebar */
 .classic-scrollbar {
-  display: block !important;
-  height: 675px !important;
-  min-height: 675px !important;
-  max-height: 675px !important;
   overflow-y: scroll !important;
   overflow-x: hidden !important;
   scrollbar-width: auto;
   scrollbar-color: #6b7280 #e5e4de;
 }
+
 
 
