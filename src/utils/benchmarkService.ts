@@ -1,7 +1,7 @@
 import { BenchmarkItem, StockConstituent } from '../types/indexTracker';
 import verifiedLiveMarketData from '../data/verifiedLiveMarketData.json';
 
-// Pre-loaded verified real market closes (63 trading days) for all 196 NSE/BSE stocks across all 46 sectors
+// Pre-loaded cached NSE/BSE closes; every stock is validated before use by the tracker
 export const INITIAL_LIVE_STOCKS_DATA: Record<
   string,
   {
@@ -54,8 +54,17 @@ export const BENCHMARK_TOP_CONSTITUENTS: Record<string, StockConstituent[]> = {
   ],
 };
 
-export const FALLBACK_BENCHMARKS: Record<string, BenchmarkItem> =
-  verifiedLiveMarketData.benchmarks as Record<string, BenchmarkItem>;
+export const FALLBACK_BENCHMARKS: Record<string, BenchmarkItem> = {
+  ...(verifiedLiveMarketData.benchmarks as Record<string, BenchmarkItem>),
+  niftyMidcap: {
+    ...(verifiedLiveMarketData.benchmarks.niftyMidcap as BenchmarkItem),
+    name: 'NIFTY Midcap 100 ETF proxy (MOM100)',
+  },
+  niftySmallcap: {
+    ...(verifiedLiveMarketData.benchmarks.niftySmallcap as BenchmarkItem),
+    name: 'NIFTY Smallcap 100 ETF proxy (SML100CASE)',
+  },
+};
 
 export async function fetchLiveBenchmarks(): Promise<Record<string, BenchmarkItem>> {
   try {
