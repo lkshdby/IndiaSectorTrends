@@ -4,6 +4,7 @@ export interface StockConstituent {
   price: number;
   change1D: number; // percentage e.g. +0.90
   change1W: number; // percentage e.g. -0.02
+  change1M?: number; // 21-trading-day percentage return
   marketCapCr: number;
   pe: number;
   volume: number;

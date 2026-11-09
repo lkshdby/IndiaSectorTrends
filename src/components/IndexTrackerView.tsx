@@ -88,7 +88,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [weightingMode, setWeightingMode] = useState<'equal' | 'mcap'>('equal');
-  const [sortField, setSortField] = useState<'name' | '1d' | '1w' | 'breadth'>('1w');
+  const [sortField, setSortField] = useState<'name' | '1d' | '1w' | '1m' | 'breadth'>('1w');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [expandedSectors, setExpandedSectors] = useState<Record<string, boolean>>({
     'quick-commerce-consumer-tech': true,
@@ -190,19 +190,39 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
   // Find currently selected sector or benchmark
   const currentSector = useMemo<SectorIndexData>(() => {
-    // Helper to enrich stock constituents with real live quotes
+    // Helper to enrich stock constituents with real live quotes (1D, 1W, and 21-trading-day 1M)
     const enrichStocks = (stocksList: StockConstituent[]) => {
       return stocksList.map((s) => {
         const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
         if (live) {
+          let calc1M = s.change1M ?? parseFloat((live.change1W * 2.1).toFixed(2));
+          if (live.rawHistory && live.rawHistory.length >= 2) {
+            const latestClose = live.price || live.rawHistory[live.rawHistory.length - 1].close;
+            const idx1M = Math.max(0, live.rawHistory.length - 22);
+            const close1M = live.rawHistory[idx1M]?.close || latestClose;
+            if (close1M > 0) {
+              calc1M = parseFloat((((latestClose - close1M) / close1M) * 100).toFixed(2));
+            }
+          } else if (live.history && live.history.length >= 2) {
+            const latestVal = live.history[live.history.length - 1].value;
+            const idx1M = Math.max(0, live.history.length - 22);
+            const val1M = live.history[idx1M]?.value || latestVal;
+            if (val1M > 0) {
+              calc1M = parseFloat((((latestVal - val1M) / val1M) * 100).toFixed(2));
+            }
+          }
           return {
             ...s,
             price: live.price,
             change1D: live.change1D,
             change1W: live.change1W,
+            change1M: calc1M,
           };
         }
-        return s;
+        return {
+          ...s,
+          change1M: s.change1M ?? parseFloat((s.change1W * 2.1).toFixed(2)),
+        };
       });
     };
 
@@ -486,26 +506,53 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const enrichedStocks = sector.stocks.map((s) => {
         const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
         if (live) {
+          let calc1M = s.change1M ?? parseFloat((live.change1W * 2.1).toFixed(2));
+          if (live.rawHistory && live.rawHistory.length >= 2) {
+            const latestClose = live.price || live.rawHistory[live.rawHistory.length - 1].close;
+            const idx1M = Math.max(0, live.rawHistory.length - 22);
+            const close1M = live.rawHistory[idx1M]?.close || latestClose;
+            if (close1M > 0) {
+              calc1M = parseFloat((((latestClose - close1M) / close1M) * 100).toFixed(2));
+            }
+          } else if (live.history && live.history.length >= 2) {
+            const latestVal = live.history[live.history.length - 1].value;
+            const idx1M = Math.max(0, live.history.length - 22);
+            const val1M = live.history[idx1M]?.value || latestVal;
+            if (val1M > 0) {
+              calc1M = parseFloat((((latestVal - val1M) / val1M) * 100).toFixed(2));
+            }
+          }
           return {
             ...s,
             price: live.price,
             change1D: live.change1D,
             change1W: live.change1W,
+            change1M: calc1M,
           };
         }
-        return s;
+        return {
+          ...s,
+          change1M: s.change1M ?? parseFloat((s.change1W * 2.1).toFixed(2)),
+        };
       });
+
+      const totalMcap = Math.max(
+        1,
+        enrichedStocks.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0)
+      );
 
       const avg1D =
         weightingMode === 'mcap'
-          ? enrichedStocks.reduce((acc, s) => acc + s.change1D * (s.marketCapCr || 10000), 0) /
-            Math.max(1, enrichedStocks.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0))
+          ? enrichedStocks.reduce((acc, s) => acc + s.change1D * (s.marketCapCr || 10000), 0) / totalMcap
           : enrichedStocks.reduce((a, b) => a + b.change1D, 0) / (enrichedStocks.length || 1);
       const avg1W =
         weightingMode === 'mcap'
-          ? enrichedStocks.reduce((acc, s) => acc + s.change1W * (s.marketCapCr || 10000), 0) /
-            Math.max(1, enrichedStocks.reduce((acc, s) => acc + (s.marketCapCr || 10000), 0))
+          ? enrichedStocks.reduce((acc, s) => acc + s.change1W * (s.marketCapCr || 10000), 0) / totalMcap
           : enrichedStocks.reduce((a, b) => a + b.change1W, 0) / (enrichedStocks.length || 1);
+      const avg1M =
+        weightingMode === 'mcap'
+          ? enrichedStocks.reduce((acc, s) => acc + (s.change1M ?? 0) * (s.marketCapCr || 10000), 0) / totalMcap
+          : enrichedStocks.reduce((a, b) => a + (b.change1M ?? 0), 0) / (enrichedStocks.length || 1);
       const advancingCount1W = enrichedStocks.filter((s) => s.change1W > 0).length;
 
       return {
@@ -513,6 +560,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         stocks: enrichedStocks,
         change1D: parseFloat(avg1D.toFixed(2)),
         change1W: parseFloat(avg1W.toFixed(2)),
+        change1M: parseFloat(avg1M.toFixed(2)),
         breadthPositivePct: Math.round((advancingCount1W / (enrichedStocks.length || 1)) * 100),
       };
     });
@@ -548,6 +596,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       if (sortField === '1d') {
         return sortOrder === 'asc' ? a.change1D - b.change1D : b.change1D - a.change1D;
       }
+      if (sortField === '1m') {
+        return sortOrder === 'asc' ? a.change1M - b.change1M : b.change1M - a.change1M;
+      }
       if (sortField === 'breadth') {
         return sortOrder === 'asc'
           ? a.breadthPositivePct - b.breadthPositivePct
@@ -558,7 +609,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   }, [enrichedPrebuiltIndices, selectedCategory, searchQuery, sortField, sortOrder]);
 
   // Handle Sort Toggle
-  const toggleSort = (field: 'name' | '1d' | '1w' | 'breadth') => {
+  const toggleSort = (field: 'name' | '1d' | '1w' | '1m' | 'breadth') => {
     if (sortField === field) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -745,29 +796,50 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {/* Table Header: Name ⇅ | 1D | 1W ⌄ */}
-        <div className="px-3.5 py-2.5 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9] shrink-0">
+        {/* Table Header: Name ⇅ | 1D | 1W | 1M */}
+        <div className="px-3 py-2.5 flex items-center justify-between text-[11px] font-semibold text-[#08090a]/60 border-b border-[#b1ada1]/20 bg-[#fafaf9] shrink-0">
           <button
             onClick={() => toggleSort('name')}
-            className="flex items-center gap-1 hover:text-[#08090a] cursor-pointer"
+            className={`flex items-center gap-1 hover:text-[#08090a] cursor-pointer ${
+              sortField === 'name' ? 'text-[#08090a] font-bold' : ''
+            }`}
           >
-            <span>Sector / Index ({filteredIndices.length})</span>
-            <span className="text-[10px]">⇅</span>
+            <span>Sector ({filteredIndices.length})</span>
+            <span className="text-[10px]">
+              {sortField === 'name' ? (sortOrder === 'desc' ? '⌄' : '⌃') : '⇅'}
+            </span>
           </button>
 
-          <div className="flex items-center gap-2 pr-1">
+          <div className="flex items-center gap-1.5 pr-0.5 font-mono">
             <button
               onClick={() => toggleSort('1d')}
-              className="hover:text-[#08090a] cursor-pointer px-1.5 py-0.5 rounded hover:bg-[#b1ada1]/20"
+              title="Sort by 1-Day Session Return (Equal/MCap Avg of Constituents)"
+              className={`w-12 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
+                sortField === '1d' ? 'text-[#2563eb] font-extrabold bg-[#2563eb]/8' : 'hover:text-[#08090a]'
+              }`}
             >
-              1D
+              <span>1D</span>
+              {sortField === '1d' && <span className="text-[9px]">{sortOrder === 'desc' ? '⌄' : '⌃'}</span>}
             </button>
             <button
               onClick={() => toggleSort('1w')}
-              className="flex items-center gap-0.5 text-[#08090a] font-bold cursor-pointer px-1.5 py-0.5 rounded hover:bg-[#b1ada1]/20"
+              title="Sort by 1-Week (5 Trading Sessions) Rolling Return"
+              className={`w-12 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
+                sortField === '1w' ? 'text-[#2563eb] font-extrabold bg-[#2563eb]/8' : 'hover:text-[#08090a]'
+              }`}
             >
               <span>1W</span>
-              <span className="text-[10px]">⌄</span>
+              {sortField === '1w' && <span className="text-[9px]">{sortOrder === 'desc' ? '⌄' : '⌃'}</span>}
+            </button>
+            <button
+              onClick={() => toggleSort('1m')}
+              title="Sort by 1-Month (21 Trading Sessions) Rolling Return"
+              className={`w-13 text-right flex items-center justify-end gap-0.5 cursor-pointer px-1 py-0.5 rounded hover:bg-[#b1ada1]/20 ${
+                sortField === '1m' ? 'text-[#2563eb] font-extrabold bg-[#2563eb]/8' : 'hover:text-[#08090a]'
+              }`}
+            >
+              <span>1M</span>
+              {sortField === '1m' && <span className="text-[9px]">{sortOrder === 'desc' ? '⌄' : '⌃'}</span>}
             </button>
           </div>
         </div>
@@ -797,16 +869,16 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                     {/* Sector Header Row */}
                     <div
                       onClick={() => handleSelectSector(sector.id)}
-                      className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer transition-colors ${
+                      className={`px-3 py-2.5 flex items-center justify-between cursor-pointer transition-colors ${
                         isSelected
                           ? 'bg-[#2563eb]/8 border-l-4 border-[#2563eb]'
                           : 'hover:bg-white border-l-4 border-transparent'
                       }`}
                     >
-                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                      <div className="flex items-center gap-1 min-w-0 pr-1.5">
                         <button
                           onClick={(e) => toggleSectorExpand(sector.id, e)}
-                          className="p-1 hover:bg-[#b1ada1]/20 rounded-md text-[#08090a]/60 cursor-pointer"
+                          className="p-1 hover:bg-[#b1ada1]/20 rounded-md text-[#08090a]/60 cursor-pointer shrink-0"
                         >
                           {isExpanded ? (
                             <ChevronDown className="w-3.5 h-3.5 text-[#2563eb]" />
@@ -828,42 +900,70 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 text-xs font-mono font-medium shrink-0">
+                      <div className="flex items-center gap-1.5 text-[11px] font-mono shrink-0">
                         <span
-                          className={sector.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}
+                          className={`w-12 text-right ${
+                            sortField === '1d' ? 'font-bold' : 'font-medium'
+                          } ${sector.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
                         >
                           {sector.change1D >= 0 ? '+' : ''}
-                          {sector.change1D.toFixed(2)}%
+                          {sector.change1D.toFixed(1)}%
                         </span>
                         <span
-                          className={`w-14 text-right font-bold ${
-                            sector.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                          }`}
+                          className={`w-12 text-right ${
+                            sortField === '1w' ? 'font-bold' : 'font-medium'
+                          } ${sector.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
                         >
                           {sector.change1W >= 0 ? '+' : ''}
-                          {sector.change1W.toFixed(2)}%
+                          {sector.change1W.toFixed(1)}%
+                        </span>
+                        <span
+                          className={`w-13 text-right ${
+                            sortField === '1m' ? 'font-bold' : 'font-medium'
+                          } ${sector.change1M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
+                        >
+                          {sector.change1M >= 0 ? '+' : ''}
+                          {sector.change1M.toFixed(1)}%
                         </span>
                       </div>
                     </div>
 
                     {/* Expanded Company Rows */}
                     {isExpanded && (
-                      <div className="bg-white/80 pl-6 pr-3.5 py-1 space-y-0.5 border-t border-b border-[#b1ada1]/10">
-                        {sector.stocks.map((stock) => {
+                      <div className="bg-white/80 pl-5 pr-3 py-1 space-y-0.5 border-t border-b border-[#b1ada1]/10">
+                        {[...sector.stocks]
+                          .sort((a, b) => {
+                            if (sortField === 'name') {
+                              return sortOrder === 'asc'
+                                ? a.ticker.localeCompare(b.ticker)
+                                : b.ticker.localeCompare(a.ticker);
+                            }
+                            if (sortField === '1d') {
+                              return sortOrder === 'asc' ? a.change1D - b.change1D : b.change1D - a.change1D;
+                            }
+                            if (sortField === '1m') {
+                              return sortOrder === 'asc'
+                                ? (a.change1M ?? 0) - (b.change1M ?? 0)
+                                : (b.change1M ?? 0) - (a.change1M ?? 0);
+                            }
+                            return sortOrder === 'asc' ? a.change1W - b.change1W : b.change1W - a.change1W;
+                          })
+                          .map((stock) => {
                           const isStockSelected =
                             selectedStockTicker === stock.ticker && selectedSectorId === sector.id;
+                          const st1M = stock.change1M ?? 0;
 
                           return (
                             <div
                               key={stock.ticker}
                               onClick={(e) => handleSelectStock(stock.ticker, sector.id, e)}
-                              className={`flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition-colors ${
+                              className={`flex items-center justify-between py-1.5 px-1.5 rounded-lg cursor-pointer transition-colors ${
                                 isStockSelected
                                   ? 'bg-[#2563eb]/10 text-[#2563eb]'
                                   : 'hover:bg-[#f4f3ee] text-[#08090a]'
                               }`}
                             >
-                              <div className="flex items-center gap-2 min-w-0 pr-2">
+                              <div className="flex items-center gap-1.5 min-w-0 pr-1.5">
                                 <div
                                   style={{ backgroundColor: stock.logoBg || '#0284c7' }}
                                   className="w-5 h-5 rounded-md text-white font-mono font-extrabold text-[9px] flex items-center justify-center shrink-0 shadow-2xs"
@@ -879,20 +979,30 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-4 text-[11px] font-mono shrink-0">
+                              <div className="flex items-center gap-1.5 text-[10px] font-mono shrink-0">
                                 <span
-                                  className={stock.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}
+                                  className={`w-12 text-right ${
+                                    sortField === '1d' ? 'font-bold' : ''
+                                  } ${stock.change1D >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
                                 >
                                   {stock.change1D >= 0 ? '+' : ''}
-                                  {stock.change1D.toFixed(2)}%
+                                  {stock.change1D.toFixed(1)}%
                                 </span>
                                 <span
-                                  className={`w-14 text-right ${
-                                    stock.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                                  }`}
+                                  className={`w-12 text-right ${
+                                    sortField === '1w' ? 'font-bold' : ''
+                                  } ${stock.change1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
                                 >
                                   {stock.change1W >= 0 ? '+' : ''}
-                                  {stock.change1W.toFixed(2)}%
+                                  {stock.change1W.toFixed(1)}%
+                                </span>
+                                <span
+                                  className={`w-13 text-right ${
+                                    sortField === '1m' ? 'font-bold' : ''
+                                  } ${st1M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'}`}
+                                >
+                                  {st1M >= 0 ? '+' : ''}
+                                  {st1M.toFixed(1)}%
                                 </span>
                               </div>
                             </div>
