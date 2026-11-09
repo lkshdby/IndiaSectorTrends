@@ -337,6 +337,7 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
             change1W: data.change1W,
             change3M: data.change3M,
             history: data.history,
+            fetchedAt: new Date().toISOString(),
           };
         } catch {
           // keep existing benchmark entry on transient error
