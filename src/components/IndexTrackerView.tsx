@@ -331,7 +331,13 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
       const advancingCount1W = enriched.filter((s) => s.change1W > 0).length;
       const realHistory = buildRealCompositeHistory(enriched);
-      const basketCoverage = buildAlignedBasketHistory(enriched, liveStocksData, weightingMode).dataCoveragePct;
+      // Coverage is measured against the WHOLE curated core list, not only
+      // the surviving priced subset. Missing tickers must reduce confidence.
+      const aligned = buildAlignedBasketHistory(enriched, liveStocksData, weightingMode);
+      const denominator = activeTab === 'prebuilt'
+        ? (CORE_SECTOR_INDICES.find(x => x.id === selectedSectorId)?.stocks.length || 1)
+        : (customIndices.find(x => x.id === selectedSectorId)?.stockTickers.length || 1);
+      const basketCoverage = Math.round(aligned.dataCoveragePct * enriched.length / denominator);
 
       return {
         ...base,
@@ -380,7 +386,13 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       const mc3M = computeWeightedAvg(enriched, 'change3M', 'mcap');
 
       const realHistory = buildRealCompositeHistory(enriched);
-      const basketCoverage = buildAlignedBasketHistory(enriched, liveStocksData, weightingMode).dataCoveragePct;
+      // Coverage is measured against the WHOLE curated core list, not only
+      // the surviving priced subset. Missing tickers must reduce confidence.
+      const aligned = buildAlignedBasketHistory(enriched, liveStocksData, weightingMode);
+      const denominator = activeTab === 'prebuilt'
+        ? (CORE_SECTOR_INDICES.find(x => x.id === selectedSectorId)?.stocks.length || 1)
+        : (customIndices.find(x => x.id === selectedSectorId)?.stockTickers.length || 1);
+      const basketCoverage = Math.round(aligned.dataCoveragePct * enriched.length / denominator);
 
       return {
         id: custom.id,
@@ -566,6 +578,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         ewMcapSpread1W: parseFloat((ew1W - mc1W).toFixed(2)),
         ewMcapSpread1M: parseFloat((ew1M - mc1M).toFixed(2)),
         breadthPositivePct: Math.round((advancingCount1W / (enrichedStocks.length || 1)) * 100),
+        dataCoveragePct: Math.round(100 * enrichedStocks.length / Math.max(1, sector.stocks.length)),
       };
     });
   }, [liveStocksData, weightingMode]);
