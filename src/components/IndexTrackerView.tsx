@@ -43,7 +43,8 @@ import {
   HistoricalPricePoint,
   BenchmarkItem,
 } from '../types/indexTracker';
-import { PREBUILT_SECTOR_INDICES } from '../data/prebuiltIndices';
+import { CORE_SECTOR_INDICES, getSectorOpportunityMembers } from '../data/sectorUniverse';
+import { sanitizeSnapshot, observedHorizonReturn } from '../utils/priceQuality';
 import {
   fetchLiveBenchmarks,
   FALLBACK_BENCHMARKS,
@@ -127,7 +128,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
-  // Live Real Stock Market Quotes and 63-Day Histories (pre-loaded for all 196 NSE/BSE constituents)
+  // Snapshot-backed stock quotes, validated before use
   const [liveStocksData, setLiveStocksData] = useState<
     Record<
       string,
@@ -142,7 +143,23 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         rawHistory: { date: string; close: number }[];
       }
     >
-  >(INITIAL_LIVE_STOCKS_DATA);
+  >(sanitizeSnapshot(INITIAL_LIVE_STOCKS_DATA));
+
+  // Rehydrate the FULL validated universe; do not leave the sidebar on bundled
+  // prices while the selected basket alone receives newly refreshed quotes.
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/stocks-snapshot', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(payload => {
+        if (alive && payload?.success && payload.stocks) {
+          const safe = sanitizeSnapshot(payload.stocks);
+          setLiveStocksData(previous => ({ ...previous, ...safe }));
+        }
+      })
+      .catch(() => { /* static validated seed remains available */ });
+    return () => { alive = false; };
+  }, [syncTrigger]);
 
   // Load live benchmarks on mount or sync trigger
   useEffect(() => {
@@ -194,11 +211,14 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const currentSector = useMemo<SectorIndexData>(() => {
     // Helper to enrich stock constituents with real live quotes (1D, 1W, 21-day 1M, and 63-day 3M)
     const enrichStocks = (stocksList: StockConstituent[]) => {
-      return stocksList.map((s) => {
+      return stocksList.filter(s => {
+        const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
+        return !!live?.rawHistory && live.rawHistory.length >= 40;
+      }).map((s) => {
         const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
         if (live) {
-          let calc1M = s.change1M ?? parseFloat((live.change1W * 2.1).toFixed(2));
-          let calc3M = live.change3M ?? parseFloat((live.change1W * 3.4).toFixed(2));
+          let calc1M = observedHorizonReturn(live, 21) ?? 0;
+          let calc3M = live.change3M ?? 0;
           if (live.rawHistory && live.rawHistory.length >= 2) {
             const latestClose = live.price || live.rawHistory[live.rawHistory.length - 1].close;
             const idx1M = Math.max(0, live.rawHistory.length - 22);
@@ -233,8 +253,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         }
         return {
           ...s,
-          change1M: s.change1M ?? parseFloat((s.change1W * 2.1).toFixed(2)),
-          change3M: s.change3M ?? parseFloat((s.change1W * 3.4).toFixed(2)),
+          change1M: 0,
+          change3M: 0,
         };
       });
     };
@@ -294,8 +314,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
     if (activeTab === 'prebuilt') {
       const base =
-        PREBUILT_SECTOR_INDICES.find((s) => s.id === selectedSectorId) ||
-        PREBUILT_SECTOR_INDICES[0];
+        CORE_SECTOR_INDICES.find((s) => s.id === selectedSectorId) ||
+        CORE_SECTOR_INDICES[0];
       const enriched = enrichStocks(base.stocks);
       const avg1D = computeWeightedAvg(enriched, 'change1D');
       const avg1W = computeWeightedAvg(enriched, 'change1W');
@@ -336,10 +356,10 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       };
     } else {
       const custom = customIndices.find((c) => c.id === selectedSectorId);
-      if (!custom) return PREBUILT_SECTOR_INDICES[0];
+      if (!custom) return CORE_SECTOR_INDICES[0];
 
       const matchedStocks: StockConstituent[] = [];
-      PREBUILT_SECTOR_INDICES.forEach((sec) => {
+      CORE_SECTOR_INDICES.forEach((sec) => {
         sec.stocks.forEach((st) => {
           if (custom.stockTickers.includes(st.ticker) && !matchedStocks.some((m) => m.ticker === st.ticker)) {
             matchedStocks.push(st);
@@ -476,11 +496,14 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
   // Enrich all prebuilt sector indices with live stock market quotes so sidebar matches right panel
   const enrichedPrebuiltIndices = useMemo(() => {
-    return PREBUILT_SECTOR_INDICES.map((sector) => {
-      const enrichedStocks = sector.stocks.map((s) => {
+    return CORE_SECTOR_INDICES.map((sector) => {
+      const enrichedStocks = sector.stocks.filter(s => {
+        const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
+        return !!live?.rawHistory && live.rawHistory.length >= 40;
+      }).map((s) => {
         const live = liveStocksData[s.ticker] || liveStocksData[s.ticker.toUpperCase()];
         if (live) {
-          let calc1M = s.change1M ?? parseFloat((live.change1W * 2.1).toFixed(2));
+          let calc1M = observedHorizonReturn(live, 21) ?? 0;
           if (live.rawHistory && live.rawHistory.length >= 2) {
             const latestClose = live.price || live.rawHistory[live.rawHistory.length - 1].close;
             const idx1M = Math.max(0, live.rawHistory.length - 22);
@@ -506,7 +529,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         }
         return {
           ...s,
-          change1M: s.change1M ?? parseFloat((s.change1W * 2.1).toFixed(2)),
+          change1M: 0,
         };
       });
 
@@ -644,6 +667,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const decliningCount1W = currentSector.stocks.length - advancingCount1W;
   const advancingCount1D = currentSector.stocks.filter((s) => s.change1D > 0).length;
   const decliningCount1D = currentSector.stocks.length - advancingCount1D;
+  const thematicBeneficiaries = getSectorOpportunityMembers(selectedSectorId);
   const synchronyScore = Math.round(
     (Math.max(advancingCount1W, decliningCount1W) / (currentSector.stocks.length || 1)) * 100
   );
@@ -657,7 +681,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     const getBenchmarkReturns = (bKey: string) => {
       const bm = benchmarks[bKey] || FALLBACK_BENCHMARKS[bKey] || FALLBACK_BENCHMARKS.nifty500;
       const hist = bm.history || [];
-      let ret1M = parseFloat((bm.change1W * 2.1).toFixed(2));
+      let ret1M = 0; // Unavailable when the benchmark history is too short.
       if (hist.length >= 2) {
         const latest = hist[hist.length - 1].value;
         const idx21 = Math.max(0, hist.length - 22);
@@ -686,8 +710,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     // Get Stock return for selected signalHorizon ('1W' | '1M' | '3M')
     const getStockHorizonReturn = (s: StockConstituent) => {
       if (signalHorizon === '1W') return s.change1W;
-      if (signalHorizon === '3M') return s.change3M ?? (s.change1M ?? s.change1W * 2) * 1.6;
-      return s.change1M ?? s.change1W * 2.1;
+      if (signalHorizon === '3M') return s.change3M ?? 0;
+      return s.change1M ?? 0;
     };
 
     const n500HorizonReturn =
@@ -886,7 +910,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 activeTab === 'prebuilt' ? 'bg-[#2563eb]/10 text-[#2563eb]' : 'bg-[#b1ada1]/20 text-[#08090a]/60'
               }`}
             >
-              {PREBUILT_SECTOR_INDICES.length}
+              {CORE_SECTOR_INDICES.length}
             </span>
           </button>
 
@@ -970,7 +994,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Search ${PREBUILT_SECTOR_INDICES.length} sectors or @company (e.g. @eternal, @swiggy, @milkymist)...`}
+              placeholder={`Search ${CORE_SECTOR_INDICES.length} sectors or @company (e.g. @eternal, @swiggy, @milkymist)...`}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f4f3ee]/60 border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:border-[#2563eb] text-[#08090a] placeholder:text-[#08090a]/40"
             />
           </div>
@@ -1246,7 +1270,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   key="end-of-sectors"
                   className="py-3 px-4 text-center text-[10px] text-[#08090a]/50 font-mono bg-[#f4f3ee]/50 border-t border-[#b1ada1]/20"
                 >
-                  ✓ Showing {filteredIndices.length} of {PREBUILT_SECTOR_INDICES.length} Industry Clusters
+                  ✓ Showing {filteredIndices.length} of {CORE_SECTOR_INDICES.length} Industry Clusters
                 </div>
               ])
             ) : (
@@ -1391,8 +1415,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
             {[
               { key: 'nifty50', label: 'NIFTY 50', color: BENCHMARK_COLORS.nifty50 },
-              { key: 'niftyMidcap', label: 'Midcap 100', color: BENCHMARK_COLORS.niftyMidcap },
-              { key: 'niftySmallcap', label: 'Smallcap 100', color: BENCHMARK_COLORS.niftySmallcap },
+              { key: 'niftyMidcap', label: 'Midcap ETF proxy', color: BENCHMARK_COLORS.niftyMidcap },
+              { key: 'niftySmallcap', label: 'Smallcap ETF proxy', color: BENCHMARK_COLORS.niftySmallcap },
               { key: 'nifty500', label: 'NIFTY 500', color: BENCHMARK_COLORS.nifty500 },
             ].map((bm) => {
               const isSelectedBase = selectedSectorId === `benchmark-${bm.key}`;
@@ -1475,6 +1499,27 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             </button>
           </div>
         </div>
+
+        {/* Adjacent thematic beneficiaries remain research candidates, not sector constituents. */}
+        {thematicBeneficiaries.length > 0 && (
+          <div className="px-5 py-3 bg-[#f1f5f9] border-b border-[#b1ada1]/20 text-[11px]">
+            <div className="font-bold text-[#08090a] mb-1">
+              Core rotation basket: {currentSector.stocks.length} priced stocks · Adjacent opportunities / proxies: {thematicBeneficiaries.length}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {thematicBeneficiaries.map(member => (
+                <span key={member.stock.ticker}
+                  title={member.reason}
+                  className="rounded-md px-2 py-1 border border-[#b1ada1]/30 bg-white text-[#08090a]/80">
+                  {member.stock.ticker} · {member.tier === 'proxy' ? 'proxy' : 'adjacent'}
+                </span>
+              ))}
+            </div>
+            <p className="text-[10px] text-[#08090a]/60 mt-1">
+              These businesses are excluded from core sector returns. Theme classifications are editorial and require company-segment verification.
+            </p>
+          </div>
+        )}
 
         {/* ================= 4-SIGNAL INSTITUTIONAL ROTATION & SMID DIVERGENCE DIAGNOSTIC PANEL ================= */}
         {!currentSector.isBenchmark && (
