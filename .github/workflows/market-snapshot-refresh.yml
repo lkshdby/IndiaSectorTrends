@@ -6,7 +6,9 @@ name: Refresh Committed Market Snapshot
 #   20:30 UTC every day = 02:00 IST the following day
 #   22:30 UTC every day = 04:00 IST the following day
 # GitHub schedules are best-effort: runs can be delayed or occasionally skipped.
+# Manual workflow_dispatch runs are DRY RUNS: fetch/validate but never publish.
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 13 * * *'
     - cron: '30 20 * * *'
@@ -35,9 +37,15 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Fetch and validate listed stock closes
+      - name: Fetch and validate listed stock closes (manual runs are dry tests)
+        env:
+          MARKET_REFRESH_MODE: ${{ github.event_name == 'workflow_dispatch' && 'dry-run' || 'scheduled' }}
         run: npx tsx scripts/refresh-market-snapshot.ts
-      - name: Commit validated snapshot
+      - name: Confirm manual test did not publish
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: echo "Dry run only. No market snapshot was published." >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit validated snapshot (scheduled runs only)
+        if: ${{ github.event_name == 'schedule' }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
