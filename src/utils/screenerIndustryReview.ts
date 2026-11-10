@@ -1,7 +1,8 @@
 /**
  * Local-only reconciliation of an authorized Screener.in CSV export.
- * Screener data is secondary evidence and is NEVER promoted into the
- * NSE source-verified assignments or industry rankings by this module.
+ * Screener data is a user-accepted trusted source for this project, but
+ * is never falsely described as a direct NSE observation. This module
+ * reconciles evidence without automatically modifying production files.
  * The caller must have appropriate rights to use the export.
  */
 import { BASIC_INDUSTRY_BY_NAME } from '../data/basicIndustryCatalog';
