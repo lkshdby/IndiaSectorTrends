@@ -13,7 +13,17 @@ describe('zero-config automatic market collection policy', () => {
       '30 20 * * *', // 02:00 IST daily
       '30 22 * * *', // 04:00 IST daily
     ]);
-    assert.ok(!workflow.includes('workflow_dispatch:'));
+    assert.ok(workflow.includes('workflow_dispatch:'), 'Manual dry-run trigger should be enabled');
+    assert.ok(!workflow.includes('inputs:'), 'Manual test does not offer a publish option');
+  });
+
+  it('never publishes a snapshot from manually triggered runs', () => {
+    assert.match(workflow, /- name: Commit validated snapshot \(scheduled runs only\)\s*if: \$\{\{ github\.event_name == 'schedule' \}\}/);
+    assert.match(workflow, /MARKET_REFRESH_MODE: \$\{\{ github\.event_name == 'workflow_dispatch' && 'dry-run' \|\| 'scheduled' \}\}/);
+    assert.ok(workflow.includes('if: ${{ github.event_name == \'workflow_dispatch\' }}'));
+    const script = readFileSync('scripts/refresh-market-snapshot.ts', 'utf8');
+    assert.ok(script.includes('GITHUB_STEP_SUMMARY'));
+    assert.ok(script.includes('Manual dry-run quality check (never published)'));
   });
 
   it('does not require an admin key or post a manual sync request', () => {
