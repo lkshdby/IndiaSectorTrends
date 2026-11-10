@@ -46,7 +46,6 @@ import {
 import { CORE_SECTOR_INDICES, THEMATIC_SECTOR_INDICES, getSectorOpportunityMembers } from '../data/sectorUniverse';
 import { sanitizeSnapshot, observedHorizonReturn } from '../utils/priceQuality';
 import {
-  fetchLiveBenchmarks,
   FALLBACK_BENCHMARKS,
   BENCHMARK_TOP_CONSTITUENTS,
   INITIAL_LIVE_STOCKS_DATA,
@@ -54,10 +53,11 @@ import {
 import { CreateCustomIndexModal } from './CreateCustomIndexModal';
 import { SetAlertModal } from './SetAlertModal';
 import { buildAlignedBasketHistory, classifyPriceRotation, tradingDayKey } from '../utils/sectorIndexMath';
+import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
 
 interface IndexTrackerViewProps {
   onShowToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
-  syncTrigger?: number;
+  marketSnapshot: BrowserMarketSnapshot | null;
 }
 
 // Curated colors for multi-stock co-movement overlay lines
@@ -85,7 +85,7 @@ const BENCHMARK_COLORS: Record<string, string> = {
   nifty500: '#4f46e5', // Deep Indigo
 };
 
-export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast, syncTrigger }) => {
+export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast, marketSnapshot }) => {
   const [activeTab, setActiveTab] = useState<'prebuilt' | 'myIndex'>('prebuilt');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -113,7 +113,6 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
   // Benchmarks Data
   const [benchmarks, setBenchmarks] = useState<Record<string, BenchmarkItem>>(FALLBACK_BENCHMARKS);
-  const [isLoadingBenchmarks, setIsLoadingBenchmarks] = useState(false);
 
   // Custom User Indices
   const [customIndices, setCustomIndices] = useState<CustomIndexItem[]>(() => {
@@ -145,37 +144,14 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     >
   >(sanitizeSnapshot(INITIAL_LIVE_STOCKS_DATA));
 
-  // Rehydrate the FULL validated universe; do not leave the sidebar on bundled
-  // prices while the selected basket alone receives newly refreshed quotes.
+  // The parent loads one coherent snapshot (stocks AND benchmarks), directly
+  // from the public committed GitHub JSON with a Vercel fallback. A successful
+  // reload must update both sets together rather than only displaying a toast.
   useEffect(() => {
-    let alive = true;
-    fetch('/api/stocks-snapshot', { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : null)
-      .then(payload => {
-        if (alive && payload?.success && payload.stocks) {
-          const safe = sanitizeSnapshot(payload.stocks);
-          setLiveStocksData(previous => ({ ...previous, ...safe }));
-        }
-      })
-      .catch(() => { /* static validated seed remains available */ });
-    return () => { alive = false; };
-  }, [syncTrigger]);
-
-  // Load live benchmarks on mount or sync trigger
-  useEffect(() => {
-    const loadBenchmarks = async () => {
-      setIsLoadingBenchmarks(true);
-      try {
-        const live = await fetchLiveBenchmarks();
-        setBenchmarks(live);
-      } catch {
-        // keep fallbacks
-      } finally {
-        setIsLoadingBenchmarks(false);
-      }
-    };
-    loadBenchmarks();
-  }, [syncTrigger]);
+    if (!marketSnapshot) return;
+    setLiveStocksData(sanitizeSnapshot(marketSnapshot.stocks));
+    setBenchmarks({ ...FALLBACK_BENCHMARKS, ...marketSnapshot.benchmarks });
+  }, [marketSnapshot]);
 
   // Toggle benchmark comparison overlay in chart
   const toggleBenchmarkOverlay = (key: string) => {
@@ -448,7 +424,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     return () => {
       isMounted = false;
     };
-  }, [currentSector.id, currentSector.stocks.length, syncTrigger]);
+  }, [currentSector.id, currentSector.stocks.length]);
 
   // Selected Stock Details
   const currentStock = useMemo(() => {
