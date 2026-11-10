@@ -72,6 +72,9 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['JUBLFOOD', 'Restaurants', 'https://www.nseindia.com/get-quote/equity/JUBLFOOD/Jubilant-Foodworks-Limited'],
   ['DIXON', 'Consumer Electronics', 'https://www.nseindia.com/get-quote/equity/DIXON/Dixon-Technologies-%28India%29-Limited'],
   ['TRIDENT', 'Other Textile Products', 'https://www.nseindia.com/get-quote/equity/TRIDENT/Trident-Limited'],
+  ['BAJAJ-AUTO', '2/3 Wheelers', 'https://www.nseindia.com/get-quote/equity/BAJAJ-AUTO/Bajaj-Auto-Limited'],
+  ['ADANIPORTS', 'Port & Port services', 'https://www.nseindia.com/get-quote/equity/ADANIPORTS/Adani-Ports-and-Special-Economic-Zone-Ld'],
+  ['IRCTC', 'Tour, Travel Related Services', 'https://www.nseindia.com/get-quote/equity/IRCTC/Indian-Railway-Catering-And-Tourism-Corporation-Limited'],
 
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
