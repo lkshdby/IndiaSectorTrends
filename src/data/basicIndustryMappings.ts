@@ -44,6 +44,26 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['MARUTI', 'Passenger Cars & Utility Vehicles', 'https://www.nseindia.com/get-quote/equity/MARUTI/Maruti-Suzuki-India-Limited'],
   ['BAJFINANCE', 'Non Banking Financial Company (NBFC)', 'https://www.nseindia.com/get-quote/equity/BAJFINANCE/Bajaj-Finance-Limited'],
   ['HINDALCO', 'Aluminium', 'https://www.nseindia.com/get-quote/equity/HINDALCO/Hindalco-Industries-Limited'],
+  // Confirmed basic-industry fields on NSE's public company quote pages (reviewed 2026-11-10)
+  ['EICHERMOT', '2/3 Wheelers', 'https://www.nseindia.com/get-quote/equity/EICHERMOT/Eicher-Motors-Limited'],
+  ['BOSCHLTD', 'Auto Components & Equipments', 'https://www.nseindia.com/get-quote/equity/BOSCHLTD/Bosch-Limited'],
+  ['HBLENGINE', 'Other Industrial Products', 'https://www.nseindia.com/get-quote/equity/HBLENGINE/HBL-Engineering-Limited'],
+  ['AMBER', 'Household Appliances', 'https://www.nseindia.com/get-quote/equity/AMBER/Amber-Enterprises-India-Limited'],
+  ['GRAVITA', 'Industrial Minerals', 'https://www.nseindia.com/get-quote/equity/GRAVITA/Gravita-India-Ltd'],
+  ['BHARTIARTL', 'Telecom - Cellular & Fixed line services', 'https://www.nseindia.com/get-quote/equity/BHARTIARTL/Bharti-Airtel-Limited'],
+  ['KFINTECH', 'Depositories, Clearing Houses and Other Intermediaries', 'https://www.nseindia.com/get-quote/equity/KFINTECH/Kfin-Technologies-Limited'],
+  ['OLAELEC', '2/3 Wheelers', 'https://www.nseindia.com/get-quote/equity/OLAELEC/Ola-Electric-Mobility-Limited'],
+  ['HINDUNILVR', 'Diversified FMCG', 'https://www.nseindia.com/get-quote/equity/HINDUNILVR/Hindustan-Unilever-Limited'],
+  ['NTPC', 'Power Generation', 'https://www.nseindia.com/get-quote/equity/NTPC/NTPC-Limited'],
+  ['M&M', 'Passenger Cars & Utility Vehicles', 'https://www.nseindia.com/get-quote/equity/M%26M/Mahindra-%26-Mahindra-Limited'],
+  ['LICI', 'Life Insurance', 'https://www.nseindia.com/get-quote/equity/LICI/Lici-Ns'],
+  ['LT', 'Civil Construction', 'https://www.nseindia.com/get-quote/equity/LT/Larsen-Toubro-Limited'],
+  ['ULTRACEMCO', 'Cement & Cement Products', 'https://www.nseindia.com/get-quote/equity/ULTRACEMCO/UltraTech-Cement-Limited'],
+  ['CAMS', 'Depositories, Clearing Houses and Other Intermediaries', 'https://www.nseindia.com/get-quote/equity/CAMS/Computer-Age-Management-Services-Limited'],
+  ['TVSMOTOR', '2/3 Wheelers', 'https://www.nseindia.com/get-quote/equity/TVSMOTOR/TVS-Motor-Company-Ltd'],
+  ['HEROMOTOCO', '2/3 Wheelers', 'https://www.nseindia.com/get-quote/equity/HEROMOTOCO/Hero-MotoCorp-Ltd'],
+  ['FEDERALBNK', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/FEDERALBNK/The-Federal-Bank--Limited'],
+  ['IDFCFIRSTB', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/IDFCFIRSTB/IDFC-First-Bank-Limited'],
 
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
@@ -97,7 +117,7 @@ export function validateSourceVerifiedAssignments(): string[] {
     }
     try {
       const source = new URL(assignment.sourceUrl);
-      const path = source.pathname.toUpperCase();
+      const path = decodeURIComponent(source.pathname).toUpperCase();
       const ticker = assignment.ticker.toUpperCase();
       const isDirect = path.startsWith(`/GET-QUOTE/EQUITY/${ticker}/`);
       const isSearch = path === '/GET-QUOTES/EQUITY' && source.searchParams.get('symbol')?.toUpperCase() === ticker;
