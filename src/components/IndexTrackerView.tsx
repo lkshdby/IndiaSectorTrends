@@ -34,6 +34,7 @@ import {
   Flame,
   Award,
   Globe,
+  Star,
 } from 'lucide-react';
 import {
   SectorIndexData,
@@ -51,6 +52,8 @@ import {
   INITIAL_LIVE_STOCKS_DATA,
 } from '../utils/benchmarkService';
 import { CreateCustomIndexModal } from './CreateCustomIndexModal';
+import { TrackedStocksPanel } from './TrackedStocksPanel';
+import { addTrackedStock, normalizeTrackedTicker, readTrackedStocks, removeTrackedStock, writeTrackedStocks, type TrackedStock } from '../utils/trackedStocks';
 import { SetAlertModal } from './SetAlertModal';
 import { buildAlignedBasketHistory, classifyPriceRotation, tradingDayKey } from '../utils/sectorIndexMath';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
@@ -86,7 +89,7 @@ const BENCHMARK_COLORS: Record<string, string> = {
 };
 
 export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast, marketSnapshot }) => {
-  const [activeTab, setActiveTab] = useState<'prebuilt' | 'myIndex'>('prebuilt');
+  const [activeTab, setActiveTab] = useState<'prebuilt' | 'myIndex' | 'tracked'>('prebuilt');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [weightingMode, setWeightingMode] = useState<'equal' | 'mcap'>('equal');
@@ -113,6 +116,8 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
   // Benchmarks Data
   const [benchmarks, setBenchmarks] = useState<Record<string, BenchmarkItem>>(FALLBACK_BENCHMARKS);
+
+  const [trackedStocks, setTrackedStocks] = useState<TrackedStock[]>(readTrackedStocks);
 
   // Custom User Indices
   const [customIndices, setCustomIndices] = useState<CustomIndexItem[]>(() => {
@@ -178,6 +183,47 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     if (e) e.stopPropagation();
     setSelectedSectorId(sectorId);
     setSelectedStockTicker(ticker);
+  };
+
+  const handleAddTrackedStock = (tickerInput: string, name: string, sectorId?: string) => {
+    try {
+      const canonical = normalizeTrackedTicker(tickerInput);
+      if (!canonical) throw new Error('Use a valid NSE ticker such as KPITTECH, M&M or LT.NS');
+      if (trackedStocks.some(x => x.ticker === canonical)) {
+        onShowToast(`${canonical} is already in My Tracked Stocks`, 'info');
+        return;
+      }
+      const updated = addTrackedStock(trackedStocks, canonical, name, sectorId);
+      setTrackedStocks(updated);
+      const saved = writeTrackedStocks(updated);
+      onShowToast(saved
+        ? `Added ${canonical} to your personal watchlist`
+        : `Added ${canonical} for this session; browser storage is unavailable`,
+        saved ? 'success' : 'info'
+      );
+    } catch (error) {
+      onShowToast(error instanceof Error ? error.message : 'Invalid ticker', 'error');
+    }
+  };
+
+  const handleRemoveTrackedStock = (ticker: string) => {
+    const updated = removeTrackedStock(trackedStocks, ticker);
+    setTrackedStocks(updated);
+    if (!writeTrackedStocks(updated)) {
+      onShowToast('Removed for this session; browser storage is unavailable', 'info');
+    }
+  };
+
+  const openTrackedStock = (ticker: string) => {
+    const parent = CORE_SECTOR_INDICES.find(sector =>
+      sector.stocks.some(stock => stock.ticker === ticker)
+    );
+    if (!parent) {
+      onShowToast('This ticker is tracked personally but has no core-sector detail page', 'info');
+      return;
+    }
+    setActiveTab('prebuilt');
+    handleSelectStock(ticker, parent.id);
   };
 
   // Classic Scroll Container Ref
@@ -288,7 +334,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
     const buildRealCompositeHistory = (stocksList: StockConstituent[]): HistoricalPricePoint[] =>
       buildAlignedBasketHistory(stocksList, liveStocksData, weightingMode).history;
 
-    if (activeTab === 'prebuilt') {
+    if (activeTab === 'prebuilt' || activeTab === 'tracked') {
       const base =
         CORE_SECTOR_INDICES.find((s) => s.id === selectedSectorId) ||
         CORE_SECTOR_INDICES[0];
@@ -895,7 +941,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   return (
     <div className="flex flex-col lg:flex-row items-stretch bg-white border border-[#b1ada1]/30 rounded-[24px] shadow-sm overflow-hidden">
       {/* ================= LEFT SIDEBAR (BENCHMARKS + PREBUILT 46 + MY INDEX) ================= */}
-      <div className="w-full lg:w-[380px] flex flex-col border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 bg-white shrink-0">
+      <div className="w-full lg:w-[400px] xl:w-[430px] flex flex-col border-b lg:border-b-0 lg:border-r border-[#b1ada1]/30 bg-white shrink-0">
         {/* Top Tabs */}
         <div className="flex items-center border-b border-[#b1ada1]/30 bg-white shrink-0">
           <button
@@ -931,8 +977,18 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('tracked')}
+            aria-pressed={activeTab === 'tracked'}
+            className={`flex-1 min-h-11 py-3 text-xs sm:text-sm font-bold border-b-2 transition-colors flex items-center justify-center gap-1.5 ${activeTab === 'tracked' ? 'border-[#2563eb] text-[#2563eb]' : 'border-transparent text-[#08090a]/60 hover:text-[#08090a]'}`}
+          >
+            <Star className="w-3.5 h-3.5" />
+            Tracked <span className="text-[11px] opacity-70">({trackedStocks.length})</span>
+          </button>
         </div>
 
+        {activeTab === 'prebuilt' && (
+          <>
         {/* PINNED MAJOR BENCHMARK ANCHORS */}
         <div className="p-2.5 bg-[#f4f3ee]/80 border-b border-[#b1ada1]/30 shrink-0">
           <div className="text-[10px] font-extrabold text-[#08090a]/60 uppercase tracking-wider px-2 mb-1.5 flex items-center justify-between font-display">
@@ -997,7 +1053,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search ${CORE_SECTOR_INDICES.length} sectors or @company (e.g. @eternal, @swiggy, @milkymist)...`}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f4f3ee]/60 border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:border-[#2563eb] text-[#08090a] placeholder:text-[#08090a]/40"
+              className="w-full pl-8 pr-3 py-2.5 text-sm bg-[#f4f3ee]/60 border border-[#b1ada1]/40 rounded-xl focus:outline-hidden focus:border-[#2563eb] text-[#08090a] placeholder:text-[#08090a]/40"
             />
           </div>
 
@@ -1086,8 +1142,11 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
+          </>
+        )}
+
         {/* Scrollable Sector Rows with Classic Browser Scrollbar stretching to exact bottom of sidebar */}
-        <div className="relative w-full flex-1 min-h-[680px] bg-white">
+        <div className="relative w-full flex-1 min-h-[400px] lg:min-h-[680px] bg-white">
           <div
             ref={sectorListRef}
             style={{
@@ -1129,9 +1188,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                             <ChevronRight className="w-3.5 h-3.5 text-[#08090a]/50" />
                           )}
                         </button>
-                        <div className="truncate">
+                        <div className="min-w-0 flex-1">
                           <span
-                            className={`text-xs font-semibold block truncate ${
+                            className={`text-[13px] font-semibold block line-clamp-2 leading-4 ${
                               isSelected ? 'text-[#2563eb] font-bold' : 'text-[#08090a]'
                             }`}
                           >
@@ -1275,7 +1334,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   ✓ Showing {filteredIndices.length} of {CORE_SECTOR_INDICES.length} Industry Clusters
                 </div>
               ])
-            ) : (
+            ) : activeTab === 'myIndex' ? (
               // My Index View
               <div className="p-4 space-y-3">
                 <button
@@ -1320,6 +1379,14 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                   </div>
                 )}
               </div>
+            ) : (
+              <TrackedStocksPanel
+                items={trackedStocks}
+                quotes={liveStocksData}
+                onAdd={handleAddTrackedStock}
+                onRemove={handleRemoveTrackedStock}
+                onOpenStock={openTrackedStock}
+              />
             )}
           </div>
         </div>
