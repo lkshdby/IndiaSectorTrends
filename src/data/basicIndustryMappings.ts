@@ -88,6 +88,10 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['TATACONSUM', 'Tea & Coffee', 'https://www.nseindia.com/get-quote/equity/TATACONSUM/TATA-CONSUMER-PRODUCTS-LIMITED'],
   ['PIDILITIND', 'Specialty Chemicals', 'https://www.nseindia.com/get-quote/equity/PIDILITIND/Pidilite-Industries-Limited'],
   ['ASHOKLEY', 'Commercial Vehicles', 'https://www.nseindia.com/get-quote/equity/ASHOKLEY/Ashok-Leyland-Limited'],
+  ['HINDZINC', 'Zinc', 'https://www.nseindia.com/get-quote/equity/HINDZINC/Hindustan-Zinc-Limited'],
+  ['BRITANNIA', 'Packaged Foods', 'https://www.nseindia.com/get-quote/equity/BRITANNIA/Britannia-Industries-Limited'],
+  ['TITAN', 'Gems, Jewellery And Watches', 'https://www.nseindia.com/get-quote/equity/TITAN/Titan-Company-Limited'],
+  ['SBILIFE', 'Life Insurance', 'https://www.nseindia.com/get-quote/equity/SBILIFE/SBI-Life-Insurance-Company-Limited'],
 
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
