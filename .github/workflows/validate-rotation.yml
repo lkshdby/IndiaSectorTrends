@@ -51,6 +51,8 @@ jobs:
           npx tsx scripts/review-basic-industry-import.ts --coverage
       - name: Direct NSE quote evidence and conservative hypothesis tests
         run: npx tsx --test src/utils/industryEvidence.test.ts
+      - name: Full-universe Screener trusted-source reconciliation tests
+        run: npx tsx --test src/utils/screenerIndustryReview.test.ts
       - name: Production build
         run: npm run build
 
