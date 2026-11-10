@@ -28,6 +28,22 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['MEDANTA', 'Hospital', 'https://www.nseindia.com/get-quote/equity/MEDANTA/Global-Health-Limited'],
   ['SUNPHARMA', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/SUNPHARMA/Sun-Pharmaceutical-Industries-Limited'],
   ['SPARC', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/SPARC/Sun-Pharma-Advanced-Research-Company-Limited'],
+  // NSE equity quote pages separately checked on 2026-11-10;
+  // these are primary basic-industry labels, not inferred from our 62 themes.
+  ['ITC', 'Diversified FMCG', 'https://www.nseindia.com/get-quote/equity/ITC/Itc'],
+  ['TATASTEEL', 'Iron & Steel', 'https://www.nseindia.com/get-quote/equity/TATASTEEL/Tata-Steel-Limited'],
+  ['JSWSTEEL', 'Iron & Steel', 'https://www.nseindia.com/get-quote/equity/JSWSTEEL/JSW-Steel-Limited'],
+  ['RELIANCE', 'Refineries & Marketing', 'https://www.nseindia.com/get-quote/equity/RELIANCE/Reliance-Industries-Limited'],
+  ['TATATECH', 'IT Enabled Services', 'https://www.nseindia.com/get-quote/equity/TATATECH/Tata-Technologies-Limited'],
+  ['ASIANPAINT', 'Paints', 'https://www.nseindia.com/get-quote/equity/ASIANPAINT/Asian-Paints-Limited'],
+  ['SBIN', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/SBIN/State-Bank-Of-India'],
+  ['BANKBARODA', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/BANKBARODA/Bank-of-Baroda'],
+  ['CANBK', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/CANBK/Canara-Bank'],
+  ['PNB', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/PNB/Punjab-National-Bank'],
+  ['MARUTI', 'Passenger Cars & Utility Vehicles', 'https://www.nseindia.com/get-quote/equity/MARUTI/Maruti-Suzuki-India-Limited'],
+  ['BAJFINANCE', 'Non Banking Financial Company (NBFC)', 'https://www.nseindia.com/get-quote/equity/BAJFINANCE/Bajaj-Finance-Limited'],
+  ['HINDALCO', 'Aluminium', 'https://www.nseindia.com/get-quote/equity/HINDALCO/Hindalco-Industries-Limited'],
+
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
 }));
