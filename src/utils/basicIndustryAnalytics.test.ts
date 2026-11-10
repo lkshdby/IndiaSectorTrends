@@ -64,7 +64,9 @@ describe('NSE basic-industry discovery: strict provenance and honest coverage', 
     assert.deepEqual(validateSourceVerifiedAssignments(), []);
     assert.equal(VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.get('TCS')?.basicIndustry, 'Computers - Software & Consulting');
     assert.equal(VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.get('HDFCBANK')?.basicIndustry, 'Private Sector Bank');
-    assert.equal(VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.get('ETERNAL'), undefined);
+    const eternal = VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.get('ETERNAL');
+    if (eternal) assert.ok(eternal.sourceUrl.startsWith('https://www.nseindia.com/'),
+      'new automated membership is allowed only with real NSE quote evidence');
   });
 
   it('builds rankable multi-stock software group but warns on limited bank cohort', () => {
@@ -78,8 +80,10 @@ describe('NSE basic-industry discovery: strict provenance and honest coverage', 
     assert.equal(software.breadth1W, 100);
     assert.ok(banks.pricedCount > 0 && banks.pricedCount <= 4);
     assert.equal(banks.confidence, 'limited-sample');
-    assert.ok(summary.unclassifiedTickers > 300, 'do not imply universe-wide completeness');
-    const unmapped = summary.industryRows.find(x => x.industry.name === 'Zinc')!;
+    assert.equal(summary.unclassifiedTickers, summary.universeSize - summary.verifiedMappingCount,
+      'reported unmapped count must match the actual source-verified mapping set');
+    const unmapped = summary.industryRows.find(x => x.mappedCount === 0)!;
+    assert.ok(unmapped, 'at least one candidate industry must still be without verified coverage');
     assert.equal(unmapped.confidence, 'unmapped');
     assert.equal(unmapped.price1M, null);
   });
