@@ -25,17 +25,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --no-save --package-lock=false
       - name: Fetch and validate listed stock closes
         run: npx tsx scripts/refresh-market-snapshot.ts
       - name: Commit validated snapshot
@@ -48,6 +48,16 @@ jobs:
             exit 0
           fi
           git commit -m "data: update verified market snapshot [skip ci]"
-          # Rebase onto any newer app commits to avoid clobbering them.
-          git pull --rebase origin main
+          # npm install can modify package-lock.json even without dependency edits.
+          # Keep only the validated snapshot in the commit and a clean worktree
+          # before rebasing; a dirty worktree caused exit code 128 in run 42799275608.
+          git restore -- package-lock.json
+          if ! git diff --quiet; then
+            echo "::error::Unexpected tracked changes after creating snapshot commit:"
+            git status --short
+            exit 1
+          fi
+          # Rebase onto concurrent app commits without replacing their changes.
+          git fetch origin main
+          git rebase origin/main
           git push origin HEAD:main

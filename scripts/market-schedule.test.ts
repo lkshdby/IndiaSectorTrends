@@ -27,6 +27,14 @@ describe('zero-config automatic market collection policy', () => {
     assert.ok(app.includes("fetch(`/api/stocks-snapshot?reload="));
   });
 
+  it('keeps the git worktree clean before rebasing and publishing the snapshot', () => {
+    assert.ok(workflow.includes('npm install --no-audit --no-fund --no-save --package-lock=false'));
+    assert.ok(workflow.includes('git restore -- package-lock.json'));
+    assert.ok(workflow.includes('git diff --quiet'));
+    assert.ok(workflow.includes('git rebase origin/main'));
+    assert.ok(workflow.includes('git push origin HEAD:main'));
+  });
+
   it('keeps previous snapshot on a failed collection', () => {
     const script = readFileSync('scripts/refresh-market-snapshot.ts', 'utf8');
     assert.ok(script.includes('ratio < 0.90'));

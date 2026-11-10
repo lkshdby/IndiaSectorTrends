@@ -7,6 +7,7 @@ on:
       - fix/vercel-market-sync-405-20261109
       - fix/three-slot-scheduled-snapshot-no-secrets
       - feat/manual-market-refresh-commits-20261110
+      - fix/actions-snapshot-git-rebase-128-20261110
   pull_request:
 
 permissions:
@@ -16,8 +17,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
