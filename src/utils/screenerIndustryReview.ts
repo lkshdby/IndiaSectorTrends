@@ -191,6 +191,6 @@ export function approvedScreenerEvidence(
     basicIndustry: r.screenerIndustry!,
     industryCode: r.suggestedCatalogCode!,
     verifiedOn,
-    sourceUrl: 'https://www.screener.in/market/',
+    sourceUrl: `https://www.screener.in/market/${r.suggestedCatalogCode!.slice(0, 4)}/${r.suggestedCatalogCode!.slice(0, 6)}/${r.suggestedCatalogCode!.slice(0, 8)}/${r.suggestedCatalogCode}/`,
   }));
 }
