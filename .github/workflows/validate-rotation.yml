@@ -53,6 +53,8 @@ jobs:
         run: npx tsx --test src/utils/industryEvidence.test.ts
       - name: Full-universe Screener trusted-source reconciliation tests
         run: npx tsx --test src/utils/screenerIndustryReview.test.ts
+      - name: Private Screener industry import and heatmap isolation tests
+        run: npx tsx --test src/utils/privateIndustryEvidence.test.ts
       - name: Production build
         run: npm run build
 
