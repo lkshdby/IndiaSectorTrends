@@ -75,6 +75,13 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['BAJAJ-AUTO', '2/3 Wheelers', 'https://www.nseindia.com/get-quote/equity/BAJAJ-AUTO/Bajaj-Auto-Limited'],
   ['ADANIPORTS', 'Port & Port services', 'https://www.nseindia.com/get-quote/equity/ADANIPORTS/Adani-Ports-and-Special-Economic-Zone-Ld'],
   ['IRCTC', 'Tour, Travel Related Services', 'https://www.nseindia.com/get-quote/equity/IRCTC/Indian-Railway-Catering-And-Tourism-Corporation-Limited'],
+  ['SIEMENS', 'Heavy Electrical Equipment', 'https://www.nseindia.com/get-quote/equity/SIEMENS/Siemens-Limited'],
+  ['SUZLON', 'Heavy Electrical Equipment', 'https://www.nseindia.com/get-quote/equity/SUZLON/Suzlon-Energy-Limited'],
+  ['POWERGRID', 'Power - Transmission', 'https://www.nseindia.com/get-quote/equity/POWERGRID/Power-Grid-Corporation-of-India-Limited'],
+  ['HAL', 'Aerospace & Defense', 'https://www.nseindia.com/get-quote/equity/HAL/Hindustan-Aeronautics-Limited'],
+  ['BEL', 'Aerospace & Defense', 'https://www.nseindia.com/get-quote/equity/BEL/Bharat-Electronics-Limited'],
+  ['ZYDUSLIFE', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/ZYDUSLIFE/Zydus-Lifesciences-Limited'],
+  ['DIVISLAB', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/DIVISLAB/Divi-S-Laboratories'],
 
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
