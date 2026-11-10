@@ -36,8 +36,8 @@ describe('source-audited automatic NSE industry annotation', () => {
       secInfo:{basicIndustry:'2/3 Wheelers'},
     },seenAt)!;
     assert.equal(x.status,'nse-direct-code-confirmed');
-    const y=validateIndustryResponse('EICHERMOT',{
-      info:{symbol:'EICHERMOT'},industryInfo:{basicIndustry:'New Industry Not in our Catalog'},
+    const y=validateIndustryResponse('TESTUNKNOWN',{
+      info:{symbol:'TESTUNKNOWN'},industryInfo:{basicIndustry:'New Industry Not in our Catalog'},
     },seenAt)!;
     assert.equal(y.status,'nse-direct-code-pending');
     assert.equal(y.industryCode,null);
