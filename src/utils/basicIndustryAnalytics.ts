@@ -17,6 +17,7 @@ export interface BasicIndustryScore {
   historyDates: number;
   price1W: number | null;
   price1M: number | null;
+  momentumAcceleration1W: number | null;
   mcap1M: number | null;
   nifty500Relative1M: number | null;
   advancing1W: number;
@@ -54,6 +55,25 @@ function horizonReturn(history: { date: string; value: number }[], sessions: num
   const base = history[history.length - 1 - sessions]?.value;
   return base > 0 && current > 0 && Number.isFinite(base) && Number.isFinite(current)
     ? Number(((current / base - 1) * 100).toFixed(2)) : null;
+}
+
+/**
+ * Momentum acceleration = latest 5-session return minus the equivalent
+ * 5-session pace of the PRECEDING 16 sessions (both measured from the same
+ * aligned 21-session price history). Positive means returns have sped up.
+ *
+ * This is an arithmetic return-speed heuristic, not technical momentum
+ * (12–1), earnings momentum, an alpha estimate, or proof of trend strength.
+ * The return percentages describe price change, not expected future return.
+ */
+export function weeklyMomentumAcceleration(weekPct: number | null, monthPct: number | null): number | null {
+  if (weekPct === null || monthPct === null ||
+      !Number.isFinite(weekPct) || !Number.isFinite(monthPct) ||
+      weekPct <= -100 || monthPct <= -100) return null;
+  const prior16Gross = (1 + monthPct / 100) / (1 + weekPct / 100);
+  if (!Number.isFinite(prior16Gross) || prior16Gross <= 0) return null;
+  const prior5SessionPace = (Math.pow(prior16Gross, 5 / 16) - 1) * 100;
+  return Number((weekPct - prior5SessionPace).toFixed(2));
 }
 
 /** Relative strength must compare the same *observed session dates*.
@@ -126,6 +146,7 @@ export function computeIndustryDiscovery(
     const concentration = capSum > 0 ? Math.round(100 * Math.max(...caps) / capSum) : null;
     const oneW = horizonReturn(aligned.history, 5);
     const oneM = horizonReturn(aligned.history, 21);
+    const acceleration = weeklyMomentumAcceleration(oneW, oneM);
     const weightedM = horizonReturn(aligned.history.map(point => ({
       date: point.date, value: point.mcapWeightValue || point.value,
     })), 21);
@@ -142,6 +163,7 @@ export function computeIndustryDiscovery(
       historyDates: aligned.history.length,
       price1W: oneW,
       price1M: oneM,
+      momentumAcceleration1W: acceleration,
       mcap1M: weightedM,
       nifty500Relative1M: alignedRelativeReturn(aligned.history, benchmarkHistory, 21),
       advancing1W,
