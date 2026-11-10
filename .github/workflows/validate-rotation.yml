@@ -7,6 +7,7 @@ on:
       - fix/vercel-market-sync-405-20261109
       - fix/three-slot-scheduled-snapshot-no-secrets
       - feat/manual-market-refresh-commits-20261110
+      - fix/dashboard-reload-direct-github-snapshot-20261110
       - fix/actions-snapshot-git-rebase-128-20261110
   pull_request:
 
@@ -34,5 +35,7 @@ jobs:
         run: npx tsx --test src/data/sectorUniverse.test.ts
       - name: Three-slot scheduling and credential-free reload tests
         run: npx tsx --test scripts/market-schedule.test.ts
+      - name: Live-snapshot client fallback tests
+        run: npx tsx --test src/utils/marketSnapshotClient.test.ts
       - name: Production build
         run: npm run build
