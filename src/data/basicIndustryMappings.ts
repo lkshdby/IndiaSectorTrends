@@ -271,7 +271,7 @@ export function validateSourceVerifiedAssignments(): string[] {
   for (const r of TRUSTED_SCREENER_INDUSTRY_ASSIGNMENTS) {
     if (tickers.has(r.ticker)) issues.push(r.ticker + ': duplicate trusted source');
     tickers.add(r.ticker);
-    if (BASIC_INDUSTRY_BY_NAME.get(r.basicIndustry)?.code === null) {
+    if (!BASIC_INDUSTRY_BY_NAME.get(r.basicIndustry)?.code) {
       issues.push(r.ticker + ': Screener category missing checked code');
     }
     if (r.sourceType !== 'screener' || !r.sourceUrl.startsWith('https://www.screener.in/market/')) {
