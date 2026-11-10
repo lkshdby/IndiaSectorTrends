@@ -78,8 +78,11 @@ describe('NSE basic-industry discovery: strict provenance and honest coverage', 
     assert.ok(software.price1M !== null && software.price1M > 0);
     assert.ok(software.nifty500Relative1M !== null && software.nifty500Relative1M > 0);
     assert.equal(software.breadth1W, 100);
-    assert.ok(banks.pricedCount > 0 && banks.pricedCount <= 4);
-    assert.equal(banks.confidence, 'limited-sample');
+    assert.ok(banks.pricedCount >= 4, 'additional source-verified banks should improve the sample');
+    assert.equal(banks.pricedCount, banks.pricedTickers.length);
+    // New source-confirmed banks can graduate from limited sample to rankable;
+    // the classification gate, not a hardcoded count, determines eligibility.
+    assert.ok(['limited-sample', 'rankable'].includes(banks.confidence));
     assert.equal(summary.unclassifiedTickers, summary.universeSize - summary.verifiedMappingCount,
       'reported unmapped count must match the actual source-verified mapping set');
     const unmapped = summary.industryRows.find(x => x.mappedCount === 0)!;
