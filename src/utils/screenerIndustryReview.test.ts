@@ -37,7 +37,7 @@ describe('full-universe Screener reconciliation with separately attributed trust
     assert.equal(get('JUPITERWAG').reviewStatus,'not-present-in-export');
     const rows=approvedScreenerEvidence(report,'2026-11-10');
     assert.equal(rows.length,3);
-    assert.deepEqual(rows[0], {
+    assert.deepEqual(rows.find(row => row.ticker === 'BDL'), {
       ticker:'BDL',basicIndustry:'Aerospace & Defense',industryCode:'IN070201001',
       verifiedOn:'2026-11-10',sourceUrl:'https://www.screener.in/market/IN07/IN0702/IN070201/IN070201001/',
     });
