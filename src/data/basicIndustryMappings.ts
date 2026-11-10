@@ -82,6 +82,12 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['BEL', 'Aerospace & Defense', 'https://www.nseindia.com/get-quote/equity/BEL/Bharat-Electronics-Limited'],
   ['ZYDUSLIFE', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/ZYDUSLIFE/Zydus-Lifesciences-Limited'],
   ['DIVISLAB', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/DIVISLAB/Divi-S-Laboratories'],
+  ['MARICO', 'Edible Oil', 'https://www.nseindia.com/get-quote/equity/MARICO/Marico-Limited'],
+  ['DMART', 'Diversified Retail', 'https://www.nseindia.com/get-quote/equity/DMART/Avenue-Supermarts-Limited'],
+  ['AARTIIND', 'Specialty Chemicals', 'https://www.nseindia.com/get-quote/equity/AARTIIND/Aarti-Industries-Limited'],
+  ['TATACONSUM', 'Tea & Coffee', 'https://www.nseindia.com/get-quote/equity/TATACONSUM/TATA-CONSUMER-PRODUCTS-LIMITED'],
+  ['PIDILITIND', 'Specialty Chemicals', 'https://www.nseindia.com/get-quote/equity/PIDILITIND/Pidilite-Industries-Limited'],
+  ['ASHOKLEY', 'Commercial Vehicles', 'https://www.nseindia.com/get-quote/equity/ASHOKLEY/Ashok-Leyland-Limited'],
 
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
