@@ -3,8 +3,9 @@
  *
  * npx tsx scripts/reconcile-screener-industries.ts --input /secure/screener-export.csv --out /tmp/full-industry-review.csv
  *
- * Intentionally local-only: does NOT scrape Screener, publish its licensed
- * export, change production mappings, or feed candidates into rankings.
+ * Intentionally local-only: does NOT scrape Screener or publish its export.
+ * Optional retained evidence can enter ranking mappings only after exact
+ * NSE-symbol/code checks and a separate rights-authorized source step.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -36,7 +37,7 @@ const raw = readFileSync(resolve(inputFile), 'utf8');
 const report = reviewScreenerIndustryExport(raw, tracked.rows);
 console.log(JSON.stringify({
   trackedUniverse: tracked.totalUniverse,
-  verifiedNseMappedBeforeImport: tracked.coveredByVerifiedMapping,
+  trustedMappedBeforeImport: tracked.coveredByVerifiedMapping,
   screenerExportRows: report.exportDataRows,
   exportedNseSymbols: report.exportUniqueTickers,
   matchedTrackedSymbols: report.matchedTrackedSymbols,
