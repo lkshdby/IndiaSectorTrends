@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { IndustryCoveragePanel } from './IndustryCoveragePanel';
+import { PrivateIndustryImportPanel } from './PrivateIndustryImportPanel';
+import { joinPrivateIndustryAssignments, loadPrivateIndustryEvidence, type PrivateIndustryAssignments } from '../utils/privateIndustryEvidence';
 import { ArrowUpRight, BarChart3, BookOpen, ChevronRight, Filter, Layers3, Search, ShieldCheck, Star } from 'lucide-react';
 import { BASIC_INDUSTRIES, NSE_PUBLISHED_BASIC_INDUSTRY_COUNT } from '../data/basicIndustryCatalog';
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
@@ -37,7 +39,12 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
   const [show, setShow] = useState<'all' | 'mapped' | 'rankable'>('mapped');
   const [sort, setSort] = useState<'rs' | '1m' | 'breadth' | 'name'>('rs');
   const [selectedName, setSelectedName] = useState('Computers - Software & Consulting');
-  const summary = useMemo(() => computeIndustryDiscovery(marketSnapshot), [marketSnapshot]);
+  const [privateAssignments, setPrivateAssignments] = useState<PrivateIndustryAssignments>(
+    () => loadPrivateIndustryEvidence()?.assignments || new Map(),
+  );
+  const trustedAssignments = useMemo(() => joinPrivateIndustryAssignments(privateAssignments), [privateAssignments]);
+  const summary = useMemo(() => computeIndustryDiscovery(marketSnapshot, trustedAssignments),
+    [marketSnapshot, trustedAssignments]);
   const selection = summary.industryRows.find(x => x.industry.name === selectedName);
   const macros = useMemo(() => Array.from(new Set(BASIC_INDUSTRIES.map(x => x.macro).filter((x): x is string => !!x))).sort(), []);
   const visible = useMemo(() => summary.industryRows.filter(row => {
@@ -89,8 +96,8 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mt-5">
           {[
             { label: 'Candidate industry names', value: String(BASIC_INDUSTRIES.length), note: `NSE framework: ${NSE_PUBLISHED_BASIC_INDUSTRY_COUNT} official` },
-            { label: 'Source-verified stock mappings', value: `${summary.verifiedMappingCount} / ${summary.universeSize}`, note: 'Of unique existing thematic tickers' },
-            { label: 'Industries with mapped stocks', value: String(summary.groupedIndustries), note: 'Mapped to verified NSE symbols' },
+            { label: 'Trusted source stock mappings', value: `${summary.verifiedMappingCount} / ${summary.universeSize}`, note: 'Of unique thematic tickers, with optional private records' },
+            { label: 'Industries with mapped stocks', value: String(summary.groupedIndustries), note: 'NSE or locally imported Screener sources' },
             { label: 'Sample cohorts passing quality gates', value: String(summary.eligibleCount), note: 'Not full NSE-industry coverage' },
           ].map(card => (
             <div key={card.label} className="rounded-xl bg-[#f4f3ee] border border-[#b1ada1]/20 p-3.5">
@@ -102,10 +109,13 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
         </div>
         <div className="mt-4 text-xs text-[#92400e] px-3.5 py-3 rounded-xl border border-[#fbbf24]/40 bg-[#fffbeb]">
           <strong>Coverage notice:</strong> Names are seeded from the supplied list; official NSE codes and stock-to-industry assignments are being audited.
-          Do not treat a low-mapping sample as the market-wide industry leaderboard.
+          Treat rankings as samples of the tracked thematic universe, not the entire NSE market. Importing private classifications does not add any new stock prices.
           {marketSnapshot ? ` Saved market collection: ${new Date(marketSnapshot.fetchedAt).toLocaleString('en-IN', { timeZone:'Asia/Kolkata' })} IST.` : ' Waiting for the saved market snapshot.'}
         </div>
       </header>
+
+      <PrivateIndustryImportPanel activeCount={privateAssignments.size}
+        onImport={setPrivateAssignments} onRemove={() => setPrivateAssignments(new Map())}/>
 
       <details className="group rounded-2xl border border-[#b1ada1]/30 bg-white overflow-hidden">
         <summary className="cursor-pointer select-none px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2 font-bold text-sm sm:text-base hover:bg-[#fafaf9]">
@@ -113,14 +123,14 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
           <span className="text-xs font-medium text-[#08090a]/60">Click to expand or collapse</span>
         </summary>
         <div className="px-3 sm:px-4 pb-4">
-          <IndustryCoveragePanel marketSnapshot={marketSnapshot}/>
+          <IndustryCoveragePanel marketSnapshot={marketSnapshot} trustedMappings={trustedAssignments}/>
         </div>
       </details>
 
       <section aria-label="Industry performance heatmap" className="p-4 sm:p-5 rounded-2xl bg-white border border-[#b1ada1]/30 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="text-base font-extrabold">Source-verified industry heatmap</h3>
+            <h3 className="text-base font-extrabold">Trusted-source basic-industry heatmap</h3>
             <p className="text-xs text-[#08090a]/60 mt-1">1-month equal-weight price returns for currently mapped companies. Unrankable observations are marked, not hidden.</p>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-[#08090a]/60">
@@ -129,6 +139,17 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
             <span className="w-3 h-3 rounded bg-[#f2f1ec] border border-[#b1ada1]/30"/> No verified return
           </div>
         </div>
+        <details className="text-xs bg-[#f4f3ee] border border-[#b1ada1]/25 rounded-xl p-3">
+          <summary className="font-bold cursor-pointer">How to read this heatmap and the rankings</summary>
+          <div className="mt-2 space-y-2 leading-relaxed text-[#08090a]/75">
+            <p><strong>Color / large %:</strong> Green is a positive 1-month equal-weight price return; red is negative. Grey or — means insufficient usable price history. A green tile is not automatically a buy signal.</p>
+            <p><strong>8/10 valid:</strong> Of 10 classified stocks in that industry, 8 have valid histories and contributed to the return. The other 2 do not contribute.</p>
+            <p><strong>RS 1M:</strong> Industry's 1-month return minus NIFTY 500 over the same observed dates. Positive values imply outperformance, not necessarily a positive absolute return.</p>
+            <p><strong>1W breadth:</strong> Percent of valid industry members rising over one week. For example, 7 of 10 risers = 70% breadth.</p>
+            <p><strong>Confidence:</strong> Rankable samples need at least five usable companies, 80% usable-history coverage and acceptable concentration. Limited/single-stock industries can appear on the heatmap but should not be treated as broad industry trends.</p>
+            <p><strong>Investment themes vs basic industries:</strong> Themes are curated cross-industry baskets. Basic industries classify companies by their reported primary business. Importing private classifications affects basic-industry heatmaps, not the 62 curated theme memberships.</p>
+          </div>
+        </details>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
           {summary.industryRows.filter(row => row.mappedCount > 0).map(row => (
             <button type="button" key={row.industry.name} onClick={() => setSelectedName(row.industry.name)}
@@ -167,8 +188,8 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
               </label>
               <select aria-label="Filter confidence" value={show} onChange={e => setShow(e.target.value)}
                 className="min-h-11 px-3 text-sm border border-[#b1ada1]/40 rounded-xl bg-white">
-                <option value="mapped">With verified stock assignments</option>
-                <option value="rankable">Source-mapped sample cohorts only</option>
+                <option value="mapped">With trusted stock assignments</option>
+                <option value="rankable">Sample-eligible cohorts only</option>
                 <option value="all">All candidate industry names</option>
               </select>
               <select aria-label="Sort industry results" value={sort} onChange={e => setSort(e.target.value)}
@@ -244,7 +265,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
                 <p className="mt-1">Validated cohort {selection.pricedCount} / mapped {selection.mappedCount}. Historical coverage {selection.coveragePct}%. Largest stored market-cap weight: {selection.concentrationPct === null ? 'unknown' : selection.concentrationPct + '%'}.</p>
               </div>
               <div>
-                <h4 className="text-sm font-bold mb-2">Source-verified company mappings</h4>
+                <h4 className="text-sm font-bold mb-2">Source-attributed company mappings</h4>
                 {selection.provenance.length ? (
                   <div className="space-y-2">
                     {selection.provenance.map(ref => (
@@ -258,7 +279,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
                       </a>
                     ))}
                   </div>
-                ) : <p className="text-xs text-[#08090a]/60">No source-verified stock assignments. This industry is not ranked.</p>}
+                ) : <p className="text-xs text-[#08090a]/60">No trusted industry assignments. This industry is not ranked.</p>}
               </div>
               {!!related.length && (
                 <div>
