@@ -2,14 +2,15 @@ import React, { useMemo, useState } from 'react';
 import { ArrowUpRight, CheckCircle2, Download, Search, ShieldAlert } from 'lucide-react';
 import { buildBasicIndustryAudit, industryAuditCsv } from '../utils/basicIndustryCoverage';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
+import type { BasicIndustryAssignment } from '../data/basicIndustryMappings';
 
-interface Props { marketSnapshot: BrowserMarketSnapshot | null }
+interface Props { marketSnapshot: BrowserMarketSnapshot | null; trustedMappings?: ReadonlyMap<string, BasicIndustryAssignment> }
 
-export function IndustryCoveragePanel({ marketSnapshot }: Props) {
+export function IndustryCoveragePanel({ marketSnapshot, trustedMappings }: Props) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'needs-review' | 'all' | 'source-verified' | 'editorial'>('needs-review');
   const [limit, setLimit] = useState(60);
-  const audit = useMemo(() => buildBasicIndustryAudit(marketSnapshot), [marketSnapshot]);
+  const audit = useMemo(() => buildBasicIndustryAudit(marketSnapshot, trustedMappings), [marketSnapshot, trustedMappings]);
   const filtered = useMemo(() => audit.rows.filter(row => {
     if (status === 'needs-review' && row.status === 'source-verified') return false;
     if (status === 'source-verified' && row.status !== 'source-verified') return false;
@@ -126,7 +127,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
       <p className="text-xs text-[#08090a]/55">
         This is a stock-level audit, not complete-market industry coverage. Exported rows are a review checklist.
         Editorial suggestions reflect basket context only and are never fed into industry returns.
-        Any accepted new classification needs its own documented source, verified NSE code and review date.
+        New mappings require a checked NSE category code and dated evidence; trusted Screener imports remain private to this browser and appear with source attribution.
       </p>
     </section>
   );
