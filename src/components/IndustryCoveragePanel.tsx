@@ -39,7 +39,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
           </h4>
           <p className="text-xs text-[#08090a]/60 mt-1 max-w-2xl">
             All unique symbols from the 62 thematic baskets and the currently loaded saved-price snapshot.
-            Verified means a source-linked classification, not complete coverage of all NSE listings.
+            Verified means an individually source-linked NSE observation or a user-accepted, code-checked Screener classification. Source provider is displayed per row; this does not mean complete coverage of all NSE listings.
           </p>
         </div>
         <button onClick={downloadAudit} type="button"
@@ -50,7 +50,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {[
           ['Saved + thematic stock universe', audit.totalUniverse],
-          ['Source-verified symbols', audit.coveredByVerifiedMapping],
+          ['Trusted classified symbols', audit.coveredByVerifiedMapping],
           ['Awaiting company classification', audit.needingReview],
           ['Mapped coverage', audit.mappedPct + '%'],
           ['Editorial review hints', audit.rows.filter(row => row.suggestedIndustry).length],
@@ -78,7 +78,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
           aria-label="Filter mapping coverage"
           className="min-h-11 px-3 text-sm border border-[#b1ada1]/40 rounded-xl bg-white">
           <option value="needs-review">Needs classification review</option>
-          <option value="source-verified">Source-verified only</option>
+          <option value="source-verified">Trusted source classifications</option>
           <option value="editorial">Editorial suggestions · unverified</option>
           <option value="all">All tracked symbols</option>
         </select>
@@ -96,7 +96,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
               </div>
               <p className="text-xs text-[#08090a]/70 mt-0.5 break-words">{row.name}</p>
               <p className="text-xs text-[#08090a]/55 mt-1">
-                {row.status === 'source-verified' ? `${row.industry} · ${row.industryCode}` : 'Basic industry not source-verified'}
+                {row.status === 'source-verified' ? `${row.industry} · ${row.industryCode} · ${row.sourceProvider || 'Source pending'}` : 'Basic industry not source-confirmed'}
                 {row.themeNames.length ? ` · ${row.themeNames.length} theme(s)` : ' · Snapshot-only'}
                 {!row.inSavedSnapshot && marketSnapshot ? ' · No saved price' : ''}
               </p>
