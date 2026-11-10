@@ -129,6 +129,37 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['BHEL', 'Heavy Electrical Equipment', 'https://www.nseindia.com/get-quote/equity/BHEL/Bharat-Heavy-Electricals-Limited'],
   ['CGPOWER', 'Heavy Electrical Equipment', 'https://www.nseindia.com/get-quote/equity/CGPOWER/CG-Power-and-Industrial-Solutions-Limited'],
 
+  // 2026-11-10 independently web-checked NSE equity quote basic-industry rows, batch 3.
+  // Exact source ledger and code-pending exclusions: docs/NSE_INDUSTRY_EVIDENCE_BATCH_3.md
+  ['HATSUN', 'Dairy Products', 'https://www.nseindia.com/get-quote/equity/HATSUN/Hatsun-Agro-Product-Limited'],
+  ['PARAGMILK', 'Dairy Products', 'https://www.nseindia.com/get-quote/equity/PARAGMILK/Paragmilk-Ns'],
+  ['KALYANKJIL', 'Gems, Jewellery And Watches', 'https://www.nseindia.com/get-quote/equity/KALYANKJIL/Kalyan-Jewellers-India-Limited'],
+  ['SKYGOLD', 'Gems, Jewellery And Watches', 'https://www.nseindia.com/get-quote/equity/SKYGOLD/SKY-GOLD-AND-DIAMONDS-LIMITED'],
+  ['SENCO', 'Gems, Jewellery And Watches', 'https://www.nseindia.com/get-quote/equity/SENCO/Senco-Gold-Limited'],
+  ['UNITDSPR', 'Breweries & Distilleries', 'https://www.nseindia.com/get-quote/equity/UNITDSPR/United-Spirits-Ltd'],
+  ['UBL', 'Breweries & Distilleries', 'https://www.nseindia.com/get-quote/equity/UBL/United-Breweries-Limited'],
+  ['INDIGO', 'Airline', 'https://www.nseindia.com/get-quote/equity/INDIGO/InterGlobe-Aviation-Limited'],
+  ['TATAPOWER', 'Integrated Power Utilities', 'https://www.nseindia.com/get-quote/equity/TATAPOWER/Tata-Power-Company-Limited'],
+  ['JSWENERGY', 'Power Generation', 'https://www.nseindia.com/get-quote/equity/JSWENERGY/JSW-Energy-Limited'],
+  ['NHPC', 'Power Generation', 'https://www.nseindia.com/get-quote/equity/NHPC/NHPC-Limited'],
+  ['SJVN', 'Power Generation', 'https://www.nseindia.com/get-quote/equity/SJVN/SJVN-Limited'],
+  ['POLYCAB', 'Cables - Electricals', 'https://www.nseindia.com/get-quote/equity/POLYCAB/Polycab-Ns'],
+  ['RRKABEL', 'Cables - Electricals', 'https://www.nseindia.com/get-quotes/equity?symbol=RRKABEL'],
+  ['FINCABLES', 'Cables - Electricals', 'https://www.nseindia.com/get-quote/equity/FINCABLES/Finolex-Cables-Limited'],
+  ['GRSE', 'Aerospace & Defense', 'https://www.nseindia.com/get-quotes/equity?symbol=GRSE'],
+  ['TITAGARH', 'Railway Wagons', 'https://www.nseindia.com/get-quote/equity/TITAGARH/TITAGARH-RAIL-SYSTEMS-LIMITED'],
+  ['NESTLEIND', 'Packaged Foods', 'https://www.nseindia.com/get-quote/equity/NESTLEIND/Nestle-India-Limited'],
+  ['DABUR', 'Personal Care', 'https://www.nseindia.com/get-quote/equity/DABUR/Dabur-India-Limited'],
+  ['GODREJCP', 'Personal Care', 'https://www.nseindia.com/get-quote/equity/GODREJCP/Godrej-Consumer-Products-Limited'],
+  ['DRREDDY', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/DRREDDY/Dr-Reddy%27s-Laboratories-Limited'],
+  ['HDFCLIFE', 'Life Insurance', 'https://www.nseindia.com/get-quote/equity/HDFCLIFE/HDFC-Life-Insurance-Company-Limited'],
+  ['ICICIGI', 'General Insurance', 'https://www.nseindia.com/get-quote/equity/ICICIGI/ICICI-Lombard-General-Insurance-Company-Limited'],
+  ['BATAINDIA', 'Footwear', 'https://www.nseindia.com/get-quote/equity/BATAINDIA/Bata-India-Limited'],
+  ['METROBRAND', 'Footwear', 'https://www.nseindia.com/get-quote/equity/METROBRAND/Metro-Brands-Limited'],
+  ['RBLBANK', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/RBLBANK/RBL-Bank-Limited'],
+  ['MCX', 'Exchange and Data Platform', 'https://www.nseindia.com/get-quote/equity/MCX/Multi-Commodity-Exchange-of-India-Limited'],
+  ['UNIONBANK', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/UNIONBANK/Union-Bank-of-India'],
+
 
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
