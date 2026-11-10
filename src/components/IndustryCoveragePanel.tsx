@@ -7,14 +7,15 @@ interface Props { marketSnapshot: BrowserMarketSnapshot | null }
 
 export function IndustryCoveragePanel({ marketSnapshot }: Props) {
   const [query, setQuery] = useState('');
-  const [status, setStatus] = useState<'needs-review' | 'all' | 'source-verified'>('needs-review');
+  const [status, setStatus] = useState<'needs-review' | 'all' | 'source-verified' | 'editorial'>('needs-review');
   const [limit, setLimit] = useState(60);
   const audit = useMemo(() => buildBasicIndustryAudit(marketSnapshot), [marketSnapshot]);
   const filtered = useMemo(() => audit.rows.filter(row => {
     if (status === 'needs-review' && row.status === 'source-verified') return false;
     if (status === 'source-verified' && row.status !== 'source-verified') return false;
+    if (status === 'editorial' && !row.suggestedIndustry) return false;
     const term = query.toLowerCase().trim();
-    return !term || `${row.ticker} ${row.name} ${row.industry || ''} ${row.themeNames.join(' ')}`.toLowerCase().includes(term);
+    return !term || `${row.ticker} ${row.name} ${row.industry || ''} ${row.suggestedIndustry || ''} ${row.themeNames.join(' ')}`.toLowerCase().includes(term);
   }), [audit, status, query]);
 
   const downloadAudit = () => {
@@ -52,6 +53,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
           ['Source-verified symbols', audit.coveredByVerifiedMapping],
           ['Awaiting company classification', audit.needingReview],
           ['Mapped coverage', audit.mappedPct + '%'],
+          ['Editorial review hints', audit.rows.filter(row => row.suggestedIndustry).length],
         ].map(([label, value]) => (
           <div key={label} className="bg-[#f4f3ee] p-3 rounded-xl border border-[#b1ada1]/20">
             <div className="text-[11px] text-[#08090a]/60">{label}</div>
@@ -77,6 +79,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
           className="min-h-11 px-3 text-sm border border-[#b1ada1]/40 rounded-xl bg-white">
           <option value="needs-review">Needs classification review</option>
           <option value="source-verified">Source-verified only</option>
+          <option value="editorial">Editorial suggestions · unverified</option>
           <option value="all">All tracked symbols</option>
         </select>
       </div>
@@ -97,6 +100,15 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
                 {row.themeNames.length ? ` · ${row.themeNames.length} theme(s)` : ' · Snapshot-only'}
                 {!row.inSavedSnapshot && marketSnapshot ? ' · No saved price' : ''}
               </p>
+              {row.status !== 'source-verified' && (
+                <p className="text-xs mt-1 text-[#92400e]">
+                  {row.suggestedIndustry
+                    ? `Suggested for review: ${row.suggestedIndustry} ${row.suggestedCode ? '· ' + row.suggestedCode : ''} · NOT NSE-verified`
+                    : row.suggestionStatus === 'ambiguous-themes'
+                      ? 'Multiple themes suggest conflicting primary industries · requires evidence'
+                      : 'No reliable industry hypothesis · requires primary-source review'}
+                </p>
+              )}
             </div>
             <a target="_blank" rel="noopener noreferrer" href={row.sourceUrl || `https://www.nseindia.com/get-quotes/equity?symbol=${encodeURIComponent(row.ticker)}`}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#2563eb] min-h-8">
@@ -113,6 +125,7 @@ export function IndustryCoveragePanel({ marketSnapshot }: Props) {
       )}
       <p className="text-xs text-[#08090a]/55">
         This is a stock-level audit, not complete-market industry coverage. Exported rows are a review checklist.
+        Editorial suggestions reflect basket context only and are never fed into industry returns.
         Any accepted new classification needs its own documented source, verified NSE code and review date.
       </p>
     </section>
