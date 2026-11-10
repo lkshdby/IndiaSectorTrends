@@ -996,7 +996,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
               <Award className="w-3 h-3 text-[#2563eb]" />
               Major Benchmark Anchors
             </span>
-            <span className="text-[9px] text-[#2563eb] font-mono">Live NSE Closes</span>
+            <span className="text-[9px] text-[#2563eb] font-mono">Saved NSE closes</span>
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
@@ -1144,6 +1144,10 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
 
           </>
         )}
+
+        <a href="#sector-detail" className="lg:hidden flex items-center justify-center min-h-11 px-4 text-sm font-bold text-[#2563eb] border-b border-[#b1ada1]/30 bg-[#eff6ff]">
+          Jump to selected sector analysis
+        </a>
 
         {/* Scrollable Sector Rows with Classic Browser Scrollbar stretching to exact bottom of sidebar */}
         <div className="relative w-full flex-1 min-h-[400px] lg:min-h-[680px] bg-white">
@@ -1393,9 +1397,9 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
       </div>
 
       {/* ================= RIGHT MAIN CANVAS (DEFINITIVE PROOF & BENCHMARK COMPARISONS) ================= */}
-      <div className="flex-1 flex flex-col bg-white min-w-0">
+      <div id="sector-detail" className="flex-1 flex flex-col bg-white min-w-0 scroll-mt-20">
         {/* Header: Title + Mode Switcher */}
-        <div className="px-6 py-4 border-b border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-3 bg-white shrink-0">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-3 bg-white shrink-0">
           <div className="flex items-center gap-3">
             {selectedStockTicker && (
               <button
@@ -1407,13 +1411,14 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             )}
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-extrabold text-[#08090a] font-display tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#08090a] font-display tracking-tight break-words">
                   {currentStock ? currentStock.ticker : currentSector.name}
                 </h2>
                 {!currentStock && !currentSector.isBenchmark && (
-                  <span className="text-xs font-bold px-2.5 py-0.5 bg-[#10b981]/15 text-[#10b981] rounded-md font-display flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>{synchronyScore}% Directional Agreement</span>
+                  <span title="Directional participation alone is not proof of institutional flows; sample size matters"
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-lg font-display inline-flex items-center gap-1.5 ${currentSector.stocks.length < 4 ? 'bg-[#fffbeb] text-[#92400e] border border-[#fbbf24]/40' : 'bg-[#eff6ff] text-[#1d4ed8]'}`}>
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>{synchronyScore}% directional · {currentSector.stocks.length} stocks{currentSector.stocks.length < 4 ? ' · small sample' : ''}</span>
                   </span>
                 )}
                 {currentSector.isBenchmark && (
@@ -1427,55 +1432,55 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 {currentStock
                   ? currentStock.name
                   : currentSector.isBenchmark
-                  ? `Live Reference Benchmark Index · ${currentSector.category}`
-                  : `${currentSector.stocks.length} Constituent Stocks · NSE 500 Classification`}
+                  ? `Reference benchmark or ETF proxy · ${currentSector.category}`
+                  : `${currentSector.stocks.length} priced core constituents · curated thematic basket`}
               </p>
             </div>
           </div>
 
           {/* Visualization Modes */}
-          <div className="flex items-center gap-1.5 bg-[#f4f3ee] p-1 rounded-xl border border-[#b1ada1]/30">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#f4f3ee] p-1 rounded-xl border border-[#b1ada1]/30">
             <button
               onClick={() => setViewProofMode('overlay')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-display ${
+              className={`px-3 min-h-10 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-display ${
                 viewProofMode === 'overlay'
                   ? 'bg-[#08090a] text-white shadow-xs'
                   : 'text-[#08090a]/70 hover:text-[#08090a]'
               }`}
             >
               <Activity className="w-3.5 h-3.5 text-[#10b981]" />
-              <span>Multi-Stock Overlay (Proof)</span>
+              <span>Stocks</span>
             </button>
 
             <button
               onClick={() => setViewProofMode('composite')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-display ${
+              className={`px-3 min-h-10 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-display ${
                 viewProofMode === 'composite'
                   ? 'bg-[#08090a] text-white shadow-xs'
                   : 'text-[#08090a]/70 hover:text-[#08090a]'
               }`}
             >
               <BarChart2 className="w-3.5 h-3.5" />
-              <span>Basket Index</span>
+              <span>EW vs MCap</span>
             </button>
 
             <button
               onClick={() => setViewProofMode('rotation')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-display ${
+              className={`px-3 min-h-10 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer font-display ${
                 viewProofMode === 'rotation'
                   ? 'bg-[#08090a] text-white shadow-xs'
                   : 'text-[#08090a]/70 hover:text-[#08090a]'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
-              <span>Rotation Phase</span>
+              <span>Rotation</span>
             </button>
           </div>
         </div>
 
         {/* ================= BENCHMARK COMPARISON ANCHOR CONTROLS ================= */}
         {/* Allows 1-click overlay of Nifty 50, Midcap 100, Smallcap 100 in the same chart */}
-        <div className="px-6 py-2.5 bg-white border-b border-[#b1ada1]/20 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+        <div className="px-4 sm:px-6 py-3 bg-white border-b border-[#b1ada1]/20 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-extrabold text-[#08090a] font-display flex items-center gap-1 text-[11px]">
               <Globe className="w-3.5 h-3.5 text-[#2563eb]" />
@@ -1552,6 +1557,17 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
             </div>
 
             <button
+              onClick={() => {
+                if (currentStock) handleAddTrackedStock(currentStock.ticker, currentStock.name, selectedSectorId);
+                else setActiveTab('tracked');
+              }}
+              className="px-3 min-h-10 text-xs sm:text-sm font-bold text-[#08090a] bg-[#eff6ff] border border-[#93c5fd]/60 rounded-xl hover:bg-[#dbeafe] transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              title={currentStock ? 'Save this stock to your private browser watchlist' : 'Open My Tracked Stocks and add a symbol'}
+            >
+              <Star className="w-4 h-4 text-[#2563eb]"/>
+              <span>{currentStock ? 'Track stock' : 'Add stock'}</span>
+            </button>
+            <button
               onClick={handleCopy}
               className="px-3 py-1 text-xs font-semibold text-[#08090a] bg-white border border-[#b1ada1]/40 rounded-xl hover:bg-[#f4f3ee] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
             >
@@ -1620,7 +1636,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 <div>
                   <h3 className="text-sm font-extrabold text-[#08090a] font-display flex items-center gap-2">
                     <span>
-                      {currentSector.name} Co-Movement Ribbon
+                      {currentSector.name} Stock & Benchmark Performance
                       {currentSector.stocks.length > 0 && ` (${currentSector.stocks.length} Stocks)`}
                     </span>
                     <span className="text-[11px] font-normal text-[#08090a]/60">
