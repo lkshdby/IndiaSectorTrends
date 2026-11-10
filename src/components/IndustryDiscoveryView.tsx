@@ -107,7 +107,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
         </div>
       </header>
 
-      <details className="group rounded-2xl border border-[#b1ada1]/30 bg-white overflow-hidden" open>
+      <details className="group rounded-2xl border border-[#b1ada1]/30 bg-white overflow-hidden">
         <summary className="cursor-pointer select-none px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2 font-bold text-sm sm:text-base hover:bg-[#fafaf9]">
           <span>Classification coverage · Map every stock to its basic industry</span>
           <span className="text-xs font-medium text-[#08090a]/60">Click to expand or collapse</span>
