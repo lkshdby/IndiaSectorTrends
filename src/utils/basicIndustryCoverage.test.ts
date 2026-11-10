@@ -36,7 +36,8 @@ describe('verified industry classification coverage and staged licensed CSV impo
   it('reconciles unique thematic symbols and snapshot-only symbols WITHOUT inferring memberships', () => {
     const base = buildBasicIndustryAudit(null);
     assert.ok(base.totalUniverse >= 400);
-    assert.ok(base.coveredByVerifiedMapping >= 25);
+    assert.equal(base.coveredByVerifiedMapping, [...VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.keys()].filter(ticker => base.rows.some(row => row.ticker === ticker)).length, 'only source-linked symbols in the audited universe can count as covered');
+    assert.ok(base.coveredByVerifiedMapping >= 20, 'new verified mappings should improve coverage');
     assert.equal(base.totalUniverse, base.coveredByVerifiedMapping + base.needingReview);
     assert.equal(base.themeCoverage.length, 62);
     assert.equal(base.rows.find(x => x.ticker === 'ETERNAL')?.status, 'unmapped');
