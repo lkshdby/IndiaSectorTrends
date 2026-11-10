@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Header } from './components/Header';
 import { IndexTrackerView } from './components/IndexTrackerView';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { fetchCommittedMarketSnapshot, type BrowserMarketSnapshot } from './utils/marketSnapshotClient';
 
 export default function App() {
   const [toastMessage, setToastMessage] = useState<{
@@ -10,37 +11,62 @@ export default function App() {
   } | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncTrigger, setSyncTrigger] = useState(0);
+  const [marketSnapshot, setMarketSnapshot] = useState<BrowserMarketSnapshot | null>(null);
+  const [snapshotLoadError, setSnapshotLoadError] = useState<string | null>(null);
+  const loadSequence = useRef(0);
 
   const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  // A static Vite site should read a public, committed JSON snapshot directly,
+  // not depend on Vercel functions that may be absent from the deployment.
+  useEffect(() => {
+    const sequence = ++loadSequence.current;
+    fetchCommittedMarketSnapshot()
+      .then(snapshot => {
+        if (sequence !== loadSequence.current) return;
+        setMarketSnapshot(snapshot);
+        setSnapshotLoadError(null);
+      })
+      .catch(error => {
+        if (sequence !== loadSequence.current) return;
+        const message = error instanceof Error ? error.message : 'Unknown network error';
+        console.warn('Latest committed market data unavailable; using bundled snapshot:', message);
+        setSnapshotLoadError(message);
+      });
+    return () => { loadSequence.current++; };
+  }, []);
+
+  const formatCollectionTime = (timestamp: string) =>
+    new Date(timestamp).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+    }) + ' IST';
+
   const handleSyncMarketCloses = async () => {
-    // This button only reloads the last saved snapshot. New market data is
-    // collected automatically by the three scheduled GitHub Actions runs.
     setIsSyncing(true);
+    const sequence = ++loadSequence.current;
     try {
-      const response = await fetch(`/api/stocks-snapshot?reload=${Date.now()}`, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const result = await response.json();
-      if (!result?.success || !result.stocks || !Object.keys(result.stocks).length) {
-        throw new Error('The saved stock snapshot is unavailable');
-      }
-      const savedAt = typeof result.fetchedAt === 'string' ? Date.parse(result.fetchedAt) : NaN;
-      const when = Number.isFinite(savedAt)
-        ? new Date(savedAt).toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short',
-            hour: '2-digit', minute: '2-digit'
-          }) + ' IST'
-        : 'unknown time';
-      setSyncTrigger(previous => previous + 1);
-      showToast(`Reloading saved market snapshot (collected ${when}). New prices are collected automatically at 6:30 PM, 2 AM and 4 AM IST.`, 'info');
+      const latest = await fetchCommittedMarketSnapshot();
+      if (sequence !== loadSequence.current) return;
+      const hadLatest = marketSnapshot?.fetchedAt === latest.fetchedAt;
+      setMarketSnapshot(latest);
+      setSnapshotLoadError(null);
+      const time = formatCollectionTime(latest.fetchedAt);
+      showToast(hadLatest
+        ? `Already showing the latest saved prices (${time}, from ${latest.source}).`
+        : `Loaded saved market data collected ${time} from ${latest.source}.`,
+        hadLatest ? 'info' : 'success'
+      );
     } catch (error) {
-      showToast(`Could not reload saved market data: ${error instanceof Error ? error.message : 'unknown error'}. Existing data retained.`, 'error');
+      if (sequence !== loadSequence.current) return;
+      const message = error instanceof Error ? error.message : 'Unknown network error';
+      setSnapshotLoadError(message);
+      showToast(`Could not load saved market data: ${message}. Existing prices retained.`, 'error');
     } finally {
-      setIsSyncing(false);
+      if (sequence === loadSequence.current) setIsSyncing(false);
     }
   };
 
@@ -71,11 +97,11 @@ export default function App() {
       {/* Main Container */}
       <div className="w-full max-w-7xl bg-[#f4f3ee] rounded-none sm:rounded-[36px] shadow-2xl overflow-hidden border-0 sm:border border-[#b1ada1]/40 flex flex-col grow pb-6 relative">
         {/* Main Header */}
-        <Header onRefresh={handleSyncMarketCloses} isSyncing={isSyncing} />
+        <Header onRefresh={handleSyncMarketCloses} isSyncing={isSyncing} savedAt={marketSnapshot?.fetchedAt} snapshotSource={marketSnapshot?.source} loadError={!!snapshotLoadError} />
 
         {/* Master Sector Rotation & Co-Movement Engine */}
         <main className="w-full px-3 sm:px-5 lg:px-6 py-4 flex-1 flex flex-col min-h-0">
-          <IndexTrackerView onShowToast={showToast} syncTrigger={syncTrigger} />
+          <IndexTrackerView onShowToast={showToast} marketSnapshot={marketSnapshot} />
         </main>
 
         {/* Sleek Footer */}
