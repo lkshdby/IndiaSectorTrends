@@ -36,9 +36,9 @@ describe('zero-config automatic market collection policy', () => {
 
   it('keeps previous snapshot on a failed collection', () => {
     const script = readFileSync('scripts/refresh-market-snapshot.ts', 'utf8');
-    assert.ok(script.includes('ratio < 0.90'));
-    assert.ok(script.includes('emptyCoreBaskets.length'));
-    assert.ok(script.includes('invalidBenchmarks.length'));
+    assert.ok(script.includes('ratio >= 0.90'));
+    assert.ok(script.includes('emptyCoreBaskets.length === 0'));
+    assert.ok(script.includes('invalidBenchmarks.length === 0'));
     assert.ok(workflow.includes('git add src/data/verifiedLiveMarketData.json'));
   });
 });
