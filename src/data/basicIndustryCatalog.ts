@@ -240,7 +240,6 @@ const OFFICIALLY_CHECKED: Record<string, ParentGroup> = {
   'Stockbroking & Allied': { code: 'IN050103006', macro: 'Financial Services', sector: 'Financial Services', industry: 'Capital Markets' },
   'Other Capital Market related Services': { code: 'IN050103007', macro: 'Financial Services', sector: 'Financial Services', industry: 'Capital Markets' },
   'General Insurance': { code: 'IN050104001', macro: 'Financial Services', sector: 'Financial Services', industry: 'Insurance' },
-  'IT Enabled Services': { code: 'IN080102001', macro: 'Information Technology', sector: 'Information Technology', industry: 'IT - Services' },
   'Commodity Chemicals': { code: 'IN010101001', macro: 'Commodities', sector: 'Chemicals', industry: 'Chemicals & Petrochemicals' },
   'Specialty Chemicals': { code: 'IN010101002', macro: 'Commodities', sector: 'Chemicals', industry: 'Chemicals & Petrochemicals' },
   'Carbon Black': { code: 'IN010101003', macro: 'Commodities', sector: 'Chemicals', industry: 'Chemicals & Petrochemicals' },
