@@ -119,3 +119,41 @@ describe('verified industry classification coverage and staged licensed CSV impo
     assert.ok(view.includes('<IndustryCoveragePanel'));
   });
 });
+
+
+describe('NSE-checked codes recovered by single-pass 2026-11-10 Screener audit', () => {
+  it('keeps the newly verified 22 taxonomy code/name pairs and parent industry hierarchy', () => {
+    const checks: Array<[string,string,string]> = [
+      ['Investment Company','IN050101003','Finance'],
+      ['Diversified Commercial Services','IN090104004','Commercial Services & Supplies'],
+      ['Residential, Commercial Projects','IN020501001','Realty'],
+      ['Garments & Apparels','IN020301001','Textiles & Apparels'],
+      ['Other Beverages','IN040102002','Beverages'],
+      ['Other Agricultural Products','IN040101004','Agricultural Food & other Products'],
+      ['Financial Institution','IN050101001','Finance'],
+      ['Glass - Industrial','IN070205013','Industrial Products'],
+      ['Water Supply & Management','IN110201001','Other Utilities'],
+      ['Waste Management','IN110201002','Other Utilities'],
+      ['Plastic Products - Industrial','IN070205009','Industrial Products'],
+      ['Ship Building & Allied Services','IN070204006','Industrial Manufacturing'],
+      ['Other Telecom Services','IN100101003','Telecom - Services'],
+      ['Construction Vehicles','IN070202003','Agricultural, Commercial & Construction Vehicles'],
+      ['Compressors, Pumps & Diesel Engines','IN070205017','Industrial Products'],
+      ['Castings & Forgings','IN070205004','Industrial Products'],
+      ['Housing Finance Company','IN050101002','Finance'],
+      ['Education','IN020602001','Other Consumer Services'],
+      ['Iron & Steel Products','IN070205015','Industrial Products'],
+      ['Ceramics','IN020201019','Consumer Durables'],
+      ['Paper & Paper Products','IN010401001','Paper, Forest & Jute Products'],
+      ['Telecom - Equipment & Accessories','IN100102001','Telecom - Equipment & Accessories'],
+    ];
+    assert.equal(checks.length,22);
+    for(const [name,code,group] of checks){
+      const x=BASIC_INDUSTRY_BY_NAME.get(name);
+      assert.equal(x?.code,code,name);
+      assert.equal(x?.industry,group,name);
+      assert.equal(x?.verification,'nse-structure-2023',name);
+      assert.equal(BASIC_INDUSTRY_BY_CODE.get(code)?.name,name);
+    }
+  });
+});
