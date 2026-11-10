@@ -213,6 +213,10 @@ interface ParentGroup { code: string; macro: string; sector: string; industry: s
 
 /** Exact codes and parent hierarchy checked against the July 2023 NSE PDF. */
 const OFFICIALLY_CHECKED: Record<string, ParentGroup> = {
+  'Hotels & Resorts': { code: 'IN020601001', macro: 'Consumer Discretionary', sector: 'Consumer Services', industry: 'Leisure Services' },
+  'Other Textile Products': { code: 'IN020301002', macro: 'Consumer Discretionary', sector: 'Textiles', industry: 'Textiles & Apparels' },
+  'Cables - Electricals': { code: 'IN070205003', macro: 'Industrials', sector: 'Capital Goods', industry: 'Industrial Products' },
+  'Restaurants': { code: 'IN020601002', macro: 'Consumer Discretionary', sector: 'Consumer Services', industry: 'Leisure Services' },
   // Explicit codes and hierarchical parents sourced from NSE Indices classification structure (July 2023).
   'Household Appliances': { code: 'IN020201007', macro: 'Consumer Discretionary', sector: 'Consumer Durables', industry: 'Consumer Durables' },
   'Consumer Electronics': { code: 'IN020201003', macro: 'Consumer Discretionary', sector: 'Consumer Durables', industry: 'Consumer Durables' },
