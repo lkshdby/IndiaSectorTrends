@@ -1,4 +1,5 @@
 import { BASIC_INDUSTRY_BY_NAME } from './basicIndustryCatalog';
+import quoteEvidence from './nseIndustryQuoteEvidence.json';
 
 /** Direct NSE equity quote pages explicitly displaying each symbol's Basic Industry.
  * These are sparse verified seed rows, NOT an inferred mapping for 453 symbols.
@@ -48,13 +49,40 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
 }));
 
+/**
+ * Accept NSE quote API observations only after exact symbol, name, date and
+ * published industry code are validated. Existing reviewed entries win on
+ * conflict and can never be silently overwritten by an automated crawl.
+ */
+function loadSourceValidatedQuoteAssignments(): BasicIndustryAssignment[] {
+  const results: BasicIndustryAssignment[] = [];
+  const seen = new Set(VERIFIED_NSE_QUOTE_MAPPINGS.map(x => x.ticker));
+  for (const row of quoteEvidence.rows) {
+    if (row.status !== 'nse-direct-code-confirmed' || seen.has(row.ticker)) continue;
+    if (!/^[A-Z0-9][A-Z0-9&._-]{0,19}$/.test(row.ticker)) continue;
+    const expectedCode = BASIC_INDUSTRY_BY_NAME.get(row.basicIndustry)?.code;
+    if (!expectedCode || expectedCode !== row.industryCode) continue;
+    if (row.sourceUrl !== `https://www.nseindia.com/api/quote-equity?symbol=${encodeURIComponent(row.ticker)}`) continue;
+    if (!Number.isFinite(Date.parse(row.observedAt))) continue;
+    seen.add(row.ticker);
+    results.push({
+      ticker: row.ticker,
+      basicIndustry: row.basicIndustry,
+      sourceUrl: row.sourceUrl,
+      verifiedOn: row.observedAt.slice(0, 10),
+    });
+  }
+  return results;
+}
+
+export const DIRECT_NSE_QUOTE_ASSIGNMENTS = loadSourceValidatedQuoteAssignments();
 export const VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS: ReadonlyMap<string, BasicIndustryAssignment> =
-  new Map(VERIFIED_NSE_QUOTE_MAPPINGS.map(row => [row.ticker, row]));
+  new Map([...VERIFIED_NSE_QUOTE_MAPPINGS, ...DIRECT_NSE_QUOTE_ASSIGNMENTS].map(row => [row.ticker, row]));
 
 export function validateSourceVerifiedAssignments(): string[] {
   const issues: string[] = [];
   const tickers = new Set<string>();
-  for (const assignment of VERIFIED_NSE_QUOTE_MAPPINGS) {
+  for (const assignment of [...VERIFIED_NSE_QUOTE_MAPPINGS, ...DIRECT_NSE_QUOTE_ASSIGNMENTS]) {
     if (tickers.has(assignment.ticker)) issues.push(`${assignment.ticker}: duplicate source record`);
     tickers.add(assignment.ticker);
     const industry = BASIC_INDUSTRY_BY_NAME.get(assignment.basicIndustry);
@@ -69,8 +97,9 @@ export function validateSourceVerifiedAssignments(): string[] {
       const ticker = assignment.ticker.toUpperCase();
       const isDirect = path.startsWith(`/GET-QUOTE/EQUITY/${ticker}/`);
       const isSearch = path === '/GET-QUOTES/EQUITY' && source.searchParams.get('symbol')?.toUpperCase() === ticker;
+      const isApi = path === '/API/QUOTE-EQUITY' && source.searchParams.get('symbol')?.toUpperCase() === ticker;
       if (source.protocol !== 'https:' || source.hostname !== 'www.nseindia.com' ||
-          (!isDirect && !isSearch)) {
+          (!isDirect && !isSearch && !isApi)) {
         issues.push(`${assignment.ticker}: source URL does not identify the same NSE equity symbol`);
       }
     } catch {
