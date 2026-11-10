@@ -1,0 +1,113 @@
+# NSE-source-backed Basic Industry annotation — 10 November 2026
+
+## Objective
+
+Map the current **457** snapshot/thematic stock symbols to the 197-category
+NSE Indices basic-industry framework, using the strongest accessible evidence.
+Never label company-to-industry membership as NSE-verified just because it
+appears in one of our 62 user-curated investment themes.
+
+## Evidence hierarchy
+
+1. **NSE direct quote, matched symbol and checked industry code**:
+   a saved observation from the public NSE per-company
+   `/api/quote-equity?symbol=...` response, with exact response symbol,
+   `industryInfo.basicIndustry` (or documented alternate `secInfo.basicIndustry`),
+   optional ISIN, timestamp, and URL. Accepted into the industry calculation
+   only if the named category matches a **previously checked** NSE code in
+   `basicIndustryCatalog.ts`. Existing reviewed mappings win on conflicts.
+2. **NSE direct quote, code pending**: a company classification observed
+   from NSE, but its industry code is not yet in the checked local catalog.
+   The observation stays visible in the evidence file; it is not used
+   to construct a price index until the code is checked.
+3. **Existing individually reviewed primary sources**: the manually
+   source-linked company classifications in `basicIndustryMappings.ts`.
+4. **Editorial hypothesis** (non-authoritative): a modest suggestion
+   from a narrowly defined investment theme. Explicitly labeled
+   `NOT NSE-verified` in UI and CSV. NEVER used for breadth, sector
+   returns, or ranking. Broad and conflicting theme exposure yields no
+   default classification.
+5. **Unresolved**: no primary observation and no unambiguous editorial
+   hypothesis. May be an SME, renamed/demerged stock, thinly traded,
+   diversified, or category outside the current candidate catalog.
+
+## Authoritative references
+
+- https://www.nseindia.com/static/products-services/industry-classification
+- https://nsearchives.nseindia.com/web/sites/default/files/inline-files/nse-indices_industry-classification-structure-2023-07.pdf
+- Public quote page: https://www.nseindia.com/get-quotes/equity?symbol=INFY
+
+NSE's methodology primarily classifies the company using segment revenue.
+The published structure defines **197 basic industries**. Our candidate
+catalog started with **188 user-supplied names**, with a smaller subset of
+checked codes. These counts must not be confused with verified company
+coverage.
+
+## Collecting direct evidence
+
+Run locally in a network-enabled environment:
+
+```bash
+npm install
+npx tsx scripts/annotate-nse-industries.ts --max 12
+# 0 = collect as many missing symbols as NSE permits, at a polite pace
+npx tsx scripts/annotate-nse-industries.ts --max 0
+npm run lint
+npx tsx --test src/utils/industryEvidence.test.ts src/utils/basicIndustryAnalytics.test.ts
+```
+
+The script uses ordinary public HTTPS requests with a single conventional
+NSE session and **one lookup per ~2.3 seconds**. If NSE responds with
+403/429 or similar access-denial responses repeatedly, it stops—no
+cookie-bypass proxy, residential network, credentials, CAPTCHA-solving,
+or rate-limit evasion. Existing observations are preserved. No stock
+price data is collected or altered. Never run as a frequent scheduled
+scraper; obey website permissions and rate limits.
+
+Raw accepted observations live in `src/data/nseIndustryQuoteEvidence.json`
+with timestamps, exact basic-industry names, NSE source URLs, optional ISINs,
+and one of three review states:
+`nse-direct-code-confirmed`,
+`nse-direct-code-pending`, or
+`conflicting-prior-classification`.
+
+Only the first enters the source-backed stock-index mapping. A manually
+reviewed mapping may NOT be overwritten automatically.
+
+## Using the UI and exported audit
+
+In **Basic Industries → Classification Coverage**:
+- Filter **Needs classification review** to see every unmapped company.
+- Each row shows a *candidate* basic industry when the thematic context
+  supports a cautious suggestion, or an explicit ambiguous/unresolved notice.
+- Filter **Editorial suggestions · unverified** to review candidates.
+- Export the entire mapping audit to CSV. The export contains separate
+  columns for `basicIndustry` / `basicIndustryCode` (source-verified)
+  and `editorialSuggestedIndustry` / `editorialSuggestedCode`
+  (proposed only). It never conflates them.
+- Use the **Check NSE** link to review source evidence for individual cases.
+
+Do **not** mistake the number of candidate classifications for validated
+industry coverage. Current industry-level price signals are still
+sample-based until full NSE-listed company membership and up-to-date
+historical close data are audited.
+
+## Dataset and rights
+
+NSE may restrict bulk data usage or republishing. Confirm the exchange's
+terms and any applicable index/reference-data licensing before widely
+redistributing a complete master. The one-time public quote collector
+is guarded and stores only classification metadata; it is not a
+licensed bulk-feed substitute.
+
+## Next after this PR
+
+Finish cross-checking missing basic-industry codes against official structure;
+review unresolved or conflicting company classifications individually;
+reconcile NSE symbol/ISIN changes and recent corporate actions; document
+true all-listed NSE industry coverage before interpreting comprehensive
+industry rankings or momentum acceleration.
+
+The existing **62 thematic baskets**, scheduled 18:30 / 02:00 / 04:00 IST
+price updates, personal watchlists, and verified snapshot pricing remain
+unchanged.
