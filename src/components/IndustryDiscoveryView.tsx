@@ -106,6 +106,32 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
         </div>
       </header>
 
+      <section aria-label="Industry performance heatmap" className="p-4 sm:p-5 rounded-2xl bg-white border border-[#b1ada1]/30 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-base font-extrabold">Source-verified industry heatmap</h3>
+            <p className="text-xs text-[#08090a]/60 mt-1">1-month equal-weight price returns for currently mapped companies. Unrankable observations are marked, not hidden.</p>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-[#08090a]/60">
+            <span className="w-3 h-3 rounded bg-emerald-100"/> Positive
+            <span className="w-3 h-3 rounded bg-rose-100"/> Negative
+            <span className="w-3 h-3 rounded bg-[#f2f1ec] border border-[#b1ada1]/30"/> No verified return
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          {summary.industryRows.filter(row => row.mappedCount > 0).map(row => (
+            <button type="button" key={row.industry.name} onClick={() => setSelectedName(row.industry.name)}
+              aria-pressed={selectedName === row.industry.name}
+              className={`rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5 ${signalTone(row.price1M)} ${selectedName === row.industry.name ? 'ring-2 ring-[#2563eb]' : ''}`}>
+              <span className="block text-xs font-bold leading-snug min-h-9">{row.industry.name}</span>
+              <span className="block mt-2 text-lg font-extrabold font-mono">{fmt(row.price1M)}</span>
+              <span className="block mt-1 text-[11px] opacity-80">{row.pricedCount}/{row.mappedCount} valid · {row.confidence === 'rankable' ? 'Rankable' : 'Limited evidence'}</span>
+            </button>
+          ))}
+        </div>
+        {summary.groupedIndustries === 0 && <p className="text-sm text-[#08090a]/60">No independently verified industry membership is available yet.</p>}
+      </section>
+
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)] gap-4 items-start">
         <div className="rounded-2xl bg-white border border-[#b1ada1]/30 overflow-hidden">
           <div className="p-4 border-b border-[#b1ada1]/20 space-y-3">
