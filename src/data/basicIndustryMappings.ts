@@ -64,6 +64,14 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['HEROMOTOCO', '2/3 Wheelers', 'https://www.nseindia.com/get-quote/equity/HEROMOTOCO/Hero-MotoCorp-Ltd'],
   ['FEDERALBNK', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/FEDERALBNK/The-Federal-Bank--Limited'],
   ['IDFCFIRSTB', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/IDFCFIRSTB/IDFC-First-Bank-Limited'],
+  // Independently indexed NSE company-quote Basic Industry fields
+  ['ETERNAL', 'E-Retail/ E-Commerce', 'https://www.nseindia.com/get-quote/equity/ETERNAL/ETERNAL-LIMITED'],
+  ['SWIGGY', 'E-Retail/ E-Commerce', 'https://www.nseindia.com/get-quote/equity/SWIGGY/Swiggy-Limited'],
+  ['TRENT', 'Speciality Retail', 'https://www.nseindia.com/get-quote/equity/TRENT/Trent-Limited'],
+  ['KEI', 'Cables - Electricals', 'https://www.nseindia.com/get-quote/equity/KEI/KEI-Industries-Limited'],
+  ['JUBLFOOD', 'Restaurants', 'https://www.nseindia.com/get-quote/equity/JUBLFOOD/Jubilant-Foodworks-Limited'],
+  ['DIXON', 'Consumer Electronics', 'https://www.nseindia.com/get-quote/equity/DIXON/Dixon-Technologies-%28India%29-Limited'],
+  ['TRIDENT', 'Other Textile Products', 'https://www.nseindia.com/get-quote/equity/TRIDENT/Trident-Limited'],
 
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
