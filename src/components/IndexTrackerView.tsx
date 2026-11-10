@@ -1569,347 +1569,45 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
           </div>
         </div>
 
-        {!currentSector.isBenchmark && (
-          <div className="px-5 py-2.5 border-b border-[#b1ada1]/20 bg-[#fffbeb] text-[11px] text-[#78350f]">
-            Core data coverage: {currentSector.dataCoveragePct ?? 0}% · Basket size: {currentSector.stocks.length}
-            {currentSector.stocks.length < 4 ? ' · Low-confidence breadth: fewer than 4 priced core stocks' : ''}
-            {topCapWeightPct >= 50 ? ` · Concentration caution: largest company has approximately ${topCapWeightPct}% of stored market-cap weight` : ''}
-            {' · '}Market-cap weights are static estimates, not free-float index weights.
+        {/* High-priority decision summary: chart immediately follows this. */}
+        <section aria-label="Sector performance summary"
+          className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 px-4 sm:px-6 pt-4 bg-white">
+          <div className="p-3 rounded-xl border border-[#b1ada1]/25 bg-[#fafaf9]">
+            <span className="block text-xs font-semibold text-[#08090a]/60">1-week performance</span>
+            <span className={`block text-xl sm:text-2xl font-bold font-mono mt-1 ${currentSector.change1W >= 0 ? 'text-[#047857]' : 'text-[#be123c]'}`}>
+              {currentSector.change1W > 0 ? '+' : ''}{currentSector.change1W.toFixed(2)}%
+            </span>
           </div>
-        )}
-
-        {/* Adjacent thematic beneficiaries remain research candidates, not sector constituents. */}
-        {thematicBeneficiaries.length > 0 && (
-          <div className="px-5 py-3 bg-[#f1f5f9] border-b border-[#b1ada1]/20 text-[11px]">
-            <div className="font-bold text-[#08090a] mb-1">
-              Core rotation basket: {currentSector.stocks.length} priced stocks · Adjacent opportunities / proxies: {thematicBeneficiaries.length}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {thematicBeneficiaries.map(member => (
-                <span key={member.stock.ticker}
-                  title={member.reason}
-                  className="rounded-md px-2 py-1 border border-[#b1ada1]/30 bg-white text-[#08090a]/80">
-                  {member.stock.ticker} · {member.tier === 'proxy' ? 'proxy' : 'adjacent'}
-                </span>
-              ))}
-            </div>
-            <p className="text-[10px] text-[#08090a]/60 mt-1">
-              These businesses are excluded from core sector returns. Theme classifications are editorial and require company-segment verification.
-            </p>
+          <div className="p-3 rounded-xl border border-[#b1ada1]/25 bg-[#fafaf9]">
+            <span className="block text-xs font-semibold text-[#08090a]/60">Rotation phase</span>
+            <span className="block text-lg sm:text-xl font-bold mt-1">{currentSector.rotationStatus}</span>
+            <span className="text-xs text-[#08090a]/55">Price-based heuristic</span>
           </div>
-        )}
-
-        {/* ================= 4-SIGNAL INSTITUTIONAL ROTATION & SMID DIVERGENCE DIAGNOSTIC PANEL ================= */}
+          <div className="p-3 rounded-xl border border-[#b1ada1]/25 bg-[#fafaf9]">
+            <span className="block text-xs font-semibold text-[#08090a]/60">
+              {currentSector.isBenchmark ? '3-month return' : `Relative strength vs NIFTY 500 · ${signalHorizon}`}
+            </span>
+            <span className={`block text-xl sm:text-2xl font-bold font-mono mt-1 ${(currentSector.isBenchmark ? currentSector.change3M ?? 0 : fourSignalDiagnostics.rsVsNifty500) >= 0 ? 'text-[#047857]' : 'text-[#be123c]'}`}>
+              {(currentSector.isBenchmark ? (currentSector.change3M ?? 0) : fourSignalDiagnostics.rsVsNifty500) > 0 ? '+' : ''}
+              {(currentSector.isBenchmark ? (currentSector.change3M ?? 0) : fourSignalDiagnostics.rsVsNifty500).toFixed(2)}%
+            </span>
+          </div>
+          <div className="p-3 rounded-xl border border-[#b1ada1]/25 bg-[#fafaf9]">
+            <span className="block text-xs font-semibold text-[#08090a]/60">
+              {currentSector.isBenchmark ? 'Reference series' : 'Rising constituents · 1W'}
+            </span>
+            <span className="block text-xl sm:text-2xl font-bold font-mono mt-1">
+              {currentSector.isBenchmark ? 'Index' : `${advancingCount1W} / ${currentSector.stocks.length}`}
+            </span>
+            {!currentSector.isBenchmark && <span className="text-xs text-[#08090a]/55">{synchronyScore}% directional agreement · sample size matters</span>}
+          </div>
+        </section>
         {!currentSector.isBenchmark && (
-          <div className="px-6 py-4 bg-[#fafaf9] border-b border-[#b1ada1]/25 space-y-3 shrink-0">
-            {/* Top Bar: Title + Horizon Selector (1W | 1M | 3M) */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold text-[#08090a] font-display uppercase tracking-wider">
-                  4-Signal Price Rotation & SMID Divergence Engine
-                </span>
-                <span className="text-[11px] text-[#08090a]/55 font-mono">
-                  · Median Constituent MCap: ₹{Math.round(fourSignalDiagnostics.medianMcap).toLocaleString('en-IN')} Cr
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-[#08090a]/60 font-semibold">Signal Horizon:</span>
-                <div className="flex items-center bg-white p-0.5 rounded-lg border border-[#b1ada1]/35">
-                  {(['1W', '1M', '3M'] as const).map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => setSignalHorizon(h)}
-                      className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold cursor-pointer transition-colors ${
-                        signalHorizon === h
-                          ? 'bg-[#08090a] text-white'
-                          : 'text-[#08090a]/65 hover:text-[#08090a]'
-                      }`}
-                    >
-                      {h}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 4-Signal Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-              {/* SIGNAL 1: Relative Strength */}
-              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
-                    <span>1. Relative Strength ({signalHorizon})</span>
-                    <span
-                      className={`font-mono font-bold ${
-                        fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                      }`}
-                    >
-                      {fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'Outperforming' : 'Lagging'}
-                    </span>
-                  </div>
-
-                  <div className="mt-2 flex items-baseline justify-between">
-                    <span className="text-xs text-[#08090a]/70 font-medium">vs NIFTY 500:</span>
-                    <span
-                      className={`text-sm font-mono font-extrabold ${
-                        fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                      }`}
-                    >
-                      {fourSignalDiagnostics.rsVsNifty500 >= 0 ? '+' : ''}
-                      {fourSignalDiagnostics.rsVsNifty500.toFixed(2)}% Alpha
-                    </span>
-                  </div>
-
-                  <div className="mt-1 flex items-baseline justify-between">
-                    <span className="text-xs text-[#08090a]/70 font-medium">
-                      vs {fourSignalDiagnostics.sizeBenchmarkStats.name.replace('NIFTY ', '')}:
-                    </span>
-                    <span
-                      className={`text-xs font-mono font-bold ${
-                        fourSignalDiagnostics.rsVsSizeBm >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                      }`}
-                    >
-                      {fourSignalDiagnostics.rsVsSizeBm >= 0 ? '+' : ''}
-                      {fourSignalDiagnostics.rsVsSizeBm.toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-2.5 pt-2 border-t border-[#b1ada1]/15 text-[10px] text-[#08090a]/60 font-mono flex items-center justify-between">
-                  <span>Sector ({weightingMode === 'mcap' ? 'MCap' : 'EW'}):</span>
-                  <span className="font-bold text-[#08090a]">
-                    {fourSignalDiagnostics.activeSectorReturn >= 0 ? '+' : ''}
-                    {fourSignalDiagnostics.activeSectorReturn.toFixed(2)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* SIGNAL 2: Dual Breadth */}
-              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
-                    <span>2. Constituent Breadth ({signalHorizon})</span>
-                    <span className="font-mono font-bold text-[#08090a]">
-                      {currentSector.stocks.length} Stocks
-                    </span>
-                  </div>
-
-                  <div className="mt-2 flex items-baseline justify-between">
-                    <span className="text-xs text-[#08090a]/70 font-medium">Absolute Rising (&gt;0%):</span>
-                    <span
-                      className={`text-sm font-mono font-extrabold ${
-                        fourSignalDiagnostics.risingBreadthPct >= 60 ? 'text-[#10b981]' : 'text-[#f59e0b]'
-                      }`}
-                    >
-                      {fourSignalDiagnostics.risingBreadthPct}% ({fourSignalDiagnostics.risingStocksCount}/{currentSector.stocks.length})
-                    </span>
-                  </div>
-
-                  <div className="mt-1 flex items-baseline justify-between">
-                    <span className="text-xs text-[#08090a]/70 font-medium">Beating NIFTY 500:</span>
-                    <span
-                      className={`text-xs font-mono font-bold ${
-                        fourSignalDiagnostics.beatingN500BreadthPct >= 55 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                      }`}
-                    >
-                      {fourSignalDiagnostics.beatingN500BreadthPct}% ({fourSignalDiagnostics.beatingN500Count}/{currentSector.stocks.length})
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-2.5 pt-2 border-t border-[#b1ada1]/15 text-[10px] text-[#08090a]/60 font-mono flex items-center justify-between">
-                  <span>1D Session A/D:</span>
-                  <span>
-                    <strong className="text-[#10b981]">{advancingCount1D} Up</strong> /{' '}
-                    <strong className="text-[#f43f5e]">{decliningCount1D} Down</strong>
-                  </span>
-                </div>
-              </div>
-
-              {/* SIGNAL 3: Equal-Weight vs MCap-Weight Divergence (SMID Leadership vs Outlier Check) */}
-              <div
-                className={`p-3.5 rounded-xl border flex flex-col justify-between ${
-                  fourSignalDiagnostics.divergenceVerdict.tone === 'emerald'
-                    ? 'bg-[#10b981]/5 border-[#10b981]/40'
-                    : fourSignalDiagnostics.divergenceVerdict.tone === 'amber'
-                    ? 'bg-[#f59e0b]/5 border-[#f59e0b]/40'
-                    : fourSignalDiagnostics.divergenceVerdict.tone === 'blue'
-                    ? 'bg-[#2563eb]/5 border-[#2563eb]/35'
-                    : 'bg-white border-[#b1ada1]/30'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/65 font-display">
-                    <span>3. EW vs MCap Divergence ({signalHorizon})</span>
-                    <span
-                      className={`font-mono font-extrabold ${
-                        fourSignalDiagnostics.ewMcapSpread >= 1.25
-                          ? 'text-[#10b981]'
-                          : fourSignalDiagnostics.ewMcapSpread <= -1.25
-                          ? 'text-[#2563eb]'
-                          : 'text-[#08090a]'
-                      }`}
-                    >
-                      Spread: {fourSignalDiagnostics.ewMcapSpread >= 0 ? '+' : ''}
-                      {fourSignalDiagnostics.ewMcapSpread.toFixed(1)}%
-                    </span>
-                  </div>
-
-                  {/* Side-by-side Equal-Weight vs MCap-Weight Return Boxes */}
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="bg-white/90 px-2.5 py-1.5 rounded-lg border border-[#b1ada1]/25">
-                      <span className="text-[9px] font-bold uppercase text-[#08090a]/55 block">
-                        Equal-Weight
-                      </span>
-                      <span
-                        className={`text-sm font-mono font-extrabold ${
-                          fourSignalDiagnostics.ewReturn >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                        }`}
-                      >
-                        {fourSignalDiagnostics.ewReturn >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.ewReturn.toFixed(1)}%
-                      </span>
-                      <span className="text-[9px] text-[#08090a]/50 block truncate">
-                        SMIDs equal voice
-                      </span>
-                    </div>
-
-                    <div className="bg-white/90 px-2.5 py-1.5 rounded-lg border border-[#b1ada1]/25">
-                      <span className="text-[9px] font-bold uppercase text-[#08090a]/55 block">
-                        MCap-Weight
-                      </span>
-                      <span
-                        className={`text-sm font-mono font-extrabold ${
-                          fourSignalDiagnostics.mcapReturn >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                        }`}
-                      >
-                        {fourSignalDiagnostics.mcapReturn >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.mcapReturn.toFixed(1)}%
-                      </span>
-                      <span className="text-[9px] text-[#08090a]/50 block truncate">
-                        Large caps dominate
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-2 pt-1.5 border-t border-[#b1ada1]/20 text-[10px]">
-                  <span
-                    className={`font-bold block ${
-                      fourSignalDiagnostics.divergenceVerdict.tone === 'emerald'
-                        ? 'text-[#10b981]'
-                        : fourSignalDiagnostics.divergenceVerdict.tone === 'amber'
-                        ? 'text-[#d97706]'
-                        : fourSignalDiagnostics.divergenceVerdict.tone === 'blue'
-                        ? 'text-[#2563eb]'
-                        : 'text-[#08090a]'
-                    }`}
-                  >
-                    {fourSignalDiagnostics.divergenceVerdict.title}
-                  </span>
-                  <span className="text-[#08090a]/65 font-mono text-[9px] block mt-0.5">
-                    Median: {fourSignalDiagnostics.medianReturn >= 0 ? '+' : ''}
-                    {fourSignalDiagnostics.medianReturn.toFixed(1)}% · Top1 Share:{' '}
-                    {fourSignalDiagnostics.top1ContributionShare}% ({fourSignalDiagnostics.topGainer?.ticker})
-                  </span>
-                </div>
-              </div>
-
-              {/* SIGNAL 4: Momentum Persistence (1W, 1M, 3M) */}
-              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
-                    <span>4. Momentum Persistence</span>
-                    <span className="font-mono text-[10px] text-[#08090a]/60">1W → 1M → 3M</span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1.5 mt-2 text-center font-mono">
-                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
-                      <span className="text-[9px] text-[#08090a]/55 block">1W</span>
-                      <span
-                        className={`text-xs font-extrabold ${
-                          fourSignalDiagnostics.r1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                        }`}
-                      >
-                        {fourSignalDiagnostics.r1W >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.r1W.toFixed(1)}%
-                      </span>
-                      <span className="text-[8px] text-[#08090a]/50 block">
-                        α:{fourSignalDiagnostics.alpha1W >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.alpha1W.toFixed(1)}%
-                      </span>
-                    </div>
-
-                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
-                      <span className="text-[9px] text-[#08090a]/55 block">1M</span>
-                      <span
-                        className={`text-xs font-extrabold ${
-                          fourSignalDiagnostics.r1M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                        }`}
-                      >
-                        {fourSignalDiagnostics.r1M >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.r1M.toFixed(1)}%
-                      </span>
-                      <span className="text-[8px] text-[#08090a]/50 block">
-                        α:{fourSignalDiagnostics.alpha1M >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.alpha1M.toFixed(1)}%
-                      </span>
-                    </div>
-
-                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
-                      <span className="text-[9px] text-[#08090a]/55 block">3M</span>
-                      <span
-                        className={`text-xs font-extrabold ${
-                          fourSignalDiagnostics.r3M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
-                        }`}
-                      >
-                        {fourSignalDiagnostics.r3M >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.r3M.toFixed(1)}%
-                      </span>
-                      <span className="text-[8px] text-[#08090a]/50 block">
-                        α:{fourSignalDiagnostics.alpha3M >= 0 ? '+' : ''}
-                        {fourSignalDiagnostics.alpha3M.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-2 pt-1.5 border-t border-[#b1ada1]/15 text-[10px]">
-                  <span
-                    className={`font-bold block ${
-                      fourSignalDiagnostics.persistenceRegime.tone === 'emerald'
-                        ? 'text-[#10b981]'
-                        : fourSignalDiagnostics.persistenceRegime.tone === 'blue'
-                        ? 'text-[#2563eb]'
-                        : fourSignalDiagnostics.persistenceRegime.tone === 'amber'
-                        ? 'text-[#d97706]'
-                        : fourSignalDiagnostics.persistenceRegime.tone === 'rose'
-                        ? 'text-[#f43f5e]'
-                        : 'text-[#08090a]'
-                    }`}
-                  >
-                    {fourSignalDiagnostics.persistenceRegime.label}
-                  </span>
-                  <span className="text-[9px] text-[#08090a]/60 block truncate">
-                    {fourSignalDiagnostics.persistenceRegime.summary}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Diagnostic Callout Banner Explaining EW vs MCap & Outlier/Liquidity Nuance */}
-            <div className="px-3.5 py-2 rounded-xl bg-white border border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-              <div className="text-[#08090a]/80">
-                <strong className="text-[#08090a] font-display">SMID Divergence Diagnostic: </strong>
-                {fourSignalDiagnostics.divergenceVerdict.explanation}
-              </div>
-              {fourSignalDiagnostics.divergenceVerdict.cautionFlag && (
-                <span className="text-[10px] font-mono font-bold text-[#d97706] bg-[#f59e0b]/10 px-2 py-0.5 rounded border border-[#f59e0b]/30">
-                  ⚠ {fourSignalDiagnostics.divergenceVerdict.cautionFlag}
-                </span>
-              )}
-            </div>
+          <div className={`mx-4 sm:mx-6 mt-3 px-3 py-2.5 rounded-xl border text-xs sm:text-sm flex flex-wrap gap-x-3 gap-y-1 ${currentSector.stocks.length < 4 || (currentSector.dataCoveragePct ?? 0) < 80 || topCapWeightPct >= 65 ? 'bg-[#fffbeb] border-[#fbbf24]/40 text-[#92400e]' : 'bg-[#f8fafc] border-[#b1ada1]/25 text-[#08090a]/75'}`}>
+            <span className="font-bold">{currentSector.stocks.length < 4 || (currentSector.dataCoveragePct ?? 0) < 80 || topCapWeightPct >= 65 ? 'Limited signal confidence' : 'Data coverage check'}</span>
+            <span>{currentSector.stocks.length} priced core stocks</span>
+            <span>{currentSector.dataCoveragePct ?? 0}% historical coverage</span>
+            {topCapWeightPct >= 50 && <span>Largest company ~{topCapWeightPct}% of stored MCap</span>}
           </div>
         )}
 
@@ -2252,6 +1950,373 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Supporting evidence follows the principal chart, collapsed by default. */}
+          {!currentSector.isBenchmark && (
+            <details className="group bg-[#fafaf9] border border-[#b1ada1]/30 rounded-[18px] overflow-hidden">
+              <summary className="cursor-pointer select-none flex items-center justify-between gap-2 p-4 text-sm font-bold text-[#08090a] hover:bg-[#f4f3ee]">
+                <span>Advanced analysis · Four rotation signals</span>
+                <span className="text-[#08090a]/55 text-xs font-medium group-open:hidden">Expand</span>
+                <span className="text-[#08090a]/55 text-xs font-medium hidden group-open:block">Collapse</span>
+              </summary>
+        {/* ================= 4-SIGNAL INSTITUTIONAL ROTATION & SMID DIVERGENCE DIAGNOSTIC PANEL ================= */}
+        {!currentSector.isBenchmark && (
+          <div className="px-6 py-4 bg-[#fafaf9] border-b border-[#b1ada1]/25 space-y-3 shrink-0">
+            {/* Top Bar: Title + Horizon Selector (1W | 1M | 3M) */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-extrabold text-[#08090a] font-display uppercase tracking-wider">
+                  4-Signal Price Rotation & SMID Divergence Engine
+                </span>
+                <span className="text-[11px] text-[#08090a]/55 font-mono">
+                  · Median Constituent MCap: ₹{Math.round(fourSignalDiagnostics.medianMcap).toLocaleString('en-IN')} Cr
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[#08090a]/60 font-semibold">Signal Horizon:</span>
+                <div className="flex items-center bg-white p-0.5 rounded-lg border border-[#b1ada1]/35">
+                  {(['1W', '1M', '3M'] as const).map((h) => (
+                    <button
+                      key={h}
+                      onClick={() => setSignalHorizon(h)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold cursor-pointer transition-colors ${
+                        signalHorizon === h
+                          ? 'bg-[#08090a] text-white'
+                          : 'text-[#08090a]/65 hover:text-[#08090a]'
+                      }`}
+                    >
+                      {h}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 4-Signal Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              {/* SIGNAL 1: Relative Strength */}
+              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
+                    <span>1. Relative Strength ({signalHorizon})</span>
+                    <span
+                      className={`font-mono font-bold ${
+                        fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'Outperforming' : 'Lagging'}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">vs NIFTY 500:</span>
+                    <span
+                      className={`text-sm font-mono font-extrabold ${
+                        fourSignalDiagnostics.rsVsNifty500 >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.rsVsNifty500 >= 0 ? '+' : ''}
+                      {fourSignalDiagnostics.rsVsNifty500.toFixed(2)}% Alpha
+                    </span>
+                  </div>
+
+                  <div className="mt-1 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">
+                      vs {fourSignalDiagnostics.sizeBenchmarkStats.name.replace('NIFTY ', '')}:
+                    </span>
+                    <span
+                      className={`text-xs font-mono font-bold ${
+                        fourSignalDiagnostics.rsVsSizeBm >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.rsVsSizeBm >= 0 ? '+' : ''}
+                      {fourSignalDiagnostics.rsVsSizeBm.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-[#b1ada1]/15 text-[10px] text-[#08090a]/60 font-mono flex items-center justify-between">
+                  <span>Sector ({weightingMode === 'mcap' ? 'MCap' : 'EW'}):</span>
+                  <span className="font-bold text-[#08090a]">
+                    {fourSignalDiagnostics.activeSectorReturn >= 0 ? '+' : ''}
+                    {fourSignalDiagnostics.activeSectorReturn.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+
+              {/* SIGNAL 2: Dual Breadth */}
+              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
+                    <span>2. Constituent Breadth ({signalHorizon})</span>
+                    <span className="font-mono font-bold text-[#08090a]">
+                      {currentSector.stocks.length} Stocks
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">Absolute Rising (&gt;0%):</span>
+                    <span
+                      className={`text-sm font-mono font-extrabold ${
+                        fourSignalDiagnostics.risingBreadthPct >= 60 ? 'text-[#10b981]' : 'text-[#f59e0b]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.risingBreadthPct}% ({fourSignalDiagnostics.risingStocksCount}/{currentSector.stocks.length})
+                    </span>
+                  </div>
+
+                  <div className="mt-1 flex items-baseline justify-between">
+                    <span className="text-xs text-[#08090a]/70 font-medium">Beating NIFTY 500:</span>
+                    <span
+                      className={`text-xs font-mono font-bold ${
+                        fourSignalDiagnostics.beatingN500BreadthPct >= 55 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                      }`}
+                    >
+                      {fourSignalDiagnostics.beatingN500BreadthPct}% ({fourSignalDiagnostics.beatingN500Count}/{currentSector.stocks.length})
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2.5 pt-2 border-t border-[#b1ada1]/15 text-[10px] text-[#08090a]/60 font-mono flex items-center justify-between">
+                  <span>1D Session A/D:</span>
+                  <span>
+                    <strong className="text-[#10b981]">{advancingCount1D} Up</strong> /{' '}
+                    <strong className="text-[#f43f5e]">{decliningCount1D} Down</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* SIGNAL 3: Equal-Weight vs MCap-Weight Divergence (SMID Leadership vs Outlier Check) */}
+              <div
+                className={`p-3.5 rounded-xl border flex flex-col justify-between ${
+                  fourSignalDiagnostics.divergenceVerdict.tone === 'emerald'
+                    ? 'bg-[#10b981]/5 border-[#10b981]/40'
+                    : fourSignalDiagnostics.divergenceVerdict.tone === 'amber'
+                    ? 'bg-[#f59e0b]/5 border-[#f59e0b]/40'
+                    : fourSignalDiagnostics.divergenceVerdict.tone === 'blue'
+                    ? 'bg-[#2563eb]/5 border-[#2563eb]/35'
+                    : 'bg-white border-[#b1ada1]/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/65 font-display">
+                    <span>3. EW vs MCap Divergence ({signalHorizon})</span>
+                    <span
+                      className={`font-mono font-extrabold ${
+                        fourSignalDiagnostics.ewMcapSpread >= 1.25
+                          ? 'text-[#10b981]'
+                          : fourSignalDiagnostics.ewMcapSpread <= -1.25
+                          ? 'text-[#2563eb]'
+                          : 'text-[#08090a]'
+                      }`}
+                    >
+                      Spread: {fourSignalDiagnostics.ewMcapSpread >= 0 ? '+' : ''}
+                      {fourSignalDiagnostics.ewMcapSpread.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  {/* Side-by-side Equal-Weight vs MCap-Weight Return Boxes */}
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="bg-white/90 px-2.5 py-1.5 rounded-lg border border-[#b1ada1]/25">
+                      <span className="text-[9px] font-bold uppercase text-[#08090a]/55 block">
+                        Equal-Weight
+                      </span>
+                      <span
+                        className={`text-sm font-mono font-extrabold ${
+                          fourSignalDiagnostics.ewReturn >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.ewReturn >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.ewReturn.toFixed(1)}%
+                      </span>
+                      <span className="text-[9px] text-[#08090a]/50 block truncate">
+                        SMIDs equal voice
+                      </span>
+                    </div>
+
+                    <div className="bg-white/90 px-2.5 py-1.5 rounded-lg border border-[#b1ada1]/25">
+                      <span className="text-[9px] font-bold uppercase text-[#08090a]/55 block">
+                        MCap-Weight
+                      </span>
+                      <span
+                        className={`text-sm font-mono font-extrabold ${
+                          fourSignalDiagnostics.mcapReturn >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.mcapReturn >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.mcapReturn.toFixed(1)}%
+                      </span>
+                      <span className="text-[9px] text-[#08090a]/50 block truncate">
+                        Large caps dominate
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-1.5 border-t border-[#b1ada1]/20 text-[10px]">
+                  <span
+                    className={`font-bold block ${
+                      fourSignalDiagnostics.divergenceVerdict.tone === 'emerald'
+                        ? 'text-[#10b981]'
+                        : fourSignalDiagnostics.divergenceVerdict.tone === 'amber'
+                        ? 'text-[#d97706]'
+                        : fourSignalDiagnostics.divergenceVerdict.tone === 'blue'
+                        ? 'text-[#2563eb]'
+                        : 'text-[#08090a]'
+                    }`}
+                  >
+                    {fourSignalDiagnostics.divergenceVerdict.title}
+                  </span>
+                  <span className="text-[#08090a]/65 font-mono text-[9px] block mt-0.5">
+                    Median: {fourSignalDiagnostics.medianReturn >= 0 ? '+' : ''}
+                    {fourSignalDiagnostics.medianReturn.toFixed(1)}% · Top1 Share:{' '}
+                    {fourSignalDiagnostics.top1ContributionShare}% ({fourSignalDiagnostics.topGainer?.ticker})
+                  </span>
+                </div>
+              </div>
+
+              {/* SIGNAL 4: Momentum Persistence (1W, 1M, 3M) */}
+              <div className="bg-white p-3.5 rounded-xl border border-[#b1ada1]/30 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#08090a]/55 font-display">
+                    <span>4. Momentum Persistence</span>
+                    <span className="font-mono text-[10px] text-[#08090a]/60">1W → 1M → 3M</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 mt-2 text-center font-mono">
+                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
+                      <span className="text-[9px] text-[#08090a]/55 block">1W</span>
+                      <span
+                        className={`text-xs font-extrabold ${
+                          fourSignalDiagnostics.r1W >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.r1W >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.r1W.toFixed(1)}%
+                      </span>
+                      <span className="text-[8px] text-[#08090a]/50 block">
+                        α:{fourSignalDiagnostics.alpha1W >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.alpha1W.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
+                      <span className="text-[9px] text-[#08090a]/55 block">1M</span>
+                      <span
+                        className={`text-xs font-extrabold ${
+                          fourSignalDiagnostics.r1M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.r1M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.r1M.toFixed(1)}%
+                      </span>
+                      <span className="text-[8px] text-[#08090a]/50 block">
+                        α:{fourSignalDiagnostics.alpha1M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.alpha1M.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div className="bg-[#fafaf9] p-1.5 rounded-lg border border-[#b1ada1]/20">
+                      <span className="text-[9px] text-[#08090a]/55 block">3M</span>
+                      <span
+                        className={`text-xs font-extrabold ${
+                          fourSignalDiagnostics.r3M >= 0 ? 'text-[#10b981]' : 'text-[#f43f5e]'
+                        }`}
+                      >
+                        {fourSignalDiagnostics.r3M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.r3M.toFixed(1)}%
+                      </span>
+                      <span className="text-[8px] text-[#08090a]/50 block">
+                        α:{fourSignalDiagnostics.alpha3M >= 0 ? '+' : ''}
+                        {fourSignalDiagnostics.alpha3M.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-1.5 border-t border-[#b1ada1]/15 text-[10px]">
+                  <span
+                    className={`font-bold block ${
+                      fourSignalDiagnostics.persistenceRegime.tone === 'emerald'
+                        ? 'text-[#10b981]'
+                        : fourSignalDiagnostics.persistenceRegime.tone === 'blue'
+                        ? 'text-[#2563eb]'
+                        : fourSignalDiagnostics.persistenceRegime.tone === 'amber'
+                        ? 'text-[#d97706]'
+                        : fourSignalDiagnostics.persistenceRegime.tone === 'rose'
+                        ? 'text-[#f43f5e]'
+                        : 'text-[#08090a]'
+                    }`}
+                  >
+                    {fourSignalDiagnostics.persistenceRegime.label}
+                  </span>
+                  <span className="text-[9px] text-[#08090a]/60 block truncate">
+                    {fourSignalDiagnostics.persistenceRegime.summary}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Diagnostic Callout Banner Explaining EW vs MCap & Outlier/Liquidity Nuance */}
+            <div className="px-3.5 py-2 rounded-xl bg-white border border-[#b1ada1]/30 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <div className="text-[#08090a]/80">
+                <strong className="text-[#08090a] font-display">SMID Divergence Diagnostic: </strong>
+                {fourSignalDiagnostics.divergenceVerdict.explanation}
+              </div>
+              {fourSignalDiagnostics.divergenceVerdict.cautionFlag && (
+                <span className="text-[10px] font-mono font-bold text-[#d97706] bg-[#f59e0b]/10 px-2 py-0.5 rounded border border-[#f59e0b]/30">
+                  ⚠ {fourSignalDiagnostics.divergenceVerdict.cautionFlag}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+
+            </details>
+          )}
+
+        {!currentSector.isBenchmark && (
+          <div className="px-5 py-2.5 border-b border-[#b1ada1]/20 bg-[#fffbeb] text-[11px] text-[#78350f]">
+            Core data coverage: {currentSector.dataCoveragePct ?? 0}% · Basket size: {currentSector.stocks.length}
+            {currentSector.stocks.length < 4 ? ' · Low-confidence breadth: fewer than 4 priced core stocks' : ''}
+            {topCapWeightPct >= 50 ? ` · Concentration caution: largest company has approximately ${topCapWeightPct}% of stored market-cap weight` : ''}
+            {' · '}Market-cap weights are static estimates, not free-float index weights.
+          </div>
+        )}
+
+
+          {thematicBeneficiaries.length > 0 && (
+            <details className="group border border-[#b1ada1]/30 rounded-[18px] overflow-hidden">
+              <summary className="cursor-pointer select-none flex items-center justify-between gap-2 p-4 text-sm font-bold text-[#08090a] hover:bg-[#fafaf9]">
+                <span>Related businesses · {thematicBeneficiaries.length} adjacent opportunities</span>
+                <span className="text-xs font-medium text-[#08090a]/55">View list</span>
+              </summary>
+        {/* Adjacent thematic beneficiaries remain research candidates, not sector constituents. */}
+        {thematicBeneficiaries.length > 0 && (
+          <div className="px-5 py-3 bg-[#f1f5f9] border-b border-[#b1ada1]/20 text-[11px]">
+            <div className="font-bold text-[#08090a] mb-1">
+              Core rotation basket: {currentSector.stocks.length} priced stocks · Adjacent opportunities / proxies: {thematicBeneficiaries.length}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {thematicBeneficiaries.map(member => (
+                <span key={member.stock.ticker}
+                  title={member.reason}
+                  className="rounded-md px-2 py-1 border border-[#b1ada1]/30 bg-white text-[#08090a]/80">
+                  {member.stock.ticker} · {member.tier === 'proxy' ? 'proxy' : 'adjacent'}
+                </span>
+              ))}
+            </div>
+            <p className="text-[10px] text-[#08090a]/60 mt-1">
+              These businesses are excluded from core sector returns. Theme classifications are editorial and require company-segment verification.
+            </p>
+          </div>
+        )}
+
+
+            </details>
           )}
 
           {/* Return Dispersion Strip */}
