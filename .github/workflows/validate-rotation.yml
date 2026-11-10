@@ -6,6 +6,7 @@ on:
       - feat/sector-universe-price-qa-20261109
       - fix/vercel-market-sync-405-20261109
       - fix/three-slot-scheduled-snapshot-no-secrets
+      - feat/manual-market-refresh-commits-20261110
   pull_request:
 
 permissions:

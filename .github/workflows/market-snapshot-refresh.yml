@@ -7,6 +7,7 @@ name: Refresh Committed Market Snapshot
 #   22:30 UTC every day = 04:00 IST the following day
 # GitHub schedules are best-effort: runs can be delayed or occasionally skipped.
 on:
+  workflow_dispatch: # Manual runs also validate and commit to main
   schedule:
     - cron: '0 13 * * *'
     - cron: '30 20 * * *'
@@ -46,7 +47,7 @@ jobs:
             echo "No snapshot changes to commit."
             exit 0
           fi
-          git commit -m "data: record scheduled verified sector snapshot [skip ci]"
+          git commit -m "data: update verified market snapshot [skip ci]"
           # Rebase onto any newer app commits to avoid clobbering them.
           git pull --rebase origin main
           git push origin HEAD:main
