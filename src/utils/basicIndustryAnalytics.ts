@@ -88,7 +88,12 @@ export function computeIndustryDiscovery(snapshot: BrowserMarketSnapshot | null)
     });
     const priced = validated.map(({ ticker }) => ticker);
     const weightedStocks = priced.map(ticker => ({ ticker, marketCapCr: marketCapByTicker.get(ticker) || 0 }));
-    const aligned = buildAlignedBasketHistory(weightedStocks, stocks, 'equal');
+    // The price sanitizer exposes optional histories in its public type; only
+    // validated observations are allowed into the date-aligned index builder.
+    const observedHistories = Object.fromEntries(validated.map(({ ticker }) => [
+      ticker, { history: stocks[ticker].history || [] },
+    ]));
+    const aligned = buildAlignedBasketHistory(weightedStocks, observedHistories, 'equal');
     const alignedCohort = new Set(aligned.includedTickers);
     const effective = priced.filter(ticker => alignedCohort.has(ticker));
     const total = mapped.length;
