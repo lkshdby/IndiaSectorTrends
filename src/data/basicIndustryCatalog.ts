@@ -213,6 +213,7 @@ interface ParentGroup { code: string; macro: string; sector: string; industry: s
 
 /** Exact codes and parent hierarchy checked against the July 2023 NSE PDF. */
 const OFFICIALLY_CHECKED: Record<string, ParentGroup> = {
+  'Power - Transmission': { code: 'IN110101003', macro: 'Utilities', sector: 'Power', industry: 'Power' },
   'Tour, Travel Related Services': { code: 'IN020601005', macro: 'Consumer Discretionary', sector: 'Consumer Services', industry: 'Leisure Services' },
   'Hotels & Resorts': { code: 'IN020601001', macro: 'Consumer Discretionary', sector: 'Consumer Services', industry: 'Leisure Services' },
   'Other Textile Products': { code: 'IN020301002', macro: 'Consumer Discretionary', sector: 'Textiles', industry: 'Textiles & Apparels' },
