@@ -53,12 +53,28 @@ export const VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS: ReadonlyMap<string, BasicIndus
 
 export function validateSourceVerifiedAssignments(): string[] {
   const issues: string[] = [];
+  const tickers = new Set<string>();
   for (const assignment of VERIFIED_NSE_QUOTE_MAPPINGS) {
+    if (tickers.has(assignment.ticker)) issues.push(`${assignment.ticker}: duplicate source record`);
+    tickers.add(assignment.ticker);
     const industry = BASIC_INDUSTRY_BY_NAME.get(assignment.basicIndustry);
     if (!industry?.code) issues.push(`${assignment.ticker}: missing verified NSE basic-industry code`);
-    if (!assignment.sourceUrl.startsWith('https://www.nseindia.com/get-quote/') &&
-        !assignment.sourceUrl.startsWith('https://www.nseindia.com/get-quotes/')) {
-      issues.push(`${assignment.ticker}: mapping lacks an NSE equity quote source`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(assignment.verifiedOn) ||
+        !Number.isFinite(Date.parse(assignment.verifiedOn))) {
+      issues.push(`${assignment.ticker}: missing valid review date`);
+    }
+    try {
+      const source = new URL(assignment.sourceUrl);
+      const path = source.pathname.toUpperCase();
+      const ticker = assignment.ticker.toUpperCase();
+      const isDirect = path.startsWith(`/GET-QUOTE/EQUITY/${ticker}/`);
+      const isSearch = path === '/GET-QUOTES/EQUITY' && source.searchParams.get('symbol')?.toUpperCase() === ticker;
+      if (source.protocol !== 'https:' || source.hostname !== 'www.nseindia.com' ||
+          (!isDirect && !isSearch)) {
+        issues.push(`${assignment.ticker}: source URL does not identify the same NSE equity symbol`);
+      }
+    } catch {
+      issues.push(`${assignment.ticker}: invalid NSE source URL`);
     }
   }
   return issues;
