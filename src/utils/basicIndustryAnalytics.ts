@@ -1,5 +1,5 @@
 import { BASIC_INDUSTRIES, type BasicIndustry } from '../data/basicIndustryCatalog';
-import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS } from '../data/basicIndustryMappings';
+import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS, type BasicIndustryAssignment } from '../data/basicIndustryMappings';
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
 import { buildAlignedBasketHistory, tradingDayKey } from './sectorIndexMath';
 import { sanitizeSnapshot, type PriceHistoryRecord } from './priceQuality';
@@ -84,16 +84,19 @@ export function describeConfidence(mapped: number, priced: number, coverage: num
   return 'rankable';
 }
 
-/** Only explicit, source-verified NSE mappings may contribute to the price indices.
+/** Only explicit, source-checked NSE or user-imported, code-validated Screener mappings may contribute to indices.
  * A user's personal watchlist or thematic membership is NOT classification evidence.
  */
-export function computeIndustryDiscovery(snapshot: BrowserMarketSnapshot | null): IndustryDiscoverySummary {
+export function computeIndustryDiscovery(
+  snapshot: BrowserMarketSnapshot | null,
+  trustedMappings: ReadonlyMap<string, BasicIndustryAssignment> = VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS,
+): IndustryDiscoverySummary {
   const rawPrices = snapshot ? sanitizeSnapshot(snapshot.stocks) : {};
   const stocks = rawPrices as Record<string, Validated>;
   const nifty500 = snapshot?.benchmarks?.nifty500;
   const benchmarkHistory = Array.isArray(nifty500?.history) ? nifty500.history : [];
   const grouped = new Map<string, { ticker: string; sourceUrl: string }[]>();
-  for (const [ticker, mapping] of VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS) {
+  for (const [ticker, mapping] of trustedMappings) {
     if (!trackedSymbols.has(ticker)) continue;
     const current = grouped.get(mapping.basicIndustry) || [];
     current.push({ ticker, sourceUrl: mapping.sourceUrl });
@@ -149,7 +152,7 @@ export function computeIndustryDiscovery(snapshot: BrowserMarketSnapshot | null)
     } satisfies BasicIndustryScore;
   });
 
-  const verifiedMapped = [...VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.keys()].filter(ticker => trackedSymbols.has(ticker));
+  const verifiedMapped = [...trustedMappings.keys()].filter(ticker => trackedSymbols.has(ticker));
   return {
     industryRows,
     verifiedMappingCount: verifiedMapped.length,
