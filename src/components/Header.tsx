@@ -5,10 +5,19 @@ import { getUniverseDiagnostics } from '../data/sectorUniverse';
 interface HeaderProps {
   onRefresh?: () => void;
   isSyncing?: boolean;
+  savedAt?: string | null;
+  snapshotSource?: string;
+  loadError?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRefresh, isSyncing }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onRefresh, isSyncing, savedAt, snapshotSource, loadError,
+}) => {
   const universe = getUniverseDiagnostics();
+  const savedWhen = savedAt ? new Date(savedAt).toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+  }) : null;
   return (
     <header className="border-b border-[#b1ada1]/30 bg-white/95 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
@@ -34,8 +43,12 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh, isSyncing }) => {
           </div>
         </div>
 
-        {/* Right: Clean Status & Live Market Sync Button */}
+        {/* Right: Show the actual committed collection date instead of implying live data. */}
         <div className="flex items-center gap-2 shrink-0">
+          <span className={`hidden lg:inline text-[10px] font-medium ${loadError ? 'text-amber-700' : 'text-[#08090a]/60'}`}
+            title={loadError ? 'Latest saved snapshot could not be fetched; the bundled snapshot may be stale' : 'Last successful market snapshot collection time in IST'}>
+            {savedWhen ? `Saved: ${savedWhen} IST · ${snapshotSource || 'GitHub'}` : loadError ? 'Using bundled market data' : 'Loading saved data...'}
+          </span>
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#f4f3ee] border border-[#b1ada1]/30 rounded-xl text-xs font-semibold text-[#08090a]">
             <Layers className="w-3.5 h-3.5 text-[#2563eb]" />
             <span>{universe.basketCount} Clusters · {universe.coreUniqueSymbols} Core Tickers · 4 Benchmarks</span>
