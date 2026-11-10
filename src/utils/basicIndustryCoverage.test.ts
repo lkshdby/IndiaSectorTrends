@@ -40,7 +40,8 @@ describe('verified industry classification coverage and staged licensed CSV impo
     assert.ok(base.coveredByVerifiedMapping >= 20, 'new verified mappings should improve coverage');
     assert.equal(base.totalUniverse, base.coveredByVerifiedMapping + base.needingReview);
     assert.equal(base.themeCoverage.length, 62);
-    assert.equal(base.rows.find(x => x.ticker === 'ETERNAL')?.status, 'unmapped');
+    assert.ok(['unmapped','source-verified'].includes(base.rows.find(x => x.ticker === 'ETERNAL')?.status || ''),
+      'ETERNAL can become source-verified if the NSE collector receives a matching quote');
     const mock = {
       fetchedAt: '2026-11-10T10:00:00Z',
       source: 'GitHub',
