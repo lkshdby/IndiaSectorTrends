@@ -12,7 +12,7 @@ interface Props {
 }
 
 const CONFIDENCE: Record<IndustryConfidence, string> = {
-  rankable: 'Rankable · >=5 verified stocks',
+  rankable: 'Sample-eligible · >=5 verified stocks',
   'limited-sample': 'Limited sample / concentration',
   'single-stock': 'Single-stock observation',
   unmapped: 'Company mapping not verified',
@@ -90,7 +90,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
             { label: 'Candidate industry names', value: String(BASIC_INDUSTRIES.length), note: `NSE framework: ${NSE_PUBLISHED_BASIC_INDUSTRY_COUNT} official` },
             { label: 'Source-verified stock mappings', value: `${summary.verifiedMappingCount} / ${summary.universeSize}`, note: 'Of unique existing thematic tickers' },
             { label: 'Industries with mapped stocks', value: String(summary.groupedIndustries), note: 'Mapped to verified NSE symbols' },
-            { label: 'Eligible industry rankings', value: String(summary.eligibleCount), note: '>=5 aligned stocks; adequate coverage' },
+            { label: 'Sample cohorts passing quality gates', value: String(summary.eligibleCount), note: 'Not full NSE-industry coverage' },
           ].map(card => (
             <div key={card.label} className="rounded-xl bg-[#f4f3ee] border border-[#b1ada1]/20 p-3.5">
               <div className="text-xs text-[#08090a]/65 font-semibold">{card.label}</div>
@@ -125,7 +125,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
               className={`rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5 ${signalTone(row.price1M)} ${selectedName === row.industry.name ? 'ring-2 ring-[#2563eb]' : ''}`}>
               <span className="block text-xs font-bold leading-snug min-h-9">{row.industry.name}</span>
               <span className="block mt-2 text-lg font-extrabold font-mono">{fmt(row.price1M)}</span>
-              <span className="block mt-1 text-[11px] opacity-80">{row.pricedCount}/{row.mappedCount} valid · {row.confidence === 'rankable' ? 'Rankable' : 'Limited evidence'}</span>
+              <span className="block mt-1 text-[11px] opacity-80">{row.pricedCount}/{row.mappedCount} valid · {row.confidence === 'rankable' ? 'Sample only' : 'Limited evidence'}</span>
             </button>
           ))}
         </div>
@@ -157,7 +157,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
               <select aria-label="Filter confidence" value={show} onChange={e => setShow(e.target.value)}
                 className="min-h-11 px-3 text-sm border border-[#b1ada1]/40 rounded-xl bg-white">
                 <option value="mapped">With verified stock assignments</option>
-                <option value="rankable">Eligible rankings only</option>
+                <option value="rankable">Source-mapped sample cohorts only</option>
                 <option value="all">All candidate industry names</option>
               </select>
               <select aria-label="Sort industry results" value={sort} onChange={e => setSort(e.target.value)}
