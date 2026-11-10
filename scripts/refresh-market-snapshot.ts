@@ -8,7 +8,10 @@ import { validateAndRepairStock } from '../src/utils/priceQuality';
  * overwrites the saved file if network/provider coverage is insufficient. */
 async function main() {
   const startedAt = Date.now();
-  const report = await runFullUniverseSync('Scheduled market collection (18:30 / 02:00 / 04:00 IST)');
+  const isManualTest = process.env.MARKET_REFRESH_MODE === 'dry-run';
+  const report = await runFullUniverseSync(isManualTest
+    ? 'Manual dry-run quality check (never published)'
+    : 'Scheduled market collection (18:30 / 02:00 / 04:00 IST)');
   const filename = path.join(process.cwd(), 'src', 'data', 'verifiedLiveMarketData.json');
   const snapshot = JSON.parse(fs.readFileSync(filename, 'utf8'));
 
@@ -42,14 +45,35 @@ async function main() {
   });
   const emptyCoreBaskets = coreCoverage.filter(x => x.fresh === 0);
 
-  console.info('Scheduled refresh quality report:', JSON.stringify({
-    report, expectedStocks: expected.length, freshStocks: fresh.length,
+  const mode = process.env.MARKET_REFRESH_MODE === 'dry-run' ? 'dry-run' : 'scheduled';
+  const accepted = Boolean(
+    report.success && ratio >= 0.90 && invalidBenchmarks.length === 0 &&
+    emptyCoreBaskets.length === 0 && Number.isFinite(Date.parse(snapshot.fetchedAt))
+  );
+  console.info('Market refresh quality report:', JSON.stringify({
+    mode, accepted, report, expectedStocks: expected.length, freshStocks: fresh.length,
     coveragePercent: Number((ratio * 100).toFixed(1)), invalidBenchmarks,
     emptyCoreBaskets, sampleCoreCoverage: coreCoverage.slice(0, 5),
   }));
 
-  if (!report.success || ratio < 0.90 || invalidBenchmarks.length ||
-      emptyCoreBaskets.length || !Number.isFinite(Date.parse(snapshot.fetchedAt))) {
+  const summary = [
+    '## Market snapshot collection ' + (mode === 'dry-run' ? '(manual dry run)' : '(scheduled)'),
+    '',
+    '| Check | Result |',
+    '| --- | --- |',
+    `| Validation | ${accepted ? 'PASS' : 'FAIL'} |`,
+    `| Newly verified thematic stocks | ${fresh.length} / ${expected.length} (${(ratio * 100).toFixed(1)}%) |`,
+    `| Required stock coverage | 90% or more |`,
+    `| Benchmarks not freshly validated | ${invalidBenchmarks.join(', ') || 'None'} |`,
+    `| Core baskets with zero fresh stocks | ${emptyCoreBaskets.map(x => x.name).join(', ') || 'None'} |`,
+    `| Publishing | ${mode === 'dry-run' ? 'DISABLED — existing snapshot is unchanged' : accepted ? 'Eligible for scheduled commit' : 'BLOCKED'} |`,
+    '',
+  ].join('\\n');
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\\n');
+  }
+
+  if (!accepted) {
     throw new Error(
       'Collection did not meet quality thresholds (>=90% freshly verified ' +
       'thematic tickers, every core basket represented, four usable benchmarks). ' +
@@ -62,9 +86,13 @@ async function main() {
   snapshot.totalExpectedStocks = expected.length;
   snapshot.freshStocksCount = fresh.length;
   snapshot.freshCoveragePct = Number((ratio * 100).toFixed(1));
-  snapshot.collectionMethod = 'GitHub Actions scheduled pull — Yahoo daily closes';
+  snapshot.collectionMethod = isManualTest
+    ? 'GitHub Actions manual dry-run — not published'
+    : 'GitHub Actions scheduled pull — Yahoo daily closes';
   fs.writeFileSync(filename, JSON.stringify(snapshot) + '\n');
-  console.info('Accepted market snapshot; all quality gates passed.');
+  console.info(isManualTest
+    ? 'Manual data-quality test passed. The local snapshot is NOT committed or published.'
+    : 'Accepted scheduled market snapshot; all quality gates passed.');
 }
 
 main().catch(error => {
