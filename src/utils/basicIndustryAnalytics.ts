@@ -1,7 +1,7 @@
 import { BASIC_INDUSTRIES, type BasicIndustry } from '../data/basicIndustryCatalog';
 import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS } from '../data/basicIndustryMappings';
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
-import { buildAlignedBasketHistory } from './sectorIndexMath';
+import { buildAlignedBasketHistory, tradingDayKey } from './sectorIndexMath';
 import { sanitizeSnapshot, type PriceHistoryRecord } from './priceQuality';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
 
@@ -56,6 +56,26 @@ function horizonReturn(history: { date: string; value: number }[], sessions: num
     ? Number(((current / base - 1) * 100).toFixed(2)) : null;
 }
 
+/** Relative strength must compare the same *observed session dates*.
+ * If a benchmark is missing the same endpoint dates, the result is unavailable.
+ */
+export function alignedRelativeReturn(
+  cohort: { date: string; value: number }[],
+  benchmark: { date: string; value: number }[],
+  sessionSpan: number
+): number | null {
+  if (cohort.length < sessionSpan + 1 || benchmark.length < sessionSpan + 1) return null;
+  const start = cohort[cohort.length - 1 - sessionSpan], end = cohort[cohort.length - 1];
+  const startKey = tradingDayKey(start.date), endKey = tradingDayKey(end.date);
+  if (!startKey || !endKey || startKey === endKey || start.value <= 0 || end.value <= 0) return null;
+  const byDay = new Map(benchmark.map(point => [tradingDayKey(point.date), point.value]));
+  const before = byDay.get(startKey), after = byDay.get(endKey);
+  if (!before || !after || before <= 0 || after <= 0) return null;
+  const priceReturn = 100 * (end.value / start.value - 1);
+  const benchmarkReturn = 100 * (after / before - 1);
+  return Number((priceReturn - benchmarkReturn).toFixed(2));
+}
+
 export function describeConfidence(mapped: number, priced: number, coverage: number, largestWeightPct: number | null): IndustryConfidence {
   if (mapped === 0) return 'unmapped';
   if (priced === 0 || coverage < 80) return 'insufficient-data';
@@ -71,7 +91,7 @@ export function computeIndustryDiscovery(snapshot: BrowserMarketSnapshot | null)
   const rawPrices = snapshot ? sanitizeSnapshot(snapshot.stocks) : {};
   const stocks = rawPrices as Record<string, Validated>;
   const nifty500 = snapshot?.benchmarks?.nifty500;
-  const benchmark1M = Array.isArray(nifty500?.history) ? horizonReturn(nifty500.history, 21) : null;
+  const benchmarkHistory = Array.isArray(nifty500?.history) ? nifty500.history : [];
   const grouped = new Map<string, { ticker: string; sourceUrl: string }[]>();
   for (const [ticker, mapping] of VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS) {
     if (!trackedSymbols.has(ticker)) continue;
@@ -120,7 +140,7 @@ export function computeIndustryDiscovery(snapshot: BrowserMarketSnapshot | null)
       price1W: oneW,
       price1M: oneM,
       mcap1M: weightedM,
-      nifty500Relative1M: oneM !== null && benchmark1M !== null ? Number((oneM - benchmark1M).toFixed(2)) : null,
+      nifty500Relative1M: alignedRelativeReturn(aligned.history, benchmarkHistory, 21),
       advancing1W,
       breadth1W: effective.length > 0 ? Math.round(100 * advancing1W / effective.length) : null,
       concentrationPct: concentration,
