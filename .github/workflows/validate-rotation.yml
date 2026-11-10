@@ -9,6 +9,7 @@ on:
       - feat/ux-phase1-personal-tracking-20261110
       - feat/basic-industry-discovery-phase2-20261110
       - feat/basic-industry-mapping-audit-import-20261110
+      - feat/nse-source-annotated-industry-coverage-20261110
       - feat/manual-market-refresh-commits-20261110
       - fix/dashboard-reload-direct-github-snapshot-20261110
       - fix/actions-snapshot-git-rebase-128-20261110
@@ -48,5 +49,43 @@ jobs:
         run: |
           npx tsx --test src/utils/basicIndustryCoverage.test.ts
           npx tsx scripts/review-basic-industry-import.ts --coverage
+      - name: Direct NSE quote evidence and conservative hypothesis tests
+        run: npx tsx --test src/utils/industryEvidence.test.ts
       - name: Production build
         run: npm run build
+
+  annotate:
+    if: github.event_name == 'push' && github.ref_name == 'feat/nse-source-annotated-industry-coverage-20261110'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check public NSE quote classification availability (maximum 40 lookups)
+        run: npx tsx scripts/annotate-nse-industries.ts --max 40
+      - name: Validate the newly collected classifications
+        run: |
+          npm run lint
+          npx tsx --test src/utils/industryEvidence.test.ts src/utils/basicIndustryAnalytics.test.ts
+      - name: Commit exact public NSE observations
+        run: |
+          if git diff --quiet -- src/data/nseIndustryQuoteEvidence.json; then
+            echo "No accepted direct quote data; preserving existing reviewed mappings"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/nseIndustryQuoteEvidence.json
+          git commit -m "data: record directly observed NSE basic-industry classifications"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
