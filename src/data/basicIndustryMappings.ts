@@ -17,6 +17,8 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['TECHM', 'Computers - Software & Consulting', 'https://www.nseindia.com/get-quote/equity/TECHM/Tech-Mahindra'],
   ['TATAELXSI', 'Computers - Software & Consulting', 'https://www.nseindia.com/get-quote/equity/TATAELXSI/Tata-Elxsi-Limited'],
   ['LTM', 'Computers - Software & Consulting', 'https://www.nseindia.com/get-quotes/equity?symbol=LTM'],
+  ['COFORGE', 'Computers - Software & Consulting', 'https://www.nseindia.com/get-quote/equity/COFORGE/Coforge-Limited'],
+  ['PERSISTENT', 'Computers - Software & Consulting', 'https://www.nseindia.com/get-quote/equity/PERSISTENT/Persistent-Systems-Limited'],
   ['HDFCBANK', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/HDFCBANK/HDFC-Bank-Limited'],
   ['ICICIBANK', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/ICICIBANK/ICICI-Bank-Limited'],
   ['AXISBANK', 'Private Sector Bank', 'https://www.nseindia.com/get-quote/equity/AXISBANK/Axis-Bank-Limited'],
