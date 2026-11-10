@@ -213,6 +213,7 @@ interface ParentGroup { code: string; macro: string; sector: string; industry: s
 
 /** Exact codes and parent hierarchy checked against the July 2023 NSE PDF. */
 const OFFICIALLY_CHECKED: Record<string, ParentGroup> = {
+  'Edible Oil': { code: 'IN040101001', macro: 'Fast Moving Consumer Goods', sector: 'Fast Moving Consumer Goods', industry: 'Agricultural Food & other Products' },
   'Power - Transmission': { code: 'IN110101003', macro: 'Utilities', sector: 'Power', industry: 'Power' },
   'Tour, Travel Related Services': { code: 'IN020601005', macro: 'Consumer Discretionary', sector: 'Consumer Services', industry: 'Leisure Services' },
   'Hotels & Resorts': { code: 'IN020601001', macro: 'Consumer Discretionary', sector: 'Consumer Services', industry: 'Leisure Services' },
