@@ -7,14 +7,14 @@ Vercel does NOT run the long-lived Express `server.ts`, and it should not
 fetch hundreds of stock histories from a web button.
 
 A public, read-only Vercel API serves the last saved, validated snapshot.
-GitHub Actions automatically collects the stock data **three times per Indian
-trading day**, following the originally requested schedule.
+GitHub Actions automatically collects the stock data **three times per IST calendar
+day**, following the originally requested schedule.
 
 | IST slot | UTC GitHub Actions schedule | Days |
 | --- | --- | --- |
 | **18:30 IST** | 13:00 UTC | Every day |
 | **02:00 IST** | 20:30 UTC on the previous calendar day | Every day |
-| **04:00 IST** | 22:30 UTC on the previous calendar day | Tuesday–Saturday |
+| **04:00 IST** | 22:30 UTC on the previous calendar day | Every day |
 
 All three entries run daily, matching the application's original 6:30 PM,
 2:00 AM and 4:00 AM IST schedule (including weekends). **There is no extra
@@ -24,6 +24,23 @@ holidays, prices will ordinarily remain at the latest completed session.
 GitHub Actions cron is best-effort: especially during high service load, jobs
 can start late or occasionally be skipped. The original time slots are
 configured, not guaranteed to execute to the second.
+
+## Safe manual test (no publication)
+
+A manual **Run workflow** option is available in GitHub Actions. It runs
+the same market collection and quality checks, **but cannot commit or push
+a snapshot**. This is a test-only execution, not a fourth automatic update.
+
+1. Open [Refresh Committed Market Snapshot](https://github.com/lkshdby/IndiaSectorTrends/actions/workflows/market-snapshot-refresh.yml).
+2. Click **Run workflow**, leave the branch set to **main**, and start it.
+3. Open the resulting run to inspect the **Summary**: freshly validated
+   stock coverage, benchmark coverage, and any missing core baskets.
+4. A green check indicates that the checks passed; if it fails, the
+   Summary and job logs show what needs investigation.
+
+Manual runs *do make provider requests* for testing, but the workflow's
+commit-and-push step is explicitly restricted to `schedule` events.
+They never replace the published market data.
 
 ## What the dashboard button does
 
