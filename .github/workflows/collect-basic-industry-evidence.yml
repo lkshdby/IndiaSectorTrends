@@ -1,21 +1,16 @@
 name: Collect NSE basic-industry evidence (manual or one-time smoke test)
 
 on:
-  push:
-    branches:
-      - feat/nse-source-annotated-industry-coverage-20261110
-    paths:
-      - .github/workflows/collect-basic-industry-evidence.yml
   workflow_dispatch:
     inputs:
       max_symbols:
         description: "Max new symbols to look up (0 = all remaining, with polite rate limit)"
         required: true
-        default: '0'
+        default: '20'
       target_branch:
         description: "Branch to write evidence JSON to (not automatically promoted into the official mapping)"
         required: true
-        default: 'feat/nse-source-annotated-industry-coverage-20261110'
+        default: 'main'
 
 permissions:
   contents: write
@@ -55,6 +50,8 @@ jobs:
           npx tsx --test src/utils/industryEvidence.test.ts
 
       - name: Commit source evidence only if records were retrieved
+        env:
+          TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
         run: |
           if git diff --quiet -- src/data/nseIndustryQuoteEvidence.json; then
             echo "No valid new NSE company classifications received; no changes to commit."
@@ -64,5 +61,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/data/nseIndustryQuoteEvidence.json
           git commit -m "data: annotate NSE quote-backed basic-industry evidence"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin "HEAD:${TARGET_BRANCH}"
