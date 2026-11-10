@@ -24,7 +24,11 @@ describe('zero-config automatic market collection policy', () => {
     assert.ok(!app.includes('GITHUB_ACTIONS_TOKEN'));
     assert.ok(!app.includes("method: 'POST'"));
     assert.ok(!app.includes("fetch('/api/sync-universe'"));
-    assert.ok(app.includes("fetch(`/api/stocks-snapshot?reload="));
+    assert.ok(app.includes('fetchCommittedMarketSnapshot()'));
+    const client = readFileSync('src/utils/marketSnapshotClient.ts', 'utf8');
+    assert.ok(client.includes('raw.githubusercontent.com/lkshdby/IndiaSectorTrends/main'));
+    assert.ok(client.includes('/api/stocks-snapshot'));
+    assert.ok(client.includes('/api/benchmarks'));
   });
 
   it('keeps the git worktree clean before rebasing and publishing the snapshot', () => {
