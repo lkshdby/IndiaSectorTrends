@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Header } from './components/Header';
 import { IndexTrackerView } from './components/IndexTrackerView';
+import { IndustryDiscoveryView } from './components/IndustryDiscoveryView';
+import { Layers3, LineChart } from 'lucide-react';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { fetchCommittedMarketSnapshot, type BrowserMarketSnapshot } from './utils/marketSnapshotClient';
 
@@ -11,6 +13,7 @@ export default function App() {
   } | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
+  const [workspace, setWorkspace] = useState<'themes' | 'industries'>('themes');
   const [marketSnapshot, setMarketSnapshot] = useState<BrowserMarketSnapshot | null>(null);
   const [snapshotLoadError, setSnapshotLoadError] = useState<string | null>(null);
   const loadSequence = useRef(0);
@@ -99,9 +102,23 @@ export default function App() {
         {/* Main Header */}
         <Header onRefresh={handleSyncMarketCloses} isSyncing={isSyncing} savedAt={marketSnapshot?.fetchedAt} snapshotSource={marketSnapshot?.source} loadError={!!snapshotLoadError} />
 
-        {/* Master Sector Rotation & Co-Movement Engine */}
+        <nav className="px-3 sm:px-5 lg:px-6 pt-4 flex flex-wrap items-center gap-2" aria-label="Market research workspace">
+          <button type="button" onClick={() => setWorkspace('themes')} aria-pressed={workspace === 'themes'}
+            className={workspace === 'themes' ? 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-[#08090a] text-white' : 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-white border border-[#b1ada1]/40'}>
+            <LineChart className="h-4 w-4"/> Investment themes · 62
+          </button>
+          <button type="button" onClick={() => setWorkspace('industries')} aria-pressed={workspace === 'industries'}
+            className={workspace === 'industries' ? 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-[#08090a] text-white' : 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-white border border-[#b1ada1]/40'}>
+            <Layers3 className="h-4 w-4"/> Basic industries · New
+          </button>
+        </nav>
         <main className="w-full px-3 sm:px-5 lg:px-6 py-4 flex-1 flex flex-col min-h-0">
-          <IndexTrackerView onShowToast={showToast} marketSnapshot={marketSnapshot} />
+          <div className={workspace === 'themes' ? 'block' : 'hidden'} aria-hidden={workspace !== 'themes'}>
+            <IndexTrackerView onShowToast={showToast} marketSnapshot={marketSnapshot} />
+          </div>
+          {workspace === 'industries' && (
+            <IndustryDiscoveryView marketSnapshot={marketSnapshot} onOpenThemes={() => setWorkspace('themes')} />
+          )}
         </main>
 
         {/* Sleek Footer */}
