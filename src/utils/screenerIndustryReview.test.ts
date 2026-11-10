@@ -39,7 +39,7 @@ describe('full-universe Screener reconciliation with separately attributed trust
     assert.equal(rows.length,1);
     assert.deepEqual(rows[0], {
       ticker:'BDL',basicIndustry:'Aerospace & Defense',industryCode:'IN070201001',
-      verifiedOn:'2026-11-10',sourceUrl:'https://www.screener.in/market/',
+      verifiedOn:'2026-11-10',sourceUrl:'https://www.screener.in/market/IN07/IN0702/IN070201/IN070201001/',
     });
     const output=screenerReconciliationCsv(report);
     assert.ok(output.includes('screenerIndustry,suggestedCatalogCode,reviewStatus'));
