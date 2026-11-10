@@ -55,6 +55,8 @@ jobs:
         run: npx tsx --test src/utils/screenerIndustryReview.test.ts
       - name: Private Screener industry import and heatmap isolation tests
         run: npx tsx --test src/utils/privateIndustryEvidence.test.ts
+      - name: Basic-industry heatmap momentum and sorting tests
+        run: npx tsx --test src/utils/industryHeatmap.test.ts
       - name: Production build
         run: npm run build
 
