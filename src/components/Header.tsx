@@ -45,11 +45,11 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh, isSyncing }) => {
             <button
               onClick={onRefresh}
               disabled={isSyncing}
-              title="Queues a protected GitHub Actions job to fetch the full universe. New prices become available after the job completes."
+              title="Reload the latest saved market snapshot. Market data is automatically collected at 6:30 PM, 2 AM and 4 AM IST."
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#08090a] hover:bg-[#1f2429] active:scale-95 text-white rounded-xl text-xs font-bold font-display cursor-pointer transition-all shadow-xs disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-[#10b981] ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Queuing...' : 'Request Market Refresh'}</span>
+              <span>{isSyncing ? 'Reloading...' : 'Reload Saved Data'}</span>
             </button>
           )}
         </div>

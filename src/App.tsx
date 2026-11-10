@@ -18,36 +18,27 @@ export default function App() {
   };
 
   const handleSyncMarketCloses = async () => {
-    // Manual refresh is a privileged operation that launches a GitHub Actions job,
-    // not a synchronous 450-stock network operation in the browser.
-    const adminKey = window.prompt(
-      'Enter the Sync Admin Key configured in Vercel. The refresh will be queued in GitHub Actions.'
-    );
-    if (adminKey === null) return;
-    if (!adminKey.trim()) {
-      showToast('A Sync Admin Key is required. Configure it in Vercel first.', 'error');
-      return;
-    }
+    // This button only reloads the last saved snapshot. New market data is
+    // collected automatically by the three scheduled GitHub Actions runs.
     setIsSyncing(true);
     try {
-      const response = await fetch('/api/sync-universe', {
-        method: 'POST',
-        headers: { 'x-sync-key': adminKey.trim() },
-        cache: 'no-store',
-      });
-      const result = await response.json().catch(() => null);
-      if (!response.ok || !result?.success || !result.queued) {
-        throw new Error(result?.error || `HTTP ${response.status}`);
+      const response = await fetch(`/api/stocks-snapshot?reload=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      if (!result?.success || !result.stocks || !Object.keys(result.stocks).length) {
+        throw new Error('The saved stock snapshot is unavailable');
       }
-      showToast(
-        'Market refresh queued in GitHub Actions. Data will update after the job finishes and the snapshot is saved.',
-        'info'
-      );
+      const savedAt = typeof result.fetchedAt === 'string' ? Date.parse(result.fetchedAt) : NaN;
+      const when = Number.isFinite(savedAt)
+        ? new Date(savedAt).toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short',
+            hour: '2-digit', minute: '2-digit'
+          }) + ' IST'
+        : 'unknown time';
+      setSyncTrigger(previous => previous + 1);
+      showToast(`Reloading saved market snapshot (collected ${when}). New prices are collected automatically at 6:30 PM, 2 AM and 4 AM IST.`, 'info');
     } catch (error) {
-      showToast(
-        `Market refresh could not be queued: ${error instanceof Error ? error.message : 'unknown error'}. Existing data retained.`,
-        'error'
-      );
+      showToast(`Could not reload saved market data: ${error instanceof Error ? error.message : 'unknown error'}. Existing data retained.`, 'error');
     } finally {
       setIsSyncing(false);
     }

@@ -5,6 +5,7 @@ on:
       - fix/rotation-data-integrity-20261109
       - feat/sector-universe-price-qa-20261109
       - fix/vercel-market-sync-405-20261109
+      - fix/three-slot-scheduled-snapshot-no-secrets
   pull_request:
 
 permissions:
@@ -29,5 +30,7 @@ jobs:
         run: npx tsx --test src/utils/priceQuality.test.ts
       - name: Sector membership tests
         run: npx tsx --test src/data/sectorUniverse.test.ts
+      - name: Three-slot scheduling and credential-free reload tests
+        run: npx tsx --test scripts/market-schedule.test.ts
       - name: Production build
         run: npm run build
