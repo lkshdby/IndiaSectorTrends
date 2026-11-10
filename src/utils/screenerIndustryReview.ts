@@ -11,7 +11,7 @@ import type { StockIndustryAuditRow } from './basicIndustryCoverage';
 export type ScreenerReviewStatus =
   | 'already-verified-match'
   | 'conflicts-with-primary-source'
-  | 'candidate-needs-primary-source'
+  | 'trusted-screener-match'
   | 'local-industry-code-pending'
   | 'unknown-industry-label'
   | 'missing-industry-field'
@@ -43,7 +43,7 @@ export interface ScreenerReconciliationReport {
 
 const allowedStatuses: ScreenerReviewStatus[] = [
   'already-verified-match', 'conflicts-with-primary-source',
-  'candidate-needs-primary-source', 'local-industry-code-pending',
+  'trusted-screener-match', 'local-industry-code-pending',
   'unknown-industry-label', 'missing-industry-field',
   'duplicate-export-conflict', 'not-present-in-export',
 ];
@@ -112,7 +112,7 @@ export function reviewScreenerIndustryExport(
     } else if (!known.code) {
       reviewStatus = 'local-industry-code-pending';
     } else {
-      reviewStatus = 'candidate-needs-primary-source';
+      reviewStatus = 'trusted-screener-match';
     }
     return {
       ticker: row.ticker,
@@ -159,4 +159,37 @@ export function screenerReconciliationCsv(report: ScreenerReconciliationReport):
   return [keys.join(','), ...report.rows.map(row =>
     keys.map(key => quoteCsv(row[key])).join(','),
   )].join('\r\n') + '\r\n';
+}
+
+
+export interface TrustedScreenerRecord {
+  ticker: string;
+  basicIndustry: string;
+  industryCode: string;
+  verifiedOn: string;
+  sourceUrl: string;
+}
+
+/**
+ * Only exact-symbol, code-checked, non-conflicting Screener matches can become
+ * trusted project evidence. Evidence is marked Screener, never NSE.
+ * Calling this function does not change repository files or production state.
+ */
+export function approvedScreenerEvidence(
+  report: ScreenerReconciliationReport,
+  verifiedOn: string,
+): TrustedScreenerRecord[] {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(verifiedOn) ||
+      !Number.isFinite(Date.parse(verifiedOn)) ||
+      new Date(verifiedOn).getTime() > Date.now()) {
+    throw new Error('Review date must be a valid nonfuture YYYY-MM-DD');
+  }
+  return report.rows.filter(r => r.reviewStatus === 'trusted-screener-match' &&
+    r.screenerIndustry && r.suggestedCatalogCode).map(r => ({
+    ticker: r.ticker,
+    basicIndustry: r.screenerIndustry!,
+    industryCode: r.suggestedCatalogCode!,
+    verifiedOn,
+    sourceUrl: 'https://www.screener.in/market/',
+  }));
 }
