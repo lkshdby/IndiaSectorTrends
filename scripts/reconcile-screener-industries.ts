@@ -43,6 +43,7 @@ console.log(JSON.stringify({
   matchedTrackedSymbols: report.matchedTrackedSymbols,
   trackedSymbolsMissingFromExport: report.missingTrackedSymbols,
   sourceDisagreements: report.statusCounts['conflicts-with-primary-source'],
+  industryGroupMismatches: report.statusCounts['industry-group-mismatch'],
   trustedScreenerMatchesEligibleAfterReview: report.statusCounts['trusted-screener-match'],
   missingCheckedIndustryCodes: report.statusCounts['local-industry-code-pending'],
   unknownIndustryLabels: report.statusCounts['unknown-industry-label'],

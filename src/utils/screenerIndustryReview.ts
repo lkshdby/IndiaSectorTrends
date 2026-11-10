@@ -16,6 +16,7 @@ export type ScreenerReviewStatus =
   | 'local-industry-code-pending'
   | 'unknown-industry-label'
   | 'missing-industry-field'
+  | 'industry-group-mismatch'
   | 'duplicate-export-conflict'
   | 'not-present-in-export';
 
@@ -26,6 +27,8 @@ export interface ScreenerReconciliationRow {
   verifiedIndustry: string | null;
   verifiedCode: string | null;
   screenerIndustry: string | null;
+  screenerIndustryGroup: string | null;
+  screenerIsin: string | null;
   suggestedCatalogCode: string | null;
   reviewStatus: ScreenerReviewStatus;
   primarySourceUrl: string | null;
@@ -46,6 +49,7 @@ const allowedStatuses: ScreenerReviewStatus[] = [
   'already-verified-match', 'conflicts-with-primary-source',
   'trusted-screener-match', 'local-industry-code-pending',
   'unknown-industry-label', 'missing-industry-field',
+  'industry-group-mismatch',
   'duplicate-export-conflict', 'not-present-in-export',
 ];
 
@@ -66,11 +70,13 @@ export function reviewScreenerIndustryExport(
   if (new Set(headers).size !== headers.length) throw new Error('Duplicate Screener export headers');
   const tickerAt = findHeader(headers, ['nsecode', 'nsesymbol', 'nseticker', 'symbol', 'ticker']);
   const industryAt = findHeader(headers, ['industry', 'basicindustry', 'basicindustryname', 'subindustry']);
+  const groupAt = findHeader(headers, ['industrygroup', 'parentindustry']);
+  const isinAt = findHeader(headers, ['isincode', 'isin', 'isinnumber']);
   if (tickerAt < 0 || industryAt < 0) {
     throw new Error('Screener CSV needs an NSE Code (or NSE Symbol) column and an Industry column');
   }
 
-  const incoming = new Map<string, string>();
+  const incoming = new Map<string, {industry: string; group: string; isin: string}>();
   const contradictory = new Set<string>();
   let invalidOrMissingNseCodes = 0;
   let repeatCount = 0;
@@ -84,18 +90,25 @@ export function reviewScreenerIndustryExport(
       invalidOrMissingNseCodes++;
       continue;
     }
-    const industry = cells[industryAt].trim();
+    // Whitespace-only differences (e.g. 'Telecom -  Equipment') are not different NSE labels.
+    const industry = cells[industryAt].replace(/\s+/g, ' ').trim();
+    const group = groupAt >= 0 ? cells[groupAt].replace(/\s+/g, ' ').trim() : '';
+    const isin = isinAt >= 0 ? cells[isinAt].trim().toUpperCase() : '';
     if (incoming.has(ticker)) {
       repeatCount++;
-      if (incoming.get(ticker) !== industry) contradictory.add(ticker);
+      const prev = incoming.get(ticker)!;
+      if (prev.industry !== industry || (prev.isin && isin && prev.isin !== isin) ||
+          (prev.group && group && prev.group !== group)) contradictory.add(ticker);
       continue;
     }
-    incoming.set(ticker, industry);
+    incoming.set(ticker, { industry, group, isin });
   }
 
   const auditSymbols = new Set(trackedRows.map(row => row.ticker));
   const rows: ScreenerReconciliationRow[] = trackedRows.map(row => {
-    const importIndustry = incoming.get(row.ticker);
+    const incomingRow = incoming.get(row.ticker);
+    const importIndustry = incomingRow?.industry;
+    const importGroup = incomingRow?.group || null;
     const known = importIndustry ? BASIC_INDUSTRY_BY_NAME.get(importIndustry) : null;
     let reviewStatus: ScreenerReviewStatus;
     if (contradictory.has(row.ticker)) {
@@ -110,6 +123,8 @@ export function reviewScreenerIndustryExport(
       reviewStatus = 'already-verified-match';
     } else if (!known) {
       reviewStatus = 'unknown-industry-label';
+    } else if (importGroup && known.industry && importGroup !== known.industry) {
+      reviewStatus = 'industry-group-mismatch';
     } else if (!known.code) {
       reviewStatus = 'local-industry-code-pending';
     } else {
@@ -122,6 +137,8 @@ export function reviewScreenerIndustryExport(
       verifiedIndustry: row.industry,
       verifiedCode: row.industryCode,
       screenerIndustry: importIndustry ?? null,
+      screenerIndustryGroup: importGroup,
+      screenerIsin: incomingRow?.isin || null,
       suggestedCatalogCode: known?.code ?? null,
       reviewStatus,
       primarySourceUrl: row.sourceUrl,
@@ -155,7 +172,7 @@ function quoteCsv(value: unknown): string {
 export function screenerReconciliationCsv(report: ScreenerReconciliationReport): string {
   const keys = [
     'ticker', 'companyName', 'primaryStatus', 'verifiedIndustry', 'verifiedCode',
-    'screenerIndustry', 'suggestedCatalogCode', 'reviewStatus', 'primarySourceUrl',
+    'screenerIndustry', 'screenerIndustryGroup', 'screenerIsin', 'suggestedCatalogCode', 'reviewStatus', 'primarySourceUrl',
   ] as const;
   return [keys.join(','), ...report.rows.map(row =>
     keys.map(key => quoteCsv(row[key])).join(','),

@@ -28,21 +28,21 @@ describe('full-universe Screener reconciliation with separately attributed trust
     assert.equal(get('BDL').reviewStatus,'trusted-screener-match');
     assert.equal(get('BDL').primaryStatus,'unmapped');
     assert.equal(get('BDL').verifiedIndustry,null);
-    assert.equal(get('DLF').reviewStatus,'local-industry-code-pending');
-    assert.equal(get('ASTRAL').reviewStatus,'local-industry-code-pending');
+    assert.equal(get('DLF').reviewStatus,'trusted-screener-match');
+    assert.equal(get('ASTRAL').reviewStatus,'trusted-screener-match');
     assert.equal(get('CIPLA').reviewStatus,'already-verified-match');
     assert.equal(get('ITC').reviewStatus,'conflicts-with-primary-source');
     assert.equal(get('ITC').verifiedIndustry,'Diversified FMCG');
     assert.equal(get('UNIONBANK').reviewStatus,'already-verified-match');
     assert.equal(get('JUPITERWAG').reviewStatus,'not-present-in-export');
     const rows=approvedScreenerEvidence(report,'2026-11-10');
-    assert.equal(rows.length,1);
-    assert.deepEqual(rows[0], {
+    assert.equal(rows.length,3);
+    assert.deepEqual(rows.find(row => row.ticker === 'BDL'), {
       ticker:'BDL',basicIndustry:'Aerospace & Defense',industryCode:'IN070201001',
       verifiedOn:'2026-11-10',sourceUrl:'https://www.screener.in/market/IN07/IN0702/IN070201/IN070201001/',
     });
     const output=screenerReconciliationCsv(report);
-    assert.ok(output.includes('screenerIndustry,suggestedCatalogCode,reviewStatus'));
+    assert.ok(output.includes('screenerIndustry,screenerIndustryGroup,screenerIsin,suggestedCatalogCode,reviewStatus'));
     assert.ok(output.includes('conflicts-with-primary-source'));
   });
 
@@ -85,5 +85,39 @@ describe('full-universe Screener reconciliation with separately attributed trust
     assert.ok(screener.includes('trusted-screener-match'));
     assert.ok(cli.includes('--authorized-source'));
     assert.equal(buildBasicIndustryAudit(null).rows.find(row=>row.ticker==='BDL')?.status,'unmapped');
+  });
+});
+
+
+describe('full Screener CSV schema with detailed Industry and broader Industry Group', () => {
+  const audit = buildBasicIndustryAudit(null);
+
+  it('accepts exported NSE Code, ISIN Code, Industry Group and Industry and normalizes spacing only', () => {
+    const csv = [
+      'Name,NSE Code,ISIN Code,Industry Group,Industry,Market Capitalization',
+      'Tejas Networks,TEJASNET,INE010J01012,Telecom -  Equipment & Accessories,Telecom -  Equipment & Accessories,1000',
+      'DLF,DLF,INE047A01021,Realty,"Residential, Commercial Projects",90000',
+      'ASTRAL,ASTRAL,INE006I01046,Industrial Products,Plastic Products - Industrial,80000',
+      'Cochin Shipyard,COCHINSHIP,INE704P01025,Industrial Manufacturing,Ship Building & Allied Services,50000',
+    ].join('\n');
+    const report = reviewScreenerIndustryExport(csv, audit.rows);
+    for (const ticker of ['TEJASNET','DLF','ASTRAL','COCHINSHIP']) {
+      const row = report.rows.find(x => x.ticker === ticker)!;
+      assert.equal(row.reviewStatus, 'trusted-screener-match', ticker);
+      assert.ok(row.suggestedCatalogCode, ticker);
+      assert.ok(row.screenerIsin?.startsWith('IN'), ticker);
+    }
+    assert.equal(report.rows.find(x=>x.ticker==='TEJASNET')?.screenerIndustry, 'Telecom - Equipment & Accessories');
+    assert.equal(report.rows.find(x=>x.ticker==='DLF')?.screenerIndustryGroup, 'Realty');
+  });
+
+  it('isolates conflicting Industry Group and never approves that secondary row', () => {
+    const csv = [
+      'NSE Code,Industry Group,Industry',
+      'DLF,Pharmaceuticals,"Residential, Commercial Projects"',
+    ].join('\n');
+    const report = reviewScreenerIndustryExport(csv, audit.rows);
+    assert.equal(report.rows.find(r => r.ticker==='DLF')?.reviewStatus, 'industry-group-mismatch');
+    assert.deepEqual(approvedScreenerEvidence(report, '2026-11-10'), []);
   });
 });
