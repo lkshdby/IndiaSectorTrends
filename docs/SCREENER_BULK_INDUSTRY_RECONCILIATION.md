@@ -41,7 +41,7 @@ The evidence file is an **empty placeholder** in the repo until authorized data 
 - Unknown Screener industry labels, missing local codes, invalid symbols, contradictory duplicate rows, and unlisted symbols are excluded. No industry codes are guessed. Differences in punctuation or source field granularity must be reconciled, not silently normalized into mismatched categories.
 - Editorial thematic hints are never accepted as evidence or ranking input.
 - The `JUPITERWAG` vs `JWL` discrepancy requires a separate symbol/ISIN/history audit. No unverified alias is applied.
-- Industry quote/market links in stored evidence indicate the **Screener export as the source**, not an assertion of separate real-time verification of each company page.
+- Each retained record links to the **Screener industry subpage** derived from the checked category code (for example `IN070201001` routes to `/market/IN07/IN0702/IN070201/IN070201001/`). This is evidence of its category table together with the authorized export's exact NSE symbol; it does not claim an independently checked live company page.
 
 ## What is still missing
 
