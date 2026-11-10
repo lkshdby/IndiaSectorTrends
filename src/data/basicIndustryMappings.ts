@@ -1,5 +1,6 @@
 import { BASIC_INDUSTRY_BY_NAME } from './basicIndustryCatalog';
 import quoteEvidence from './nseIndustryQuoteEvidence.json';
+import screenerEvidence from './screenerIndustryEvidence.json';
 
 /** Direct NSE equity quote pages explicitly displaying each symbol's Basic Industry.
  * These are sparse verified seed rows, NOT an inferred mapping for 453 symbols.
@@ -10,6 +11,7 @@ export interface BasicIndustryAssignment {
   basicIndustry: string;
   sourceUrl: string;
   verifiedOn: string;
+  sourceType?: 'nse' | 'screener';
 }
 const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['TCS', 'Computers - Software & Consulting', 'https://www.nseindia.com/get-quote/equity/TCS/Tata-Consultancy-Services-Limited'],
@@ -195,9 +197,49 @@ function loadSourceValidatedQuoteAssignments(): BasicIndustryAssignment[] {
   return results;
 }
 
+
+/**
+ * Explicit user-authorized Screener.in classifications are trusted for this
+ * PROJECT, not misrepresented as NSE observations. The evidence file is empty
+ * until an authorized bulk export has been reconciled and reviewed locally.
+ * NSE primary-source classifications always take precedence on disagreements.
+ */
+function loadTrustedScreenerAssignments(): BasicIndustryAssignment[] {
+  const results: BasicIndustryAssignment[] = [];
+  const preexisting = new Set(VERIFIED_NSE_QUOTE_MAPPINGS.map(r => r.ticker));
+  for (const r of loadSourceValidatedQuoteAssignments()) preexisting.add(r.ticker);
+  const seen = new Set<string>();
+  const rows = screenerEvidence.rows as Array<{
+    ticker: string; basicIndustry: string; industryCode: string;
+    verifiedOn: string; sourceUrl: string;
+  }>;
+  for (const r of rows) {
+    if (!/^[A-Z0-9][A-Z0-9&._-]{0,19}$/.test(r.ticker) ||
+        seen.has(r.ticker) || preexisting.has(r.ticker)) continue;
+    const code = BASIC_INDUSTRY_BY_NAME.get(r.basicIndustry)?.code;
+    if (!code || code !== r.industryCode) continue;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(r.verifiedOn) ||
+        !Number.isFinite(Date.parse(r.verifiedOn)) ||
+        new Date(r.verifiedOn).getTime() > Date.now()) continue;
+    try {
+      const source = new URL(r.sourceUrl);
+      if (source.protocol !== 'https:' || source.hostname !== 'www.screener.in' ||
+          !source.pathname.startsWith('/market/')) continue;
+    } catch { continue; }
+    seen.add(r.ticker);
+    results.push({
+      ticker: r.ticker, basicIndustry: r.basicIndustry,
+      sourceUrl: r.sourceUrl, verifiedOn: r.verifiedOn, sourceType: 'screener',
+    });
+  }
+  return results;
+}
+
+export const TRUSTED_SCREENER_INDUSTRY_ASSIGNMENTS = loadTrustedScreenerAssignments();
+
 export const DIRECT_NSE_QUOTE_ASSIGNMENTS = loadSourceValidatedQuoteAssignments();
 export const VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS: ReadonlyMap<string, BasicIndustryAssignment> =
-  new Map([...VERIFIED_NSE_QUOTE_MAPPINGS, ...DIRECT_NSE_QUOTE_ASSIGNMENTS].map(row => [row.ticker, row]));
+  new Map([...VERIFIED_NSE_QUOTE_MAPPINGS, ...DIRECT_NSE_QUOTE_ASSIGNMENTS, ...TRUSTED_SCREENER_INDUSTRY_ASSIGNMENTS].map(row => [row.ticker, row]));
 
 export function validateSourceVerifiedAssignments(): string[] {
   const issues: string[] = [];
@@ -224,6 +266,16 @@ export function validateSourceVerifiedAssignments(): string[] {
       }
     } catch {
       issues.push(`${assignment.ticker}: invalid NSE source URL`);
+    }
+  }
+  for (const r of TRUSTED_SCREENER_INDUSTRY_ASSIGNMENTS) {
+    if (tickers.has(r.ticker)) issues.push(r.ticker + ': duplicate trusted source');
+    tickers.add(r.ticker);
+    if (!BASIC_INDUSTRY_BY_NAME.get(r.basicIndustry)?.code) {
+      issues.push(r.ticker + ': Screener category missing checked code');
+    }
+    if (r.sourceType !== 'screener' || !r.sourceUrl.startsWith('https://www.screener.in/market/')) {
+      issues.push(r.ticker + ': Screener attribution missing');
     }
   }
   return issues;

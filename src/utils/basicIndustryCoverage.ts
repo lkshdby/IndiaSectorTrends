@@ -15,6 +15,7 @@ export interface StockIndustryAuditRow {
   industry: string | null;
   industryCode: string | null;
   sourceUrl: string | null;
+  sourceProvider: 'NSE' | 'Screener.in' | null;
   verifiedOn: string | null;
   status: MappingAuditStatus;
   /** A non-authoritative idea for HUMAN REVIEW; never used in industry returns. */
@@ -89,6 +90,7 @@ export function buildBasicIndustryAudit(snapshot: BrowserMarketSnapshot | null):
       industry: assignment?.basicIndustry || null,
       industryCode: industry?.code || null,
       sourceUrl: assignment?.sourceUrl || null,
+      sourceProvider: assignment ? assignment.sourceType === 'screener' ? 'Screener.in' : 'NSE' : null,
       verifiedOn: assignment?.verifiedOn || null,
       status,
       suggestedIndustry: !assignment ? hint?.suggestedIndustry || null : null,
@@ -135,7 +137,7 @@ export function buildBasicIndustryAudit(snapshot: BrowserMarketSnapshot | null):
 /** Escape CSV values before browser download / report artifact export. */
 export function industryAuditCsv(rows: StockIndustryAuditRow[]): string {
   const fields = ['ticker', 'companyName', 'status', 'basicIndustry', 'basicIndustryCode',
-    'themeCount', 'themes', 'inSavedSnapshot', 'referenceMarketCapCr', 'verifiedOn', 'sourceUrl',
+    'themeCount', 'themes', 'inSavedSnapshot', 'referenceMarketCapCr', 'verifiedOn', 'sourceUrl', 'sourceProvider',
     'editorialSuggestedIndustry', 'editorialSuggestedCode', 'suggestionStatus'];
   const cell = (value: unknown) => {
     const text = String(value ?? '');
@@ -144,7 +146,7 @@ export function industryAuditCsv(rows: StockIndustryAuditRow[]): string {
   const data = rows.map(row => [
     row.ticker, row.name, row.status, row.industry, row.industryCode,
     row.themeNames.length, row.themeNames.join('; '), row.inSavedSnapshot,
-    row.marketCapCr, row.verifiedOn, row.sourceUrl,
+    row.marketCapCr, row.verifiedOn, row.sourceUrl, row.sourceProvider,
     row.suggestedIndustry, row.suggestedCode, row.suggestionStatus,
   ].map(cell).join(','));
   return [fields.join(','), ...data].join('\r\n') + '\r\n';
