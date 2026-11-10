@@ -137,3 +137,66 @@ describe('second source-reviewed NSE quote batch, 2026-11-10', () => {
     }
   });
 });
+
+
+describe('third primary NSE quote evidence batch, 2026-11-10', () => {
+  const pinned: Record<string, string> = {
+    'HATSUN': 'Dairy Products',
+    'PARAGMILK': 'Dairy Products',
+    'KALYANKJIL': 'Gems, Jewellery And Watches',
+    'SKYGOLD': 'Gems, Jewellery And Watches',
+    'SENCO': 'Gems, Jewellery And Watches',
+    'UNITDSPR': 'Breweries & Distilleries',
+    'UBL': 'Breweries & Distilleries',
+    'INDIGO': 'Airline',
+    'TATAPOWER': 'Integrated Power Utilities',
+    'JSWENERGY': 'Power Generation',
+    'NHPC': 'Power Generation',
+    'SJVN': 'Power Generation',
+    'POLYCAB': 'Cables - Electricals',
+    'RRKABEL': 'Cables - Electricals',
+    'FINCABLES': 'Cables - Electricals',
+    'GRSE': 'Aerospace & Defense',
+    'TITAGARH': 'Railway Wagons',
+    'NESTLEIND': 'Packaged Foods',
+    'DABUR': 'Personal Care',
+    'GODREJCP': 'Personal Care',
+    'DRREDDY': 'Pharmaceuticals',
+    'HDFCLIFE': 'Life Insurance',
+    'ICICIGI': 'General Insurance',
+    'BATAINDIA': 'Footwear',
+    'METROBRAND': 'Footwear',
+    'RBLBANK': 'Private Sector Bank',
+    'MCX': 'Exchange and Data Platform',
+    'UNIONBANK': 'Public Sector Bank',
+  };
+  it('checks precise symbol, checked industry code and NSE source for all new records', () => {
+    assert.equal(Object.keys(pinned).length, 28);
+    assert.deepEqual(validateSourceVerifiedAssignments(), []);
+    for (const [ticker, industry] of Object.entries(pinned)) {
+      const record=VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.get(ticker);
+      assert.ok(record, ticker + ' source missing');
+      assert.equal(record.basicIndustry, industry, ticker);
+      assert.equal(record.verifiedOn, '2026-11-10', ticker);
+      const url=new URL(record.sourceUrl);
+      assert.equal(url.hostname, 'www.nseindia.com', ticker);
+      assert.ok(url.pathname.startsWith('/get-quote/equity/' + ticker + '/') ||
+        (url.pathname==='/get-quotes/equity' && url.searchParams.get('symbol')===ticker), ticker);
+      const audit=buildBasicIndustryAudit(null).rows.find(row=>row.ticker===ticker);
+      if (audit) {
+        assert.equal(audit.status, 'source-verified', ticker);
+        assert.equal(audit.industry, industry, ticker);
+        assert.ok(audit.industryCode, ticker);
+        assert.equal(audit.suggestedIndustry, null, ticker);
+      }
+    }
+  });
+  it('does not include NSE label-only records when their taxonomy codes are not checked', () => {
+    for (const ticker of ['DLF','GODREJPROP','ASTRAL','COCHINSHIP','IRFC']) {
+      assert.equal(VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.has(ticker),false,ticker);
+    }
+  });
+  it('does not equate the stale JUPITERWAG ticker with NSE JWL without a corporate-action audit', () => {
+    assert.equal(VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.has('JUPITERWAG'),false);
+  });
+});
