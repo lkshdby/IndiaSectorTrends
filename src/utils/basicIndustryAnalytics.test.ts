@@ -8,7 +8,7 @@ import {
 import {
   VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS, validateSourceVerifiedAssignments,
 } from '../data/basicIndustryMappings';
-import { computeIndustryDiscovery, describeConfidence } from './basicIndustryAnalytics';
+import { alignedRelativeReturn, computeIndustryDiscovery, describeConfidence } from './basicIndustryAnalytics';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
 
 function makeSyntheticSnapshot(): BrowserMarketSnapshot {
@@ -82,6 +82,26 @@ describe('NSE basic-industry discovery: strict provenance and honest coverage', 
     const unmapped = summary.industryRows.find(x => x.industry.name === 'Zinc')!;
     assert.equal(unmapped.confidence, 'unmapped');
     assert.equal(unmapped.price1M, null);
+  });
+
+  it('does not compare mismatched benchmark session dates', () => {
+    const sector = [
+      { date: '2026-10-30', value: 100 },
+      { date: '2026-11-02', value: 103 },
+      { date: '2026-11-03', value: 105 },
+    ];
+    const matching = [
+      { date: '2026-10-30', value: 100 },
+      { date: '2026-11-02', value: 101 },
+      { date: '2026-11-03', value: 102 },
+    ];
+    assert.equal(alignedRelativeReturn(sector, matching, 2), 3);
+    const mismatched = [
+      { date: '2026-10-29', value: 100 },
+      { date: '2026-11-02', value: 101 },
+      { date: '2026-11-03', value: 102 },
+    ];
+    assert.equal(alignedRelativeReturn(sector, mismatched, 2), null);
   });
 
   it('does not fabricate rankings without a market-data snapshot', () => {
