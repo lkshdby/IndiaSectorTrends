@@ -28,15 +28,15 @@ describe('full-universe Screener reconciliation with separately attributed trust
     assert.equal(get('BDL').reviewStatus,'trusted-screener-match');
     assert.equal(get('BDL').primaryStatus,'unmapped');
     assert.equal(get('BDL').verifiedIndustry,null);
-    assert.equal(get('DLF').reviewStatus,'local-industry-code-pending');
-    assert.equal(get('ASTRAL').reviewStatus,'local-industry-code-pending');
+    assert.equal(get('DLF').reviewStatus,'trusted-screener-match');
+    assert.equal(get('ASTRAL').reviewStatus,'trusted-screener-match');
     assert.equal(get('CIPLA').reviewStatus,'already-verified-match');
     assert.equal(get('ITC').reviewStatus,'conflicts-with-primary-source');
     assert.equal(get('ITC').verifiedIndustry,'Diversified FMCG');
     assert.equal(get('UNIONBANK').reviewStatus,'already-verified-match');
     assert.equal(get('JUPITERWAG').reviewStatus,'not-present-in-export');
     const rows=approvedScreenerEvidence(report,'2026-11-10');
-    assert.equal(rows.length,1);
+    assert.equal(rows.length,3);
     assert.deepEqual(rows[0], {
       ticker:'BDL',basicIndustry:'Aerospace & Defense',industryCode:'IN070201001',
       verifiedOn:'2026-11-10',sourceUrl:'https://www.screener.in/market/IN07/IN0702/IN070201/IN070201001/',
