@@ -1,5 +1,6 @@
 import { BASIC_INDUSTRY_BY_NAME } from '../data/basicIndustryCatalog';
 import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS } from '../data/basicIndustryMappings';
+import { getEditorialHints } from './industryClassificationHints';
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
 
@@ -16,6 +17,10 @@ export interface StockIndustryAuditRow {
   sourceUrl: string | null;
   verifiedOn: string | null;
   status: MappingAuditStatus;
+  /** A non-authoritative idea for HUMAN REVIEW; never used in industry returns. */
+  suggestedIndustry: string | null;
+  suggestedCode: string | null;
+  suggestionStatus: 'editorial-suggestion' | 'ambiguous-themes' | 'no-specific-theme' | 'snapshot-only' | 'already-verified';
 }
 export interface ThemeIndustryCoverage {
   themeId: string;
@@ -63,12 +68,14 @@ export function buildBasicIndustryAudit(snapshot: BrowserMarketSnapshot | null):
     }
   }
 
+  const editorialHints = getEditorialHints();
   const rawSnapshotSymbols = Object.keys(snapshot?.stocks || {});
   const savedTickers = new Set(rawSnapshotSymbols.map(normalizedTicker));
   const allTickers = new Set([...themed.keys(), ...savedTickers]);
   const rows = [...allTickers].map(ticker => {
     const company = themed.get(ticker);
     const assignment = VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.get(ticker);
+    const hint = editorialHints.get(ticker);
     const industry = assignment ? BASIC_INDUSTRY_BY_NAME.get(assignment.basicIndustry) : null;
     const status: MappingAuditStatus = assignment
       ? industry?.code ? 'source-verified' : 'missing-industry-code'
@@ -84,6 +91,9 @@ export function buildBasicIndustryAudit(snapshot: BrowserMarketSnapshot | null):
       sourceUrl: assignment?.sourceUrl || null,
       verifiedOn: assignment?.verifiedOn || null,
       status,
+      suggestedIndustry: !assignment ? hint?.suggestedIndustry || null : null,
+      suggestedCode: !assignment ? hint?.suggestedCode || null : null,
+      suggestionStatus: assignment ? 'already-verified' : hint?.status || 'snapshot-only',
     } satisfies StockIndustryAuditRow;
   }).sort((a, b) => {
     const priority = (row: StockIndustryAuditRow) => row.status === 'source-verified' ? 1 : 0;
@@ -125,7 +135,8 @@ export function buildBasicIndustryAudit(snapshot: BrowserMarketSnapshot | null):
 /** Escape CSV values before browser download / report artifact export. */
 export function industryAuditCsv(rows: StockIndustryAuditRow[]): string {
   const fields = ['ticker', 'companyName', 'status', 'basicIndustry', 'basicIndustryCode',
-    'themeCount', 'themes', 'inSavedSnapshot', 'referenceMarketCapCr', 'verifiedOn', 'sourceUrl'];
+    'themeCount', 'themes', 'inSavedSnapshot', 'referenceMarketCapCr', 'verifiedOn', 'sourceUrl',
+    'editorialSuggestedIndustry', 'editorialSuggestedCode', 'suggestionStatus'];
   const cell = (value: unknown) => {
     const text = String(value ?? '');
     return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -134,6 +145,7 @@ export function industryAuditCsv(rows: StockIndustryAuditRow[]): string {
     row.ticker, row.name, row.status, row.industry, row.industryCode,
     row.themeNames.length, row.themeNames.join('; '), row.inSavedSnapshot,
     row.marketCapCr, row.verifiedOn, row.sourceUrl,
+    row.suggestedIndustry, row.suggestedCode, row.suggestionStatus,
   ].map(cell).join(','));
   return [fields.join(','), ...data].join('\r\n') + '\r\n';
 }
