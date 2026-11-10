@@ -57,7 +57,11 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
 function loadSourceValidatedQuoteAssignments(): BasicIndustryAssignment[] {
   const results: BasicIndustryAssignment[] = [];
   const seen = new Set(VERIFIED_NSE_QUOTE_MAPPINGS.map(x => x.ticker));
-  for (const row of quoteEvidence.rows) {
+  const sourceRows = quoteEvidence.rows as Array<{
+    ticker: string; basicIndustry: string; industryCode: string | null;
+    observedAt: string; sourceUrl: string; status: string;
+  }>;
+  for (const row of sourceRows) {
     if (row.status !== 'nse-direct-code-confirmed' || seen.has(row.ticker)) continue;
     if (!/^[A-Z0-9][A-Z0-9&._-]{0,19}$/.test(row.ticker)) continue;
     const expectedCode = BASIC_INDUSTRY_BY_NAME.get(row.basicIndustry)?.code;
