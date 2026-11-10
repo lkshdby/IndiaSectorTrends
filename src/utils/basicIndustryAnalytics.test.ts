@@ -45,7 +45,7 @@ function makeSyntheticSnapshot(): BrowserMarketSnapshot {
 }
 
 describe('NSE basic-industry discovery: strict provenance and honest coverage', () => {
-  it('preserves the user's candidate labels without inventing the missing NSE codes', () => {
+  it('preserves provided candidate labels without inventing the missing NSE codes', () => {
     assert.ok(CANDIDATE_BASIC_INDUSTRY_NAMES.length >= 170);
     assert.ok(CANDIDATE_BASIC_INDUSTRY_NAMES.length <= NSE_PUBLISHED_BASIC_INDUSTRY_COUNT);
     assert.equal(new Set(CANDIDATE_BASIC_INDUSTRY_NAMES).size, BASIC_INDUSTRIES.length);
