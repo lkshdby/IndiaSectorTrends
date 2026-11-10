@@ -7,6 +7,7 @@ on:
       - fix/vercel-market-sync-405-20261109
       - fix/three-slot-scheduled-snapshot-no-secrets
       - feat/ux-phase1-personal-tracking-20261110
+      - feat/basic-industry-discovery-phase2-20261110
       - feat/manual-market-refresh-commits-20261110
       - fix/dashboard-reload-direct-github-snapshot-20261110
       - fix/actions-snapshot-git-rebase-128-20261110
@@ -40,5 +41,7 @@ jobs:
         run: npx tsx --test src/utils/marketSnapshotClient.test.ts
       - name: Personal tracking and chart-first usability tests
         run: npx tsx --test src/utils/trackedStocks.test.ts
+      - name: Basic industry taxonomy and discovery index tests
+        run: npx tsx --test src/utils/basicIndustryAnalytics.test.ts
       - name: Production build
         run: npm run build
