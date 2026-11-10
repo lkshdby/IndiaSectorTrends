@@ -68,9 +68,9 @@ async function main() {
     `| Core baskets with zero fresh stocks | ${emptyCoreBaskets.map(x => x.name).join(', ') || 'None'} |`,
     `| Publishing | ${mode === 'dry-run' ? 'DISABLED — existing snapshot is unchanged' : accepted ? 'Eligible for scheduled commit' : 'BLOCKED'} |`,
     '',
-  ].join('\\n');
+  ].join('\n');
   if (process.env.GITHUB_STEP_SUMMARY) {
-    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\\n');
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\n');
   }
 
   if (!accepted) {
