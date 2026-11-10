@@ -7,6 +7,7 @@ import { BASIC_INDUSTRIES, NSE_PUBLISHED_BASIC_INDUSTRY_COUNT } from '../data/ba
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
 import { readTrackedStocks } from '../utils/trackedStocks';
 import { computeIndustryDiscovery, type BasicIndustryScore, type IndustryConfidence } from '../utils/basicIndustryAnalytics';
+import { industryHeatmapValue, industryHeatmapColorSignal, sortIndustryHeatmap, type HeatmapSort, type HeatmapFilter } from '../utils/industryHeatmap';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
 
 interface Props {
@@ -39,6 +40,8 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
   const [show, setShow] = useState<'all' | 'mapped' | 'rankable'>('mapped');
   const [sort, setSort] = useState<'rs' | '1m' | 'breadth' | 'name'>('rs');
   const [selectedName, setSelectedName] = useState('Computers - Software & Consulting');
+  const [heatmapSort, setHeatmapSort] = useState<HeatmapSort>('acceleration');
+  const [heatmapFilter, setHeatmapFilter] = useState<HeatmapFilter>('all');
   const [privateAssignments, setPrivateAssignments] = useState<PrivateIndustryAssignments>(
     () => loadPrivateIndustryEvidence()?.assignments || new Map(),
   );
@@ -46,6 +49,8 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
   const summary = useMemo(() => computeIndustryDiscovery(marketSnapshot, trustedAssignments),
     [marketSnapshot, trustedAssignments]);
   const selection = summary.industryRows.find(x => x.industry.name === selectedName);
+  const heatmapRows = useMemo(() => sortIndustryHeatmap(summary.industryRows, heatmapSort, heatmapFilter),
+    [summary, heatmapSort, heatmapFilter]);
   const macros = useMemo(() => Array.from(new Set(BASIC_INDUSTRIES.map(x => x.macro).filter((x): x is string => !!x))).sort(), []);
   const visible = useMemo(() => summary.industryRows.filter(row => {
     if (search && !`${row.industry.name} ${row.industry.code || ''} ${row.industry.macro || ''}`.toLowerCase().includes(search.toLowerCase())) return false;
@@ -131,7 +136,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-base font-extrabold">Trusted-source basic-industry heatmap</h3>
-            <p className="text-xs text-[#08090a]/60 mt-1">1-month equal-weight price returns for currently mapped companies. Unrankable observations are marked, not hidden.</p>
+            <p className="text-xs text-[#08090a]/60 mt-1">Sort industries by recent acceleration, returns, breadth or benchmark-relative strength. All values use observed daily closing-price histories.</p>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-[#08090a]/60">
             <span className="w-3 h-3 rounded bg-emerald-100"/> Positive
@@ -139,10 +144,37 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
             <span className="w-3 h-3 rounded bg-[#f2f1ec] border border-[#b1ada1]/30"/> No verified return
           </div>
         </div>
+        <div className="flex flex-wrap gap-2 items-end">
+          <label className="flex-1 min-w-[190px] text-xs font-semibold text-[#08090a]/70">
+            Sort heatmap by
+            <select aria-label="Sort basic industry heatmap" value={heatmapSort}
+              onChange={e => setHeatmapSort(e.target.value as HeatmapSort)}
+              className="mt-1 w-full min-h-10 px-3 bg-white rounded-xl border border-[#b1ada1]/40 text-sm font-bold text-[#08090a]">
+              <option value="acceleration">Gaining momentum · recent acceleration</option>
+              <option value="rs">Relative strength vs NIFTY 500 · 1M</option>
+              <option value="week">Highest return · 1W</option>
+              <option value="month">Highest return · 1M</option>
+              <option value="breadth">Broadest participation · 1W</option>
+              <option value="name">Industry name · A–Z</option>
+            </select>
+          </label>
+          <label className="flex-1 min-w-[170px] text-xs font-semibold text-[#08090a]/70">
+            Evidence filter
+            <select aria-label="Filter basic industry heatmap" value={heatmapFilter}
+              onChange={e => setHeatmapFilter(e.target.value as HeatmapFilter)}
+              className="mt-1 w-full min-h-10 px-3 bg-white rounded-xl border border-[#b1ada1]/40 text-sm text-[#08090a]">
+              <option value="all">All mapped industries</option>
+              <option value="rankable">Sample-eligible only</option>
+              <option value="accelerating">Accelerating + sample-eligible</option>
+            </select>
+          </label>
+          <span className="text-xs text-[#08090a]/60 pb-2">{heatmapRows.length} industries · highest first</span>
+        </div>
         <details className="text-xs bg-[#f4f3ee] border border-[#b1ada1]/25 rounded-xl p-3">
           <summary className="font-bold cursor-pointer">How to read this heatmap and the rankings</summary>
           <div className="mt-2 space-y-2 leading-relaxed text-[#08090a]/75">
-            <p><strong>Color / large %:</strong> Green is a positive 1-month equal-weight price return; red is negative. Grey or — means insufficient usable price history. A green tile is not automatically a buy signal.</p>
+            <p><strong>Tile colors and numbers:</strong> Depend on the selected heatmap metric. Green is positive (or above 50% rising for breadth); red is negative (or below 50% breadth). Grey/— means insufficient usable price history.</p>
+            <p><strong>Gaining momentum (acceleration, pp):</strong> Latest five-session industry return minus the five-session-equivalent rate from the preceding 16 sessions. Positive means the most recent week moved faster than the earlier period, including possible rebounds; check 1M performance and breadth before interpreting it as leadership.</p>
             <p><strong>8/10 valid:</strong> Of 10 classified stocks in that industry, 8 have valid histories and contributed to the return. The other 2 do not contribute.</p>
             <p><strong>RS 1M:</strong> Industry's 1-month return minus NIFTY 500 over the same observed dates. Positive values imply outperformance, not necessarily a positive absolute return.</p>
             <p><strong>1W breadth:</strong> Percent of valid industry members rising over one week. For example, 7 of 10 risers = 70% breadth.</p>
@@ -151,17 +183,28 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
           </div>
         </details>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {summary.industryRows.filter(row => row.mappedCount > 0).map(row => (
-            <button type="button" key={row.industry.name} onClick={() => setSelectedName(row.industry.name)}
-              aria-pressed={selectedName === row.industry.name}
-              className={`rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5 ${signalTone(row.price1M)} ${selectedName === row.industry.name ? 'ring-2 ring-[#2563eb]' : ''}`}>
-              <span className="block text-xs font-bold leading-snug min-h-9">{row.industry.name}</span>
-              <span className="block mt-2 text-lg font-extrabold font-mono">{fmt(row.price1M)}</span>
-              <span className="block mt-1 text-[11px] opacity-80">{row.pricedCount}/{row.mappedCount} valid · {row.confidence === 'rankable' ? 'Sample only' : 'Limited evidence'}</span>
-            </button>
-          ))}
+          {heatmapRows.map(row => {
+            const value = industryHeatmapValue(row, heatmapSort);
+            const display = heatmapSort === 'breadth'
+              ? value === null ? '—' : value.toFixed(0) + '%'
+              : fmt(value, heatmapSort === 'acceleration' ? ' pp' : '%');
+            return (
+              <button type="button" key={row.industry.name} onClick={() => setSelectedName(row.industry.name)}
+                aria-pressed={selectedName === row.industry.name}
+                title={row.industry.name + ': ' + display + ' · 1M return ' + fmt(row.price1M)}
+                className={`rounded-xl border p-3 text-left transition-transform hover:-translate-y-0.5 ${signalTone(industryHeatmapColorSignal(row, heatmapSort))} ${selectedName === row.industry.name ? 'ring-2 ring-[#2563eb]' : ''}`}>
+                <span className="block text-xs font-bold leading-snug min-h-9">{row.industry.name}</span>
+                <span className="block mt-2 text-lg font-extrabold font-mono">{display}</span>
+                <span className="block mt-1 text-[11px] opacity-80">
+                  {heatmapSort === 'acceleration' ? '1W ' + fmt(row.price1W) + ' · 1M ' + fmt(row.price1M) :
+                    'Momentum ' + fmt(row.momentumAcceleration1W, ' pp')}
+                </span>
+                <span className="block mt-1 text-[11px] opacity-80">{row.pricedCount}/{row.mappedCount} valid · {row.confidence === 'rankable' ? 'Sample eligible' : 'Limited evidence'}</span>
+              </button>
+            );
+          })}
         </div>
-        {summary.groupedIndustries === 0 && <p className="text-sm text-[#08090a]/60">No independently verified industry membership is available yet.</p>}
+        {heatmapRows.length === 0 && <p className="text-sm text-[#08090a]/60">No industries qualify for this heatmap filter. Try “All mapped industries” or check data freshness.</p>}
       </section>
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)] gap-4 items-start">
@@ -250,6 +293,7 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
               <div className="grid grid-cols-2 gap-2">
                 {[
                   ['EW return · 1M', fmt(selection.price1M)],
+                  ['Momentum accel. · 1W', fmt(selection.momentumAcceleration1W, ' pp')],
                   ['EW vs NIFTY 500 · 1M', fmt(selection.nifty500Relative1M)],
                   ['MCap return · 1M', fmt(selection.mcap1M)],
                   ['Rising stocks · 1W', `${selection.advancing1W} / ${selection.pricedCount}`],
