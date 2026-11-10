@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { IndustryCoveragePanel } from './IndustryCoveragePanel';
 import { ArrowUpRight, BarChart3, BookOpen, ChevronRight, Filter, Layers3, Search, ShieldCheck, Star } from 'lucide-react';
 import { BASIC_INDUSTRIES, NSE_PUBLISHED_BASIC_INDUSTRY_COUNT } from '../data/basicIndustryCatalog';
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
@@ -105,6 +106,16 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
           {marketSnapshot ? ` Saved market collection: ${new Date(marketSnapshot.fetchedAt).toLocaleString('en-IN', { timeZone:'Asia/Kolkata' })} IST.` : ' Waiting for the saved market snapshot.'}
         </div>
       </header>
+
+      <details className="group rounded-2xl border border-[#b1ada1]/30 bg-white overflow-hidden">
+        <summary className="cursor-pointer select-none px-4 sm:px-5 py-4 flex flex-wrap items-center justify-between gap-2 font-bold text-sm sm:text-base hover:bg-[#fafaf9]">
+          <span>Classification coverage · Map every stock to its basic industry</span>
+          <span className="text-xs font-medium text-[#08090a]/60">Click to expand or collapse</span>
+        </summary>
+        <div className="px-3 sm:px-4 pb-4">
+          <IndustryCoveragePanel marketSnapshot={marketSnapshot}/>
+        </div>
+      </details>
 
       <section aria-label="Industry performance heatmap" className="p-4 sm:p-5 rounded-2xl bg-white border border-[#b1ada1]/30 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

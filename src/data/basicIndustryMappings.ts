@@ -28,6 +28,22 @@ const VERIFIED_NSE_QUOTE_MAPPINGS: BasicIndustryAssignment[] = [
   ['MEDANTA', 'Hospital', 'https://www.nseindia.com/get-quote/equity/MEDANTA/Global-Health-Limited'],
   ['SUNPHARMA', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/SUNPHARMA/Sun-Pharmaceutical-Industries-Limited'],
   ['SPARC', 'Pharmaceuticals', 'https://www.nseindia.com/get-quote/equity/SPARC/Sun-Pharma-Advanced-Research-Company-Limited'],
+  // NSE equity quote pages separately checked on 2026-11-10;
+  // these are primary basic-industry labels, not inferred from our 62 themes.
+  ['ITC', 'Diversified FMCG', 'https://www.nseindia.com/get-quote/equity/ITC/Itc'],
+  ['TATASTEEL', 'Iron & Steel', 'https://www.nseindia.com/get-quote/equity/TATASTEEL/Tata-Steel-Limited'],
+  ['JSWSTEEL', 'Iron & Steel', 'https://www.nseindia.com/get-quote/equity/JSWSTEEL/JSW-Steel-Limited'],
+  ['RELIANCE', 'Refineries & Marketing', 'https://www.nseindia.com/get-quote/equity/RELIANCE/Reliance-Industries-Limited'],
+  ['TATATECH', 'IT Enabled Services', 'https://www.nseindia.com/get-quote/equity/TATATECH/Tata-Technologies-Limited'],
+  ['ASIANPAINT', 'Paints', 'https://www.nseindia.com/get-quote/equity/ASIANPAINT/Asian-Paints-Limited'],
+  ['SBIN', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/SBIN/State-Bank-Of-India'],
+  ['BANKBARODA', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/BANKBARODA/Bank-of-Baroda'],
+  ['CANBK', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/CANBK/Canara-Bank'],
+  ['PNB', 'Public Sector Bank', 'https://www.nseindia.com/get-quote/equity/PNB/Punjab-National-Bank'],
+  ['MARUTI', 'Passenger Cars & Utility Vehicles', 'https://www.nseindia.com/get-quote/equity/MARUTI/Maruti-Suzuki-India-Limited'],
+  ['BAJFINANCE', 'Non Banking Financial Company (NBFC)', 'https://www.nseindia.com/get-quote/equity/BAJFINANCE/Bajaj-Finance-Limited'],
+  ['HINDALCO', 'Aluminium', 'https://www.nseindia.com/get-quote/equity/HINDALCO/Hindalco-Industries-Limited'],
+
 ].map(([ticker, basicIndustry, sourceUrl]) => ({
   ticker, basicIndustry, sourceUrl, verifiedOn: '2026-11-10',
 }));
@@ -37,12 +53,28 @@ export const VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS: ReadonlyMap<string, BasicIndus
 
 export function validateSourceVerifiedAssignments(): string[] {
   const issues: string[] = [];
+  const tickers = new Set<string>();
   for (const assignment of VERIFIED_NSE_QUOTE_MAPPINGS) {
+    if (tickers.has(assignment.ticker)) issues.push(`${assignment.ticker}: duplicate source record`);
+    tickers.add(assignment.ticker);
     const industry = BASIC_INDUSTRY_BY_NAME.get(assignment.basicIndustry);
     if (!industry?.code) issues.push(`${assignment.ticker}: missing verified NSE basic-industry code`);
-    if (!assignment.sourceUrl.startsWith('https://www.nseindia.com/get-quote/') &&
-        !assignment.sourceUrl.startsWith('https://www.nseindia.com/get-quotes/')) {
-      issues.push(`${assignment.ticker}: mapping lacks an NSE equity quote source`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(assignment.verifiedOn) ||
+        !Number.isFinite(Date.parse(assignment.verifiedOn))) {
+      issues.push(`${assignment.ticker}: missing valid review date`);
+    }
+    try {
+      const source = new URL(assignment.sourceUrl);
+      const path = source.pathname.toUpperCase();
+      const ticker = assignment.ticker.toUpperCase();
+      const isDirect = path.startsWith(`/GET-QUOTE/EQUITY/${ticker}/`);
+      const isSearch = path === '/GET-QUOTES/EQUITY' && source.searchParams.get('symbol')?.toUpperCase() === ticker;
+      if (source.protocol !== 'https:' || source.hostname !== 'www.nseindia.com' ||
+          (!isDirect && !isSearch)) {
+        issues.push(`${assignment.ticker}: source URL does not identify the same NSE equity symbol`);
+      }
+    } catch {
+      issues.push(`${assignment.ticker}: invalid NSE source URL`);
     }
   }
   return issues;
