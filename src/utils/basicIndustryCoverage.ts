@@ -1,5 +1,5 @@
 import { BASIC_INDUSTRY_BY_NAME } from '../data/basicIndustryCatalog';
-import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS } from '../data/basicIndustryMappings';
+import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS, type BasicIndustryAssignment } from '../data/basicIndustryMappings';
 import { getEditorialHints } from './industryClassificationHints';
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
@@ -51,7 +51,10 @@ function normalizedTicker(input: string): string {
  * the 62 theme constituents. A source-verified mapping does not imply
  * the stock is available in the daily price feed, or the reverse.
  */
-export function buildBasicIndustryAudit(snapshot: BrowserMarketSnapshot | null): IndustryMappingAudit {
+export function buildBasicIndustryAudit(
+  snapshot: BrowserMarketSnapshot | null,
+  trustedMappings: ReadonlyMap<string, BasicIndustryAssignment> = VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS,
+): IndustryMappingAudit {
   const themed = new Map<string, { name: string; themes: Set<string>; marketCapCr: number | null }>();
   for (const theme of THEMATIC_SECTOR_INDICES) {
     for (const stock of theme.stocks) {
@@ -75,7 +78,7 @@ export function buildBasicIndustryAudit(snapshot: BrowserMarketSnapshot | null):
   const allTickers = new Set([...themed.keys(), ...savedTickers]);
   const rows = [...allTickers].map(ticker => {
     const company = themed.get(ticker);
-    const assignment = VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS.get(ticker);
+    const assignment = trustedMappings.get(ticker);
     const hint = editorialHints.get(ticker);
     const industry = assignment ? BASIC_INDUSTRY_BY_NAME.get(assignment.basicIndustry) : null;
     const status: MappingAuditStatus = assignment
