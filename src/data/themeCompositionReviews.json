@@ -222,6 +222,43 @@
       "reviewedAt": "2026-11-11T10:10:29.386Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 32
+    },
+    {
+      "themeId": "alcoholic-beverages-breweries",
+      "assignments": [
+        {
+          "ticker": "ABDL",
+          "tier": "core"
+        },
+        {
+          "ticker": "GLOBUSSPR",
+          "tier": "core"
+        },
+        {
+          "ticker": "RADICO",
+          "tier": "core"
+        },
+        {
+          "ticker": "SULA",
+          "tier": "core"
+        },
+        {
+          "ticker": "TI",
+          "tier": "core"
+        },
+        {
+          "ticker": "UBL",
+          "tier": "core"
+        },
+        {
+          "ticker": "UNITDSPR",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:10:55.482Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 33
     }
   ]
 }
