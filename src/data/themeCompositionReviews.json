@@ -489,6 +489,47 @@
       "reviewedAt": "2026-11-11T10:15:37.706Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 42
+    },
+    {
+      "themeId": "logistics-ports",
+      "assignments": [
+        {
+          "ticker": "ADANIPORTS",
+          "tier": "core"
+        },
+        {
+          "ticker": "BLUEDART",
+          "tier": "core"
+        },
+        {
+          "ticker": "CONCOR",
+          "tier": "core"
+        },
+        {
+          "ticker": "DELHIVERY",
+          "tier": "core"
+        },
+        {
+          "ticker": "GPPL",
+          "tier": "core"
+        },
+        {
+          "ticker": "JSWINFRA",
+          "tier": "core"
+        },
+        {
+          "ticker": "TCIEXP",
+          "tier": "core"
+        },
+        {
+          "ticker": "VRLLOG",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:16:06.960Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 44
     }
   ]
 }
