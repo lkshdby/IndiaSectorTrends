@@ -2,6 +2,7 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { THEMATIC_SECTOR_INDICES } from '../src/data/sectorUniverse';
+import { parseMonitoringManifest, MONITORING_MANIFEST_PATH } from '../src/utils/priceMonitoring';
 import { validateAndRepairStock, sanitizeSnapshot } from '../src/utils/priceQuality';
 
 export interface MarketHistoryPoint {
@@ -184,7 +185,8 @@ try {
 
 export async function fetchStocksBatch(
   tickers: string[],
-  forceRefresh = false
+  forceRefresh = false,
+  nseOnlyTickers: ReadonlySet<string> = new Set(),
 ): Promise<Record<string, any>> {
   const now = Date.now();
   const results: Record<string, any> = {};
@@ -233,7 +235,7 @@ export async function fetchStocksBatch(
             results[ticker] = checked.record;
           } catch {
             // If .NS failed and doesn't have an extension, try .BO as fallback
-            if (!ticker.includes('.')) {
+            if (!ticker.includes('.') && !nseOnlyTickers.has(ticker)) {
               try {
                 const boSymbol = `${ticker}.BO`;
                 const chartData = await fetchYahooChart(boSymbol);
@@ -298,17 +300,27 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
       existingJson = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
     }
 
+    // User-approved monitoring stocks are a *separate* universe from the 62
+    // curated baskets. This public manifest holds tickers only, never the
+    // user's proprietary Screener export, classifications or financials.
+    const monitoringPath = path.join(process.cwd(), MONITORING_MANIFEST_PATH);
+    const monitoredTickers = parseMonitoringManifest(
+      JSON.parse(fs.readFileSync(monitoringPath, 'utf-8')),
+    ).symbols;
+    const nseOnlyMonitored = new Set(monitoredTickers);
+
     // Include the entire curated constituent universe, not only stocks in the seed cache.
     const allTickers = Array.from(
       new Set([
         ...THEMATIC_SECTOR_INDICES.flatMap(sector => sector.stocks.map(stock => stock.ticker)),
+        ...monitoredTickers,
         ...Object.keys(existingJson.stocks || {}),
         ...Array.from(stockHistoryCache.keys()),
       ])
     );
 
     const syncStartedAt = Date.now();
-    const refreshedStocks = await fetchStocksBatch(allTickers, true);
+    const refreshedStocks = await fetchStocksBatch(allTickers, true, nseOnlyMonitored);
     const mergedStocks = {
       ...sanitizeSnapshot(existingJson.stocks || {}),
       ...refreshedStocks,
@@ -349,8 +361,17 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     lastSyncAt = nowIso;
     lastSyncReason = reason;
 
+    const verifiedMonitored = monitoredTickers.filter(ticker => {
+      const entry = refreshedStocks[ticker];
+      return entry?.symbol === ticker + '.NS' && Boolean(entry?.rawHistory?.length);
+    });
     const updatedPayload = {
       fetchedAt: nowIso,
+      priceMonitoring: {
+        requested: monitoredTickers.length,
+        refreshed: verifiedMonitored.length,
+        unresolved: monitoredTickers.filter(ticker => !verifiedMonitored.includes(ticker)),
+      },
       lastSyncReason: reason,
       benchmarks: refreshedBenchmarks,
       stocks: mergedStocks,
