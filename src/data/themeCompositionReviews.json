@@ -579,6 +579,51 @@
       "reviewedAt": "2026-11-11T11:42:46.502Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 45
+    },
+    {
+      "themeId": "heavy-engineering",
+      "assignments": [
+        {
+          "ticker": "ABB",
+          "tier": "core"
+        },
+        {
+          "ticker": "AIAENG",
+          "tier": "core"
+        },
+        {
+          "ticker": "BHEL",
+          "tier": "core"
+        },
+        {
+          "ticker": "CUMMINSIND",
+          "tier": "core"
+        },
+        {
+          "ticker": "ELECON",
+          "tier": "core"
+        },
+        {
+          "ticker": "LT",
+          "tier": "core"
+        },
+        {
+          "ticker": "PRAJIND",
+          "tier": "core"
+        },
+        {
+          "ticker": "SIEMENS",
+          "tier": "core"
+        },
+        {
+          "ticker": "THERMAX",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T11:43:13.004Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 46
     }
   ]
 }
