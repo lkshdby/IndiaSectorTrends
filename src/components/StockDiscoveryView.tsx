@@ -5,6 +5,7 @@ import { joinPrivateIndustryAssignments, loadPrivateIndustryEvidence } from '../
 import { buildThemeMembershipAudit, themeMembershipAuditCsv } from '../utils/themeMembershipAudit';
 import { computeThemeStockLeadership, sortThemeStockLeaders, type LeaderSort, type ThemeStockLeader } from '../utils/stockLeadership';
 import { clearScreenerResearchPool, loadScreenerResearchPool, parseScreenerResearchPool, saveScreenerResearchPool, selectScreenerIndustryPeers, type ScreenerResearchPool } from '../utils/screenerResearchPool';
+import { MonitoringApprovalPanel } from './MonitoringApprovalPanel';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
 
 interface Props {
@@ -251,7 +252,7 @@ export function StockDiscoveryView({marketSnapshot,onOpenRadar}:Props) {
           </label>
           <p className="text-xs text-[#08090a]/60">
             {peers.length} same-industry NSE peers outside this theme. Market cap is a static Screener-export figure.
-            No daily prices are collected for these new candidates until explicitly added to a separately validated price universe.
+            You can select these or other cross-theme candidates for separate daily price monitoring below.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {peers.slice(0,18).map(p=>(
@@ -263,6 +264,8 @@ export function StockDiscoveryView({marketSnapshot,onOpenRadar}:Props) {
               </div>
             ))}
           </div>
+          <MonitoringApprovalPanel pool={pool} themeId={themeId} minCap={minCap}
+            classifications={classifications} snapshot={marketSnapshot}/>
           {peers.length===0&&<p className="text-xs text-[#08090a]/60">
             No new peers match the selected theme's classified core industries and this market-cap threshold.
             A niche theme may require business-segment research across multiple industries rather than broadening by industry label.

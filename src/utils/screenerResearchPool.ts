@@ -6,7 +6,7 @@
  */
 import { parseIndustryCsv } from './basicIndustryCsvReview';
 import { BASIC_INDUSTRY_BY_NAME } from '../data/basicIndustryCatalog';
-import { THEMATIC_SECTOR_BY_ID, classifySectorMember } from '../data/sectorUniverse';
+import { THEMATIC_SECTOR_INDICES, THEMATIC_SECTOR_BY_ID, classifySectorMember } from '../data/sectorUniverse';
 import type { BasicIndustryAssignment } from '../data/basicIndustryMappings';
 
 export const SCREENER_RESEARCH_KEY = 'india-sector-trends:screener-research-pool:v1';
@@ -97,6 +97,43 @@ export function selectScreenerIndustryPeers(
         ' with a core member; company-specific thematic exposure remains unverified',
     }))
     .sort((a,b)=>(b.marketCapCr||0)-(a.marketCapCr||0)||a.ticker.localeCompare(b.ticker));
+}
+/** Cross-theme discovery: useful even before selecting an individual basket.
+ * Returns UNVERIFIED same-industry peers, not constituent approvals. No
+ * proprietary rows are published; this computation stays in the browser.
+ */
+export interface CrossThemePeerCandidate extends IndustryPeerCandidate {
+  associatedThemes:string[];
+}
+export function discoverCrossThemeIndustryPeers(
+  pool:ScreenerResearchPool,
+  classification:ReadonlyMap<string,BasicIndustryAssignment>,
+  minimumMarketCapCr=1000,
+):CrossThemePeerCandidate[]{
+  const monitoredThematic=new Set(THEMATIC_SECTOR_INDICES.flatMap(t=>t.stocks.map(s=>s.ticker.toUpperCase())));
+  const industryThemes=new Map<string,Set<string>>();
+  for(const theme of THEMATIC_SECTOR_INDICES){
+    for(const stock of theme.stocks){
+      if(classifySectorMember(theme.id,stock).tier!=='core')continue;
+      const industry=classification.get(stock.ticker)?.basicIndustry;
+      if(!industry)continue;
+      if(!industryThemes.has(industry))industryThemes.set(industry,new Set());
+      industryThemes.get(industry)!.add(theme.name);
+    }
+  }
+  return pool.companies.filter(company=>
+    !monitoredThematic.has(company.ticker) &&
+    industryThemes.has(company.industry) &&
+    company.marketCapCr!==null &&
+    company.marketCapCr>=minimumMarketCapCr)
+    .map(company=>({
+      ...company,
+      associatedThemes:[...industryThemes.get(company.industry)!].sort(),
+      evidence:'screener-industry-only' as const,
+      reason:'Shares NSE basic-industry classification with core holdings in a curated theme; business-specific theme fit unverified',
+    }))
+    .sort((a,b)=>b.associatedThemes.length-a.associatedThemes.length ||
+      (b.marketCapCr||0)-(a.marketCapCr||0) || a.ticker.localeCompare(b.ticker));
 }
 export function loadScreenerResearchPool():ScreenerResearchPool|null {
   try {
