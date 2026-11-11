@@ -35,7 +35,7 @@ export function recordRadarDiary(existing: RadarDiary, snapshot: BrowserMarketSn
       date: radar.asOf,
       firstRecordedAt: new Date().toISOString(),
       sourceSnapshotAt: snapshot.fetchedAt,
-      themes: radar.allThemes.filter(t => t.phase !== 'Thin evidence').map(t => ({
+      themes: radar.allThemes.filter(t => t.phase !== 'Thin evidence' && t.phase !== 'Provisional composition').map(t => ({
         themeId: t.themeId, themeName: t.themeName, phase: t.phase,
         rs5: t.rs5, rs21: t.rs21, acceleration: t.rsAcceleration,
         breadth5: t.advancingPct5, coveragePct: t.coveragePct,
