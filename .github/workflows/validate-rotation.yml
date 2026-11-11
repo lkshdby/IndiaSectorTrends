@@ -59,6 +59,8 @@ jobs:
         run: npx tsx --test src/utils/industryHeatmap.test.ts
       - name: Research rotation radar and forward validation tests
         run: npx tsx --test src/utils/rotationRadar.test.ts
+      - name: Point-in-time rotation diary and forward outcome tests
+        run: npx tsx --test scripts/record-rotation-signals.test.ts
       - name: Production build
         run: npm run build
 
