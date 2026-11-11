@@ -530,6 +530,55 @@
       "reviewedAt": "2026-11-11T10:16:06.960Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 44
+    },
+    {
+      "themeId": "auto-components",
+      "assignments": [
+        {
+          "ticker": "BOSCHLTD",
+          "tier": "core"
+        },
+        {
+          "ticker": "CRAFTSMAN",
+          "tier": "core"
+        },
+        {
+          "ticker": "ENDURANCE",
+          "tier": "core"
+        },
+        {
+          "ticker": "GABRIEL",
+          "tier": "core"
+        },
+        {
+          "ticker": "MOTHERSON",
+          "tier": "core"
+        },
+        {
+          "ticker": "SANSERA",
+          "tier": "core"
+        },
+        {
+          "ticker": "SCHAEFFLER",
+          "tier": "core"
+        },
+        {
+          "ticker": "SONACOMS",
+          "tier": "core"
+        },
+        {
+          "ticker": "SUPRAJIT",
+          "tier": "core"
+        },
+        {
+          "ticker": "UNOMINDA",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T11:42:46.502Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 45
     }
   ]
 }
