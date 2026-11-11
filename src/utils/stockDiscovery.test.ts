@@ -57,7 +57,7 @@ function fixture():BrowserMarketSnapshot {
     stocks:{
       ETERNAL:mk('ETERNAL',0.996,1.014),
       SWIGGY:mk('SWIGGY',1.011,1.015),
-      NYKAA:mk('NYKAA',0.999,1.019),
+      NYKAA:mk('NYKAA',0.99,1.019),
     },
     benchmarks:{
       nifty500:{history:bench},
