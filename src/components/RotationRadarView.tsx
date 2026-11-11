@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowDownRight, ArrowUpRight, Activity, Compass, Info, Layers3, ShieldCheck, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 import { computeRotationRadar, type RotationPhase, type ThemeRotationPulse } from '../utils/rotationRadar';
+import { ThemeCompositionReviewPanel } from './ThemeCompositionReviewPanel';
+import { COMMITTED_THEME_REVIEWS, fetchThemeReviews, type ThemeReviewBook } from '../utils/themeCompositionReviews';
 import { fetchRotationDiary, summarizeRadarDiary, type RadarDiary } from '../utils/rotationDiary';
 import { joinPrivateIndustryAssignments, loadPrivateIndustryEvidence } from '../utils/privateIndustryEvidence';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
@@ -38,8 +40,15 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
   // Read only private browser state, never add source records to a public build.
   const [privateAssignments] = useState(() => loadPrivateIndustryEvidence()?.assignments || new Map());
   const classifications = useMemo(() => joinPrivateIndustryAssignments(privateAssignments), [privateAssignments]);
-  const radar = useMemo(() => computeRotationRadar(marketSnapshot, classifications),
-    [marketSnapshot, classifications]);
+  const [themeReviews,setThemeReviews] = useState<ThemeReviewBook>(COMMITTED_THEME_REVIEWS);
+  const [themeReviewError,setThemeReviewError] = useState<string|null>(null);
+  const refreshThemeReviews = async () => {
+    try {setThemeReviews(await fetchThemeReviews());setThemeReviewError(null);}
+    catch(err){setThemeReviewError(err instanceof Error?err.message:String(err));}
+  };
+  useEffect(()=>{void refreshThemeReviews();},[]);
+  const radar = useMemo(() => computeRotationRadar(marketSnapshot, classifications,themeReviews),
+    [marketSnapshot, classifications,themeReviews]);
   const [focus, setFocus] = useState<'early'|'leaders'|'cooling'|'all'>('early');
   const [selectedId, setSelectedId] = useState('');
   const [search, setSearch] = useState('');
@@ -241,6 +250,9 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
           )}
         </aside>
       </div>
+
+      <ThemeCompositionReviewPanel reviews={themeReviews} activeThemeId={active?.themeId||null}
+        refreshReviews={refreshThemeReviews} refreshError={themeReviewError}/>
 
       <section className="rounded-2xl bg-white border border-[#b1ada1]/30 p-4 sm:p-5 space-y-3">
         <h3 className="text-base font-extrabold flex items-center gap-2">
