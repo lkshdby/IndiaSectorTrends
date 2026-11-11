@@ -1,12 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CORE_SECTOR_INDICES } from '../data/sectorUniverse';
+import { CORE_SECTOR_INDICES, classifySectorMember } from '../data/sectorUniverse';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
 import { computeRotationRadar } from './rotationRadar';
 
 const theme = CORE_SECTOR_INDICES.find(x => {
   const unique = new Set(x.stocks.map(s => s.ticker));
-  return unique.size >= 5 && unique.size <= 7;
+  return unique.size >= 5 && unique.size <= 7 && x.stocks.every(stock => classifySectorMember(x.id,stock).reviewStatus==='reviewed-theme-fit');
 });
 if (!theme) throw new Error('Fixture needs a curated core basket of 5–7 companies');
 
@@ -104,6 +104,23 @@ describe('Rotation Radar: cross-theme early transition and honest validation',()
     // A signal at the latest session has no observable future close yet,
     // so its outcome must NOT appear as a forward-validated event.
     assert.equal(report.forwardCheck.signalEvents,0);
+  });
+
+  it('exposes unreviewed theme memberships but bars them from early-turn or valid forward event samples',()=>{
+    const provisional=CORE_SECTOR_INDICES.find(x=>x.stocks.length>=5 &&
+      x.stocks.every(stock=>classifySectorMember(x.id,stock).reviewStatus==='provisional'))!;
+    assert.ok(provisional);
+    const source=syntheticMarket();
+    const valid=Object.values(source.stocks)[0];
+    const extra=Object.fromEntries(provisional.stocks.map(stock=>[stock.ticker,
+      {...valid,ticker:stock.ticker,symbol:stock.ticker+'.NS'}]));
+    const withProvisional={...source,stocks:{...source.stocks,...extra}} as BrowserMarketSnapshot;
+    const report=computeRotationRadar(withProvisional);
+    const row=report.allThemes.find(x=>x.themeId===provisional.id)!;
+    assert.equal(row.membershipReview,'provisional');
+    assert.equal(row.phase,'Provisional composition');
+    assert.ok(report.provisionalThemes>=1);
+    assert.ok(!report.earlyTurns.some(x=>x.themeId===provisional.id));
   });
 
   it('never converts a thin basket into a high-confidence signal',()=>{
