@@ -65,6 +65,8 @@ jobs:
         run: npx tsx --test src/utils/stockDiscovery.test.ts
       - name: Safe owner-approved price-monitoring and private candidate import tests
         run: npx tsx --test src/utils/priceMonitoring.test.ts
+      - name: Approved NSE monitoring leader analysis tests
+        run: npx tsx --test src/utils/monitoringLeadership.test.ts
       - name: Production build
         run: npm run build
 
