@@ -16,6 +16,7 @@ const PHASE_STYLE: Record<RotationPhase, string> = {
   'Losing steam':'text-amber-900 bg-amber-50 border-amber-200',
   'Still lagging':'text-slate-700 bg-slate-50 border-slate-200',
   'Thin evidence':'text-[#08090a]/55 bg-[#f4f3ee] border-[#b1ada1]/35',
+  'Provisional composition':'text-amber-900 bg-amber-50 border-amber-300',
 };
 function num(n: number | null, unit = '%') {
   return n === null ? '—' : (n > 0 ? '+' : '') + n.toFixed(2) + unit;
@@ -28,6 +29,7 @@ function stageExplain(p: ThemeRotationPulse): string {
   if (p.phase === 'Broad leader') return 'Outperformed over both five and 21 sessions with more than half the tracked constituents beating the benchmark';
   if (p.phase === 'Losing steam') return 'Previously ahead, but short-term relative strength, acceleration or breadth has deteriorated';
   if (p.phase === 'Thin evidence') return 'Too few valid core constituents, or under 75% price-history coverage; not a reliable basket signal';
+  if (p.phase === 'Provisional composition') return 'Theme core membership is provisionally assigned without an explicit membership rule. Watchlist only; not eligible for rotation alerts until editorial membership review.';
   return 'Does not satisfy our predeclared broad-leadership or early-turn criteria';
 }
 
@@ -83,7 +85,7 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
             ['Early-turn candidates',radar.earlyTurns.length,'Relative strength just improving'],
             ['Broad leaders',radar.broadLeaders.length,'Confirmed over 5D and 21D'],
             ['Losing steam',radar.losingSteam.length,'Prior leadership now fading'],
-            ['Eligible theme samples',radar.evaluatedThemes + ' / ' + radar.coreThemes,'Core members · ≥5 stocks · ≥75% data'],
+            ['Eligible reviewed samples',radar.evaluatedThemes + ' / ' + radar.coreThemes,'Explicit editorial theme fit · ≥5 stocks · ≥75% data'],
           ].map(([label,value,note]) => (
             <div key={label} className="rounded-xl bg-[#f4f3ee] border border-[#b1ada1]/20 px-3.5 py-3">
               <p className="text-xs text-[#08090a]/65 font-semibold">{label}</p>
@@ -94,6 +96,7 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
         </div>
         <p className="text-xs mt-4 text-[#08090a]/60">
           Rotation here means <strong>relative price-strength change</strong>, not observed institutional money flows.
+          {' '}Provisional theme baskets awaiting composition review: <strong>{radar.provisionalThemes}</strong>; they appear in All themes but cannot trigger Early turn alerts.
           Our data covers the curated stock universe, <strong>not all companies in the Screener export</strong>.
           {privateAssignments.size ? ' Private industry classifications active on this browser: ' + privateAssignments.size + '.' :
             ' Import your private Screener classifications in Basic industries to label the industry drivers.'}
@@ -196,7 +199,8 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
               <div className="rounded-xl bg-[#f4f3ee] border border-[#b1ada1]/25 p-3 text-xs">
                 <p className="font-bold flex gap-1.5 items-center"><ShieldCheck className="w-4 h-4"/> Evidence quality</p>
                 <p className="mt-1 text-[#08090a]/70">{active.validCount} of {active.total} core companies had matching observed prices at all required dates; {active.coveragePct}% coverage.
-                  {active.validCount<5 || active.coveragePct<75 ? ' Not eligible for early-turn classification.' : ' Meets minimum sampling threshold.'}
+                  {active.membershipReview === 'provisional' ? ' Core thematic membership is provisional; not eligible for rotation alert even if price coverage is strong.' :
+                    active.validCount<5 || active.coveragePct<75 ? ' Not eligible for early-turn classification.' : ' Meets sampling and explicit editorial-membership thresholds (business revenue exposure still requires verification).'}
                 </p>
               </div>
               <div>
