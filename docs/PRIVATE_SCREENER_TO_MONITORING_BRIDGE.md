@@ -34,3 +34,9 @@ Previously, importing the full Screener export into browser storage made new ind
 ## Test
 
 `npx tsx --test src/utils/priceMonitoring.test.ts` verifies symbol-only issues, rejects unauthorized actors and malformed requests, protects the watchlist cap, and confirms the full private candidate pool does not automatically alter a thematic basket. Full CI also type-checks and builds.
+
+## Research after approval: discover actual stock price leadership
+
+Once the public monitoring manifest contains approved symbols and the collector has obtained exact-date NSE histories, the same private candidate screen displays **Emerging stock leaders in the approved monitoring universe**, ranked by latest five-session benchmark-relative momentum acceleration against the preceding sixteen-session pace. It includes separate 5D absolute return, 5D/21D NIFTY 500 relative returns and a visible **Awaiting history** state for missing, mismatched or quarantined quotations.
+
+The extra leaderboard is deliberately independent of all 62 curated index memberships. The private import is useful twice: (1) identifying candidates across the broad export, and (2) explaining their industry when actual fresh price histories have been captured. The public stock snapshot has only validated daily closes and ticker-only owner approvals; it does not publish private Screener fields.
