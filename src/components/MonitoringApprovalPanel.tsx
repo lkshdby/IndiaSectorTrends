@@ -95,9 +95,10 @@ export function MonitoringApprovalPanel({pool,themeId,minCap,classifications,sna
         <div>
           <h4 className="font-extrabold text-sm flex gap-2 items-center"><Telescope className="w-4 h-4 text-blue-700"/> Turn your Screener CSV into daily stock monitoring</h4>
           <p className="text-xs text-[#08090a]/65 mt-1 max-w-2xl">
-            We've screened the imported CSV against core-stock industries in the 62 themes.
-            Select candidate NSE symbols to monitor. Only ticker codes are sent to a GitHub
-            approval issue; your private Screener records remain in this browser.
+            Your approved monitoring list includes the one-time ₹10,000 Cr+ NSE screening universe,
+            alongside individual industry-peer approvals. Candidate suggestions below are still
+            industry peers, not vetted theme constituents. Only ticker codes are public;
+            your private Screener records remain in this browser.
           </p>
         </div>
         <button type="button" disabled={loading} onClick={refresh}
@@ -190,7 +191,9 @@ export function MonitoringApprovalPanel({pool,themeId,minCap,classifications,sna
         <ShieldCheck className="w-4 h-4 shrink-0 text-blue-700"/>
         New symbols enter daily Yahoo closing-price collection after the issue is approved by GitHub and the
         manifest update succeeds. Unavailable symbols show as unresolved; <strong>no automatic theme promotion</strong>.
-        Monitoring batches are limited to {MAX_APPROVAL_BATCH} and {MAX_MONITORED_TICKERS} total to protect data quality and API limits.
+        New manual approvals remain limited to {MAX_APPROVAL_BATCH} per GitHub issue; the public list allows
+        up to {MAX_MONITORED_TICKERS} additional NSE symbols. Yahoo collection itself is paced separately
+        in small batches with retry and backoff.
         The GitHub issue and approved NSE codes are public, but your Screener classifications and raw CSV are not.
       </p>
 

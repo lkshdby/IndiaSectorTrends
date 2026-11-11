@@ -4,7 +4,7 @@
  * A monitored symbol is NOT a vetted theme member or an investment suggestion.
  */
 export const MONITORING_MANIFEST_PATH = 'src/data/priceMonitoringSymbols.json';
-export const MAX_MONITORED_TICKERS = 150;
+export const MAX_MONITORED_TICKERS = 800;
 export const MAX_APPROVAL_BATCH = 20;
 export const APPROVAL_MARKER = '<!-- ist-monitor-request:v1 -->';
 export const APPROVAL_START = 'APPROVED_NSE_TICKERS';
