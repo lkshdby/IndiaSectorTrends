@@ -44,6 +44,14 @@ export function fetchYahooChart(symbol: string, range = '3mo'): Promise<{
         timeout: 10000,
       },
       (res) => {
+        // Respect provider throttling and distinguish it from an unknown ticker.
+        if (res.statusCode !== 200) {
+          const error = new Error('Yahoo chart HTTP ' + res.statusCode + ' for ' + symbol) as Error & { statusCode?: number };
+          error.statusCode = res.statusCode;
+          res.resume();
+          reject(error);
+          return;
+        }
         let data = '';
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
@@ -183,6 +191,43 @@ try {
   // continue if seed file not accessible
 }
 
+// Limit concurrent Yahoo requests and pause between batches. A 20-ticker
+// approval batch is NOT an API rate limit: every approved symbol is collected
+// at each scheduled run. The pacing below applies to the whole universe.
+const YAHOO_BATCH_SIZE = 3;
+const YAHOO_PAUSE_BETWEEN_BATCHES_MS = 1400;
+const YAHOO_RETRY_DELAYS_MS = [2500, 6500];
+
+function pauseYahoo(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function yahooStatusCode(error: unknown): number | null {
+  if (!error || typeof error !== 'object') return null;
+  const code = (error as { statusCode?: unknown }).statusCode;
+  return typeof code === 'number' ? code : null;
+}
+
+function transientYahooFailure(error: unknown): boolean {
+  const status = yahooStatusCode(error);
+  if (status === 429 || status === 500 || status === 502 || status === 503 || status === 504) return true;
+  return /timed out|ECONNRESET|ETIMEDOUT|ECONNREFUSED|socket hang up/i.test(String(error));
+}
+
+async function yahooWithRetry(symbol: string): Promise<Awaited<ReturnType<typeof fetchYahooChart>>> {
+  for (let attempt = 0; attempt <= YAHOO_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fetchYahooChart(symbol);
+    } catch (error) {
+      if (!transientYahooFailure(error) || attempt === YAHOO_RETRY_DELAYS_MS.length) throw error;
+      const wait = YAHOO_RETRY_DELAYS_MS[attempt] + Math.floor(Math.random() * 1000);
+      console.warn('[YAHOO-RETRY] ' + symbol + ' (' + String(error) + '); retry in ' + wait + ' ms');
+      await pauseYahoo(wait);
+    }
+  }
+  throw new Error('Yahoo retry budget exhausted for ' + symbol);
+}
+
 export async function fetchStocksBatch(
   tickers: string[],
   forceRefresh = false,
@@ -191,10 +236,12 @@ export async function fetchStocksBatch(
   const now = Date.now();
   const results: Record<string, any> = {};
   const tickersToFetch: string[] = [];
+  const seen = new Set<string>();
 
   for (const rawTicker of tickers) {
     const t = rawTicker.trim().toUpperCase();
-    if (!t) continue;
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
     const cached = stockHistoryCache.get(t);
     if (!forceRefresh && cached && now - cached.cachedAt < CACHE_TTL_MS) {
       results[t] = cached.data;
@@ -203,74 +250,56 @@ export async function fetchStocksBatch(
     }
   }
 
-  if (tickersToFetch.length > 0) {
-    // Process in polite batches of 15 to avoid Yahoo Finance rate limiting
-    const BATCH_SIZE = 15;
-    for (let i = 0; i < tickersToFetch.length; i += BATCH_SIZE) {
-      const batch = tickersToFetch.slice(i, i + BATCH_SIZE);
-      await Promise.allSettled(
-        batch.map(async (ticker) => {
-          const symbol =
-            STOCK_SYMBOL_MAP[ticker] || (ticker.includes('.') ? ticker : `${ticker}.NS`);
+  for (let i = 0; i < tickersToFetch.length; i += YAHOO_BATCH_SIZE) {
+    const batch = tickersToFetch.slice(i, i + YAHOO_BATCH_SIZE);
+    await Promise.allSettled(batch.map(async ticker => {
+      const symbol = STOCK_SYMBOL_MAP[ticker] || (ticker.includes('.') ? ticker : ticker + '.NS');
+      const storeValidated = (chartData: Awaited<ReturnType<typeof fetchYahooChart>>, fetchedSymbol: string): void => {
+        const checked = validateAndRepairStock({
+          ticker,
+          symbol: fetchedSymbol,
+          price: chartData.price,
+          change1D: chartData.change1D,
+          change1W: chartData.change1W,
+          change3M: chartData.change3M,
+          history: chartData.history,
+          rawHistory: chartData.rawHistory,
+          fetchedAt: new Date().toISOString(),
+        });
+        if (!checked.record) {
+          console.warn('[QUARANTINED] ' + ticker + ': ' + checked.warnings.join('; '));
+          return;
+        }
+        stockHistoryCache.set(ticker, { data: checked.record, cachedAt: Date.now() });
+        results[ticker] = checked.record;
+      };
 
+      try {
+        storeValidated(await yahooWithRetry(symbol), symbol);
+      } catch (error) {
+        // A rate limit or provider outage is not evidence that an NSE ticker
+        // has moved to BSE. Do not double the load with a .BO fallback.
+        const mayTryBse = !transientYahooFailure(error) && !ticker.includes('.') && !nseOnlyTickers.has(ticker);
+        if (mayTryBse) {
           try {
-            const chartData = await fetchYahooChart(symbol);
-            const stockResult = {
-              ticker,
-              symbol,
-              price: chartData.price,
-              change1D: chartData.change1D,
-              change1W: chartData.change1W,
-              change3M: chartData.change3M,
-              history: chartData.history,
-              rawHistory: chartData.rawHistory,
-              fetchedAt: new Date().toISOString(),
-            };
-            const checked = validateAndRepairStock(stockResult);
-            if (!checked.record) {
-              console.warn(`[QUARANTINED] ${ticker}: ${checked.warnings.join('; ')}`);
-              return;
-            }
-            stockHistoryCache.set(ticker, { data: checked.record, cachedAt: now });
-            results[ticker] = checked.record;
-          } catch {
-            // If .NS failed and doesn't have an extension, try .BO as fallback
-            if (!ticker.includes('.') && !nseOnlyTickers.has(ticker)) {
-              try {
-                const boSymbol = `${ticker}.BO`;
-                const chartData = await fetchYahooChart(boSymbol);
-                const stockResult = {
-                  ticker,
-                  symbol: boSymbol,
-                  price: chartData.price,
-                  change1D: chartData.change1D,
-                  change1W: chartData.change1W,
-                  change3M: chartData.change3M,
-                  history: chartData.history,
-                  rawHistory: chartData.rawHistory,
-                  fetchedAt: new Date().toISOString(),
-                };
-                const checked = validateAndRepairStock(stockResult);
-                if (!checked.record) {
-                  console.warn(`[QUARANTINED] ${ticker}: ${checked.warnings.join('; ')}`);
-                  return;
-                }
-                stockHistoryCache.set(ticker, { data: checked.record, cachedAt: now });
-                results[ticker] = checked.record;
-              } catch {
-                // Fall back to existing cached entry if available
-                const stale = stockHistoryCache.get(ticker);
-                if (stale) {
-                  results[ticker] = stale.data;
-                }
-              }
-            }
+            const boSymbol = ticker + '.BO';
+            storeValidated(await yahooWithRetry(boSymbol), boSymbol);
+            return;
+          } catch (boError) {
+            console.warn('[YAHOO-UNRESOLVED] ' + ticker + ': NSE and BSE unavailable (' + String(boError) + ')');
           }
-        })
-      );
+        } else {
+          console.warn('[YAHOO-UNRESOLVED] ' + ticker + ': ' + String(error));
+        }
+        // Keep prior validated history, never replace it with zeroes or fabricated prices.
+        const stale = stockHistoryCache.get(ticker);
+        if (stale) results[ticker] = stale.data;
+      }
+    }));
+    if (i + YAHOO_BATCH_SIZE < tickersToFetch.length) {
+      await pauseYahoo(YAHOO_PAUSE_BETWEEN_BATCHES_MS);
     }
   }
-
   return results;
 }
 
@@ -338,24 +367,26 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     ];
 
     const refreshedBenchmarks: Record<string, any> = { ...(existingJson.benchmarks || {}) };
-    await Promise.allSettled(
-      benchmarkConfigs.map(async (cfg) => {
-        try {
-          const data = await fetchYahooChart(cfg.symbol);
-          refreshedBenchmarks[cfg.key] = {
-            ...cfg,
-            price: data.price,
-            change1D: data.change1D,
-            change1W: data.change1W,
-            change3M: data.change3M,
-            history: data.history,
-            fetchedAt: new Date().toISOString(),
-          };
-        } catch {
-          // keep existing benchmark entry on transient error
-        }
-      })
-    );
+    // Benchmark fetches share the same retry policy and are paced as well.
+    for (const cfg of benchmarkConfigs) {
+      try {
+        const data = await yahooWithRetry(cfg.symbol);
+        refreshedBenchmarks[cfg.key] = {
+          ...cfg,
+          price: data.price,
+          change1D: data.change1D,
+          change1W: data.change1W,
+          change3M: data.change3M,
+          history: data.history,
+          fetchedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        console.warn('[BENCHMARK-UNRESOLVED] ' + cfg.symbol + ': ' + String(error));
+        // Preserve prior verified benchmark; the scheduled quality gate
+        // will reject committing stale benchmarks.
+      }
+      await pauseYahoo(YAHOO_PAUSE_BETWEEN_BATCHES_MS);
+    }
 
     const nowIso = new Date().toISOString();
     lastSyncAt = nowIso;
