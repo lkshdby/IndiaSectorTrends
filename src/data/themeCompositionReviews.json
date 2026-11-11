@@ -1,4 +1,42 @@
 {
   "version": 1,
-  "reviews": []
+  "reviews": [
+    {
+      "themeId": "jewellery-luxury-watches",
+      "assignments": [
+        {
+          "ticker": "ETHOSLTD",
+          "tier": "core"
+        },
+        {
+          "ticker": "KALYANKJIL",
+          "tier": "core"
+        },
+        {
+          "ticker": "PNGJL",
+          "tier": "core"
+        },
+        {
+          "ticker": "SENCO",
+          "tier": "core"
+        },
+        {
+          "ticker": "SKYGOLD",
+          "tier": "core"
+        },
+        {
+          "ticker": "THANGAMAYL",
+          "tier": "core"
+        },
+        {
+          "ticker": "TITAN",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T09:59:43.613Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 26
+    }
+  ]
 }
