@@ -1,0 +1,467 @@
+themeId,themeName,ticker,companyName,tier,membershipReview
+quick-commerce-consumer-tech,"Quick Commerce, Food Delivery & Consumer Tech",ETERNAL,Eternal Ltd (Zomato & Blinkit),core,explicit-editorial
+quick-commerce-consumer-tech,"Quick Commerce, Food Delivery & Consumer Tech",SWIGGY,Swiggy Limited (Instamart),core,explicit-editorial
+quick-commerce-consumer-tech,"Quick Commerce, Food Delivery & Consumer Tech",NYKAA,FSN E-Commerce Ventures (Nykaa),adjacent,explicit-editorial
+quick-commerce-consumer-tech,"Quick Commerce, Food Delivery & Consumer Tech",FIRSTCRY,Brainbees Solutions (FirstCry),adjacent,explicit-editorial
+quick-commerce-consumer-tech,"Quick Commerce, Food Delivery & Consumer Tech",NAUKRI,Info Edge (India) Ltd,proxy,explicit-editorial
+quick-commerce-consumer-tech,"Quick Commerce, Food Delivery & Consumer Tech",HONASA,Honasa Consumer (Mamaearth),adjacent,explicit-editorial
+quick-commerce-consumer-tech,"Quick Commerce, Food Delivery & Consumer Tech",ZAGGLE,Zaggle Prepaid Ocean Services,proxy,explicit-editorial
+fintech-payments-insurtech,"Fintech, Digital Payments & Insurtech",PAYTM,One 97 Communications (Paytm),core,explicit-editorial
+fintech-payments-insurtech,"Fintech, Digital Payments & Insurtech",POLICYBZR,PB Fintech (Policybazaar),core,explicit-editorial
+fintech-payments-insurtech,"Fintech, Digital Payments & Insurtech",JIOFIN,Jio Financial Services Ltd,adjacent,explicit-editorial
+fintech-payments-insurtech,"Fintech, Digital Payments & Insurtech",MOBIKWIK,One MobiKwik Systems Ltd,core,explicit-editorial
+fintech-payments-insurtech,"Fintech, Digital Payments & Insurtech",CMSINFO,CMS Info Systems Ltd,adjacent,explicit-editorial
+fintech-payments-insurtech,"Fintech, Digital Payments & Insurtech",FINOPB,Fino Payments Bank Ltd,core,explicit-editorial
+fintech-payments-insurtech,"Fintech, Digital Payments & Insurtech",AFFLE,Affle (India) Limited,proxy,explicit-editorial
+online-travel-marketplaces,"Online Travel, Marketplaces & B2B Platforms",IXIGO,Le Travenues Technology (ixigo),core,explicit-editorial
+online-travel-marketplaces,"Online Travel, Marketplaces & B2B Platforms",TBOTEK,TBO Tek Limited,core,explicit-editorial
+online-travel-marketplaces,"Online Travel, Marketplaces & B2B Platforms",EASEMYTRIP,Easy Trip Planners Ltd,core,explicit-editorial
+online-travel-marketplaces,"Online Travel, Marketplaces & B2B Platforms",CARTRADE,CarTrade Tech Limited,adjacent,explicit-editorial
+online-travel-marketplaces,"Online Travel, Marketplaces & B2B Platforms",INDIAMART,IndiaMART InterMESH Ltd,adjacent,explicit-editorial
+online-travel-marketplaces,"Online Travel, Marketplaces & B2B Platforms",JUSTDIAL,Just Dial Limited,adjacent,explicit-editorial
+online-travel-marketplaces,"Online Travel, Marketplaces & B2B Platforms",RATEGAIN,RateGain Travel Technologies,core,explicit-editorial
+data-centers-ai-cloud,"Data Centers, AI Compute & Cloud Infra",NETWEB,Netweb Technologies India Ltd,core,explicit-editorial
+data-centers-ai-cloud,"Data Centers, AI Compute & Cloud Infra",ANANTRAJ,Anant Raj Limited (Data Centers),core,explicit-editorial
+data-centers-ai-cloud,"Data Centers, AI Compute & Cloud Infra",E2E,E2E Networks Limited (Cloud GPU),core,explicit-editorial
+data-centers-ai-cloud,"Data Centers, AI Compute & Cloud Infra",BBOX,Black Box Limited,core,explicit-editorial
+data-centers-ai-cloud,"Data Centers, AI Compute & Cloud Infra",TECHNOE,Techno Electric & Engg Co,adjacent,explicit-editorial
+data-centers-ai-cloud,"Data Centers, AI Compute & Cloud Infra",AURIONPRO,Aurionpro Solutions Ltd,adjacent,explicit-editorial
+data-centers-ai-cloud,"Data Centers, AI Compute & Cloud Infra",TANLA,Tanla Platforms Limited,adjacent,explicit-editorial
+dairy-value-added-food,Dairy & Value-Added Milk Products,MILKYMIST,Milky Mist Dairy Food Ltd,core,explicit-editorial
+dairy-value-added-food,Dairy & Value-Added Milk Products,DODLA,Dodla Dairy Limited,core,explicit-editorial
+dairy-value-added-food,Dairy & Value-Added Milk Products,HATSUN,Hatsun Agro Product Ltd,core,explicit-editorial
+dairy-value-added-food,Dairy & Value-Added Milk Products,HERITGFOOD,Heritage Foods Limited,core,explicit-editorial
+dairy-value-added-food,Dairy & Value-Added Milk Products,PARAGMILK,Parag Milk Foods Ltd (Gowardhan),core,explicit-editorial
+dairy-value-added-food,Dairy & Value-Added Milk Products,VADILALIND,Vadilal Industries Ltd,adjacent,explicit-editorial
+dairy-value-added-food,Dairy & Value-Added Milk Products,BECTORFOOD,Mrs. Bectors Food Specialities,adjacent,explicit-editorial
+jewellery-luxury-watches,"Jewellery, Gold Retail & Luxury Watches",TITAN,Titan Company Limited (Tanishq),core,provisional
+jewellery-luxury-watches,"Jewellery, Gold Retail & Luxury Watches",KALYANKJIL,Kalyan Jewellers India Ltd,core,provisional
+jewellery-luxury-watches,"Jewellery, Gold Retail & Luxury Watches",SENCO,Senco Gold Limited,core,provisional
+jewellery-luxury-watches,"Jewellery, Gold Retail & Luxury Watches",PNGJL,P N Gadgil Jewellers Ltd,core,provisional
+jewellery-luxury-watches,"Jewellery, Gold Retail & Luxury Watches",THANGAMAYL,Thangamayil Jewellery Ltd,core,provisional
+jewellery-luxury-watches,"Jewellery, Gold Retail & Luxury Watches",ETHOSLTD,Ethos Limited (Luxury Watches),core,provisional
+jewellery-luxury-watches,"Jewellery, Gold Retail & Luxury Watches",SKYGOLD,Sky Gold Limited,core,provisional
+alcoholic-beverages-breweries,"Alcoholic Beverages, Spirits & Breweries",UNITDSPR,United Spirits Ltd (Diageo),core,provisional
+alcoholic-beverages-breweries,"Alcoholic Beverages, Spirits & Breweries",RADICO,Radico Khaitan Limited,core,provisional
+alcoholic-beverages-breweries,"Alcoholic Beverages, Spirits & Breweries",UBL,United Breweries Limited,core,provisional
+alcoholic-beverages-breweries,"Alcoholic Beverages, Spirits & Breweries",ABDL,Allied Blenders and Distillers,core,provisional
+alcoholic-beverages-breweries,"Alcoholic Beverages, Spirits & Breweries",SULA,Sula Vineyards Limited,core,provisional
+alcoholic-beverages-breweries,"Alcoholic Beverages, Spirits & Breweries",TI,Tilaknagar Industries Ltd,core,provisional
+alcoholic-beverages-breweries,"Alcoholic Beverages, Spirits & Breweries",GLOBUSSPR,Globus Spirits Limited,core,provisional
+retail-apparel,"Retail - Apparel, Department & Fashion",TRENT,Trent Ltd (Westside & Zudio),core,explicit-editorial
+retail-apparel,"Retail - Apparel, Department & Fashion",DMART,Avenue Supermarts Ltd (DMart),adjacent,explicit-editorial
+retail-apparel,"Retail - Apparel, Department & Fashion",ABFRL,Aditya Birla Fashion & Retail,core,explicit-editorial
+retail-apparel,"Retail - Apparel, Department & Fashion",MANYAVAR,Vedant Fashions Ltd (Manyavar),core,explicit-editorial
+retail-apparel,"Retail - Apparel, Department & Fashion",PAGEIND,Page Industries Ltd (Jockey),core,explicit-editorial
+retail-apparel,"Retail - Apparel, Department & Fashion",RAYMOND,Raymond Limited,adjacent,explicit-editorial
+retail-apparel,"Retail - Apparel, Department & Fashion",KKCL,Kewal Kiran Clothing (Killer),core,explicit-editorial
+retail-apparel,"Retail - Apparel, Department & Fashion",ARVIND,Arvind Limited,core,explicit-editorial
+retail-qsr,Retail - QSR & Restaurant Chains,JUBLFOOD,Jubilant FoodWorks (Domino's),core,explicit-editorial
+retail-qsr,Retail - QSR & Restaurant Chains,DEVYANI,Devyani International (KFC/PizzaHut),core,explicit-editorial
+retail-qsr,Retail - QSR & Restaurant Chains,WESTLIFE,Westlife Foodworld (McDonald's),core,explicit-editorial
+retail-qsr,Retail - QSR & Restaurant Chains,SAPPHIRE,Sapphire Foods India (KFC/TacoBell),core,explicit-editorial
+retail-qsr,Retail - QSR & Restaurant Chains,RBA,Restaurant Brands Asia (Burger King),core,explicit-editorial
+retail-qsr,Retail - QSR & Restaurant Chains,BIKAJI,Bikaji Foods International,adjacent,explicit-editorial
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",NESTLEIND,Nestle India Ltd,core,provisional
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",BRITANNIA,Britannia Industries Ltd,core,provisional
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",TATACONSUM,Tata Consumer Products Ltd,core,provisional
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",VBL,Varun Beverages Ltd (PepsiCo),core,provisional
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",PATANJALI,Patanjali Foods Limited,core,provisional
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",AWL,Adani Wilmar Limited,core,provisional
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",LTFOODS,LT Foods Limited (Daawat),core,provisional
+fmcg-food,"FMCG - Packaged Food, Staples & Edibles",ZYDUSWELL,Zydus Wellness Limited,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",HINDUNILVR,Hindustan Unilever Ltd,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",ITC,ITC Limited,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",GODREJCP,Godrej Consumer Products Ltd,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",DABUR,Dabur India Ltd,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",MARICO,Marico Limited,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",COLPAL,Colgate-Palmolive (India) Ltd,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",EMAMILTD,Emami Limited,core,provisional
+fmcg-personal-care,"FMCG - Personal Care, Home & Hygiene",JYOTHYLAB,Jyothy Labs Limited,core,provisional
+footwear-leather,"Footwear, Sportswear & Accessories",METROBRAND,Metro Brands Ltd,core,provisional
+footwear-leather,"Footwear, Sportswear & Accessories",BATAINDIA,Bata India Ltd,core,provisional
+footwear-leather,"Footwear, Sportswear & Accessories",RELAXO,Relaxo Footwears Ltd,core,provisional
+footwear-leather,"Footwear, Sportswear & Accessories",CAMPUS,Campus Activewear Limited,core,provisional
+footwear-leather,"Footwear, Sportswear & Accessories",REDTAPE,Redtape Limited,core,provisional
+footwear-leather,"Footwear, Sportswear & Accessories",MIRZAINT,Mirza International Ltd,core,provisional
+hotels-hospitality,"Hotels, Resorts & Hospitality",INDHOTEL,Indian Hotels Co Ltd (Taj),core,provisional
+hotels-hospitality,"Hotels, Resorts & Hospitality",EIHOTEL,EIH Ltd (Oberoi Hotels),core,provisional
+hotels-hospitality,"Hotels, Resorts & Hospitality",CHALET,Chalet Hotels Ltd,core,provisional
+hotels-hospitality,"Hotels, Resorts & Hospitality",LEMONTREE,Lemon Tree Hotels Ltd,core,provisional
+hotels-hospitality,"Hotels, Resorts & Hospitality",JUNIPER,Juniper Hotels Limited (Hyatt),core,provisional
+hotels-hospitality,"Hotels, Resorts & Hospitality",SAMHI,Samhi Hotels Limited,core,provisional
+hotels-hospitality,"Hotels, Resorts & Hospitality",ITDC,India Tourism Development Corp,core,provisional
+aviation-airports-tourism,"Aviation, Airlines & Airport Infrastructure",INDIGO,InterGlobe Aviation (IndiGo),core,explicit-editorial
+aviation-airports-tourism,"Aviation, Airlines & Airport Infrastructure",GMRAIRPORT,GMR Airports Infrastructure,core,explicit-editorial
+aviation-airports-tourism,"Aviation, Airlines & Airport Infrastructure",IRCTC,Indian Railway Catering & Tourism,adjacent,explicit-editorial
+aviation-airports-tourism,"Aviation, Airlines & Airport Infrastructure",THOMASCOOK,Thomas Cook (India) Limited,adjacent,explicit-editorial
+aviation-airports-tourism,"Aviation, Airlines & Airport Infrastructure",SPICEJET,SpiceJet Limited,core,explicit-editorial
+aviation-airports-tourism,"Aviation, Airlines & Airport Infrastructure",TAJGVK,TAJGVK Hotels & Resorts Ltd,core,explicit-editorial
+ac-cooling-hvac,"Air Conditioning, Cooling & HVAC Systems",VOLTAS,Voltas Ltd (Tata Cooling),core,provisional
+ac-cooling-hvac,"Air Conditioning, Cooling & HVAC Systems",BLUESTARCO,Blue Star Limited,core,provisional
+ac-cooling-hvac,"Air Conditioning, Cooling & HVAC Systems",AMBER,Amber Enterprises India Ltd,core,provisional
+ac-cooling-hvac,"Air Conditioning, Cooling & HVAC Systems",PGEL,PG Electroplast Limited,core,provisional
+ac-cooling-hvac,"Air Conditioning, Cooling & HVAC Systems",EPACK,EPACK Durable Limited,core,provisional
+ac-cooling-hvac,"Air Conditioning, Cooling & HVAC Systems",SYMPHONY,Symphony Limited,core,provisional
+ac-cooling-hvac,"Air Conditioning, Cooling & HVAC Systems",WHIRLPOOL,Whirlpool of India Limited,core,provisional
+consumer-durables,"Consumer Durables, Appliances & FMEG",HAVELLS,Havells India Ltd,core,provisional
+consumer-durables,"Consumer Durables, Appliances & FMEG",CROMPTON,Crompton Greaves Consumer,core,provisional
+consumer-durables,"Consumer Durables, Appliances & FMEG",VGUARD,V-Guard Industries Limited,core,provisional
+consumer-durables,"Consumer Durables, Appliances & FMEG",BAJAJELEC,Bajaj Electricals Limited,core,provisional
+consumer-durables,"Consumer Durables, Appliances & FMEG",ORIENTELEC,Orient Electric Limited,core,provisional
+consumer-durables,"Consumer Durables, Appliances & FMEG",IFBIND,IFB Industries Limited,core,provisional
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",WAAREEENER,Waaree Energies Ltd,core,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",PREMIERENE,Premier Energies Ltd,core,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",SUZLON,Suzlon Energy Ltd,core,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",INOXWIND,Inox Wind Ltd,core,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",ACMESOLAR,ACME Solar Holdings Limited,adjacent,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",KPIGREEN,KPI Green Energy Limited,adjacent,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",SWSOLAR,Sterling and Wilson Renewable,core,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",IREDA,Indian Renewable Energy Dev Agency,proxy,explicit-editorial
+solar-renewable,"Solar, Wind & Renewable Energy Equipment",BORORENEW,Borosil Renewables Ltd,core,explicit-editorial
+water-recycling-circular,"Water Treatment, Waste & Circular Economy",WABAG,VA Tech Wabag Limited,core,explicit-editorial
+water-recycling-circular,"Water Treatment, Waste & Circular Economy",GRAVITA,Gravita India Limited (Recycling),core,explicit-editorial
+water-recycling-circular,"Water Treatment, Waste & Circular Economy",EMSLIMITED,EMS Limited (Sewerage & Water),core,explicit-editorial
+water-recycling-circular,"Water Treatment, Waste & Circular Economy",IONEXCHANG,Ion Exchange (India) Limited,core,explicit-editorial
+water-recycling-circular,"Water Treatment, Waste & Circular Economy",AWHCL,Antony Waste Handling Cell,core,explicit-editorial
+water-recycling-circular,"Water Treatment, Waste & Circular Economy",GANECOS,Ganesha Ecosphere (PET Recycling),core,explicit-editorial
+water-recycling-circular,"Water Treatment, Waste & Circular Economy",EPIGRAL,Epigral Limited,adjacent,explicit-editorial
+power-generation,"Power Generation, Thermal & Hydro Utilities",NTPC,NTPC Limited,core,provisional
+power-generation,"Power Generation, Thermal & Hydro Utilities",TATAPOWER,Tata Power Company Ltd,core,provisional
+power-generation,"Power Generation, Thermal & Hydro Utilities",JSWENERGY,JSW Energy Ltd,core,provisional
+power-generation,"Power Generation, Thermal & Hydro Utilities",TORNTPOWER,Torrent Power Ltd,core,provisional
+power-generation,"Power Generation, Thermal & Hydro Utilities",NHPC,NHPC Limited,core,provisional
+power-generation,"Power Generation, Thermal & Hydro Utilities",SJVN,SJVN Limited,core,provisional
+power-generation,"Power Generation, Thermal & Hydro Utilities",CESC,CESC Limited,core,provisional
+power-generation,"Power Generation, Thermal & Hydro Utilities",NLCINDIA,NLC India Limited,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",POWERGRID,Power Grid Corp of India,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",CGPOWER,CG Power and Industrial Solutions,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",POWERINDIA,Hitachi Energy India Limited,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",APARINDS,Apar Industries Ltd,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",TRIL,Transformers & Rectifiers India,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",KEC,KEC International Limited,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",VOLTAMP,Voltamp Transformers Limited,core,provisional
+power-transmission,"Power Transmission, Transformers & Grid EPC",SKIPPER,Skipper Limited,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",POLYCAB,Polycab India Ltd,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",KEI,KEI Industries Ltd,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",RRKABEL,R R Kabel Ltd,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",FINCABLES,Finolex Cables Ltd,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",ASTRAL,Astral Limited,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",SUPREMEIND,Supreme Industries Limited,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",FINPIPE,Finolex Industries Limited,core,provisional
+cables-wires,"Cables, Wires & Piping Infrastructure",PRINCEPIPE,Prince Pipes and Fittings,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",HAL,Hindustan Aeronautics Ltd,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",BEL,Bharat Electronics Ltd,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",MAZDOCK,Mazagon Dock Shipbuilders Ltd,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",BDL,Bharat Dynamics Ltd,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",COCHINSHIP,Cochin Shipyard Ltd,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",GRSE,Garden Reach Shipbuilders Ltd,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",DATAPATTNS,Data Patterns (India) Limited,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",PARAS,Paras Defence and Space Tech,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",ASTRAMICRO,Astra Microwave Products Ltd,core,provisional
+defence,"Aerospace, Defence & Naval Shipbuilding",MTARTECH,MTAR Technologies Limited,core,provisional
+railways,"Railways, Rolling Stock & Signaling Infra",IRFC,Indian Railway Finance Corp,adjacent,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",RVNL,Rail Vikas Nigam Ltd,core,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",IRCON,Ircon International Ltd,core,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",TITAGARH,Titagarh Rail Systems Ltd,core,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",JUPITERWAG,Jupiter Wagons Ltd,core,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",RAILTEL,RailTel Corporation of India,core,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",TEXRAIL,Texmaco Rail & Engineering,core,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",RITES,RITES Limited,core,explicit-editorial
+railways,"Railways, Rolling Stock & Signaling Infra",BEML,BEML Limited,core,explicit-editorial
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",LT,Larsen & Toubro Ltd,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",SIEMENS,Siemens Limited,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",ABB,ABB India Limited,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",BHEL,Bharat Heavy Electricals Ltd,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",CUMMINSIND,Cummins India Limited,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",THERMAX,Thermax Ltd,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",AIAENG,AIA Engineering Limited,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",ELECON,Elecon Engineering Company Ltd,core,provisional
+heavy-engineering,"Heavy Engineering, Industrial Capital Goods & Automation",PRAJIND,Praj Industries Ltd,core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",DLF,DLF Ltd,core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",LODHA,Macrotech Developers (Lodha),core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",GODREJPROP,Godrej Properties Ltd,core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",OBEROIRLTY,Oberoi Realty Ltd,core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",PRESTIGE,Prestige Estates Projects,core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",BRIGADE,Brigade Enterprises Limited,core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",SOBHA,Sobha Limited,core,provisional
+real-estate,"Real Estate, Commercial & Residential Developers",SUNTECK,Sunteck Realty Limited,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",ADANIPORTS,Adani Ports & SEZ Ltd,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",JSWINFRA,JSW Infrastructure Limited,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",CONCOR,Container Corp of India,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",DELHIVERY,Delhivery Limited,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",BLUEDART,Blue Dart Express Ltd,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",GPPL,Gujarat Pipavav Port Limited,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",TCIEXP,TCI Express Limited,core,provisional
+logistics-ports,"Logistics, Ports & Multimodal Supply Chain",VRLLOG,VRL Logistics Limited,core,provisional
+shipping-dredging,"Shipping, Offshore Vessels & Dredging",GE-SHIPPING,Great Eastern Shipping Co,core,explicit-editorial
+shipping-dredging,"Shipping, Offshore Vessels & Dredging",SCI,Shipping Corp of India Ltd,core,explicit-editorial
+shipping-dredging,"Shipping, Offshore Vessels & Dredging",SEAMECLTD,SEAMEC Limited (Offshore),core,explicit-editorial
+shipping-dredging,"Shipping, Offshore Vessels & Dredging",DREDGECORP,Dredging Corp of India Ltd,core,explicit-editorial
+shipping-dredging,"Shipping, Offshore Vessels & Dredging",ESSARSHPNG,Essar Shipping Limited,core,explicit-editorial
+shipping-dredging,"Shipping, Offshore Vessels & Dredging",ALLCARGO,Allcargo Logistics Limited,adjacent,explicit-editorial
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",BHARTIARTL,Bharti Airtel Limited,core,provisional
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",INDUSTOWER,Indus Towers Limited,core,provisional
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",BHARTIHEXA,Bharti Hexacom Limited,core,provisional
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",TATACOMM,Tata Communications Limited,core,provisional
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",IDEA,Vodafone Idea Limited,core,provisional
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",TEJASNET,Tejas Networks Limited,core,provisional
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",HFCL,HFCL Limited,core,provisional
+telecom-network-equip,"Telecom Operators, Towers & Network Equipment",ITI,ITI Limited,core,provisional
+wealth-ratings-market-infra,"Wealth Management, Ratings & Market Infra",360ONE,360 ONE WAM Limited (IIFL Wealth),core,provisional
+wealth-ratings-market-infra,"Wealth Management, Ratings & Market Infra",ANANDRATHI,Anand Rathi Wealth Limited,core,provisional
+wealth-ratings-market-infra,"Wealth Management, Ratings & Market Infra",NUVAMA,Nuvama Wealth Management,core,provisional
+wealth-ratings-market-infra,"Wealth Management, Ratings & Market Infra",CAMS,Computer Age Management Services,core,provisional
+wealth-ratings-market-infra,"Wealth Management, Ratings & Market Infra",KFINTECH,KFin Technologies Limited,core,provisional
+wealth-ratings-market-infra,"Wealth Management, Ratings & Market Infra",CRISIL,CRISIL Limited (S&P Global),core,provisional
+wealth-ratings-market-infra,"Wealth Management, Ratings & Market Infra",PRUDENT,Prudent Corporate Advisory,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",BSE,BSE Limited,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",CDSL,Central Depository Services,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",MCX,Multi Commodity Exchange,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",ANGELONE,Angel One Ltd,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",MOTILALOFS,Motilal Oswal Financial Services,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",IIFLCAPS,IIFL Capital Services Limited,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",GEOJITFSL,Geojit Financial Services,core,provisional
+brokers-depositories,"Stock Brokers, Exchanges & Depositories",5PAISA,5paisa Capital Limited,core,provisional
+amc-mutual-funds,Asset Management Companies (AMCs),HDFCAMC,HDFC Asset Management Co,core,explicit-editorial
+amc-mutual-funds,Asset Management Companies (AMCs),NAM-INDIA,Nippon Life India Asset Mgmt,core,explicit-editorial
+amc-mutual-funds,Asset Management Companies (AMCs),ABSLAMC,Aditya Birla Sun Life AMC,core,explicit-editorial
+amc-mutual-funds,Asset Management Companies (AMCs),UTIAMC,UTI Asset Management Co Ltd,core,explicit-editorial
+amc-mutual-funds,Asset Management Companies (AMCs),CAMS,CAMS Mutual Fund Registrar,adjacent,explicit-editorial
+amc-mutual-funds,Asset Management Companies (AMCs),KFINTECH,KFin Tech Asset Services,adjacent,explicit-editorial
+insurance-life-general,"Insurance - Life, General & Health",LICI,Life Insurance Corp of India,core,provisional
+insurance-life-general,"Insurance - Life, General & Health",SBILIFE,SBI Life Insurance Company,core,provisional
+insurance-life-general,"Insurance - Life, General & Health",HDFCLIFE,HDFC Life Insurance Company,core,provisional
+insurance-life-general,"Insurance - Life, General & Health",ICICIPRULI,ICICI Prudential Life Insurance,core,provisional
+insurance-life-general,"Insurance - Life, General & Health",ICICIGI,ICICI Lombard General Insurance,core,provisional
+insurance-life-general,"Insurance - Life, General & Health",GODIGIT,Go Digit General Insurance,core,provisional
+insurance-life-general,"Insurance - Life, General & Health",STARHEALTH,Star Health and Allied Insurance,core,provisional
+insurance-life-general,"Insurance - Life, General & Health",NIVABUPA,Niva Bupa Health Insurance,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",BAJFINANCE,Bajaj Finance Limited,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",CHOLAFIN,Cholamandalam Investment & Fin,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",SHRIRAMFIN,Shriram Finance Limited,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",PNBHOUSING,PNB Housing Finance Limited,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",AAVAS,Aavas Financiers Limited,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",APTUS,Aptus Value Housing Finance,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",HOMEFIRST,Home First Finance Company,core,provisional
+nbfc-housing-lending,"NBFCs - Consumer, Vehicle & Housing Finance",CREDITACC,CreditAccess Grameen Limited,core,provisional
+gold-loan,Gold Loan & Specialized NBFCs,MUTHOOTFIN,Muthoot Finance Ltd,core,explicit-editorial
+gold-loan,Gold Loan & Specialized NBFCs,MANAPPURAM,Manappuram Finance Ltd,core,explicit-editorial
+gold-loan,Gold Loan & Specialized NBFCs,IIFL,IIFL Finance Ltd,core,explicit-editorial
+gold-loan,Gold Loan & Specialized NBFCs,MUTHOOTCAP,Muthoot Capital Services Ltd,core,explicit-editorial
+gold-loan,Gold Loan & Specialized NBFCs,SURYODAY,Suryoday Small Finance Bank,adjacent,explicit-editorial
+gold-loan,Gold Loan & Specialized NBFCs,SPANDANA,Spandana Sphoorty Financial,adjacent,explicit-editorial
+private-banks,Private Sector Banking,HDFCBANK,HDFC Bank Ltd,core,provisional
+private-banks,Private Sector Banking,ICICIBANK,ICICI Bank Ltd,core,provisional
+private-banks,Private Sector Banking,AXISBANK,Axis Bank Ltd,core,provisional
+private-banks,Private Sector Banking,KOTAKBANK,Kotak Mahindra Bank,core,provisional
+private-banks,Private Sector Banking,INDUSINDBK,IndusInd Bank Limited,core,provisional
+private-banks,Private Sector Banking,FEDERALBNK,Federal Bank Ltd,core,provisional
+private-banks,Private Sector Banking,IDFCFIRSTB,IDFC First Bank Limited,core,provisional
+private-banks,Private Sector Banking,KARURVYSYA,Karur Vysya Bank Limited,core,provisional
+private-banks,Private Sector Banking,RBLBANK,RBL Bank Limited,core,provisional
+psu-banks,PSU Banking Index,SBIN,State Bank of India,core,provisional
+psu-banks,PSU Banking Index,BANKBARODA,Bank of Baroda,core,provisional
+psu-banks,PSU Banking Index,PNB,Punjab National Bank,core,provisional
+psu-banks,PSU Banking Index,CANBK,Canara Bank,core,provisional
+psu-banks,PSU Banking Index,UNIONBANK,Union Bank of India,core,provisional
+psu-banks,PSU Banking Index,INDIANB,Indian Bank,core,provisional
+psu-banks,PSU Banking Index,BANKINDIA,Bank of India,core,provisional
+psu-banks,PSU Banking Index,MAHABANK,Bank of Maharashtra,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",DIXON,Dixon Technologies Ltd,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",KAYNES,Kaynes Technology India Ltd,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",AMBER,Amber Enterprises India Ltd,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",PGEL,PG Electroplast Ltd,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",SYRMA,Syrma SGS Technology Ltd,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",CYIENTDLM,Cyient DLM Ltd,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",AVALON,Avalon Technologies Limited,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",DCXINDIA,DCX Systems Limited,core,provisional
+ems,"EMS, Semiconductors & Electronics Manufacturing",CENTUM,Centum Electronics Limited,core,provisional
+geospatial,"Geospatial, Drones & Smart Metering Tech",MAPMYINDIA,C.E. Info Systems (MapmyIndia),core,explicit-editorial
+geospatial,"Geospatial, Drones & Smart Metering Tech",GENUSPOWER,Genus Power Infrastructures Ltd,core,explicit-editorial
+geospatial,"Geospatial, Drones & Smart Metering Tech",ZEN,Zen Technologies Ltd,adjacent,explicit-editorial
+geospatial,"Geospatial, Drones & Smart Metering Tech",IDEAFORGE,ideaForge Technology Ltd,core,explicit-editorial
+geospatial,"Geospatial, Drones & Smart Metering Tech",HBLENGINE,HBL Engineering (Kavach & Tech),adjacent,explicit-editorial
+geospatial,"Geospatial, Drones & Smart Metering Tech",DRONE,DroneAcharya Aerial Innovations,adjacent,explicit-editorial
+geospatial,"Geospatial, Drones & Smart Metering Tech",RRP,RRP Semiconductor Ltd,adjacent,explicit-editorial
+it-largecap,IT Services - Tier-1 Large Caps,TCS,Tata Consultancy Services,core,provisional
+it-largecap,IT Services - Tier-1 Large Caps,INFY,Infosys Limited,core,provisional
+it-largecap,IT Services - Tier-1 Large Caps,HCLTECH,HCL Technologies Ltd,core,provisional
+it-largecap,IT Services - Tier-1 Large Caps,WIPRO,Wipro Limited,core,provisional
+it-largecap,IT Services - Tier-1 Large Caps,TECHM,Tech Mahindra Ltd,core,provisional
+it-largecap,IT Services - Tier-1 Large Caps,LTIM,LTIMindtree & LTTS Group,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,PERSISTENT,Persistent Systems Ltd,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,COFORGE,Coforge Limited,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,KPITTECH,KPIT Technologies Ltd,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,ZENSARTECH,Zensar Technologies Limited,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,SONATSOFTW,Sonata Software Limited,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,BSOFT,Birlasoft Ltd,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,NEWGEN,Newgen Software Technologies,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,INTELLECT,Intellect Design Arena Ltd,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,LATENTVIEW,Latent View Analytics Ltd,core,provisional
+it-midcaps,IT Services - High-Growth Mid & Small Caps,HAPPSTMNDS,Happiest Minds Technologies,core,provisional
+ev-new-age-mobility,"EV Pure-Plays, Batteries & New-Age Mobility",OLAELEC,Ola Electric Mobility Limited,core,explicit-editorial
+ev-new-age-mobility,"EV Pure-Plays, Batteries & New-Age Mobility",OLECTRA,Olectra Greentech (EV Buses),core,explicit-editorial
+ev-new-age-mobility,"EV Pure-Plays, Batteries & New-Age Mobility",JBMA,JBM Auto Limited (EV Buses),core,explicit-editorial
+ev-new-age-mobility,"EV Pure-Plays, Batteries & New-Age Mobility",EXIDEIND,Exide Industries Limited,adjacent,explicit-editorial
+ev-new-age-mobility,"EV Pure-Plays, Batteries & New-Age Mobility",ARE&M,Amara Raja Energy & Mobility,adjacent,explicit-editorial
+ev-new-age-mobility,"EV Pure-Plays, Batteries & New-Age Mobility",HBLENGINE,HBL Engineering (EV & Batteries),adjacent,explicit-editorial
+ev-new-age-mobility,"EV Pure-Plays, Batteries & New-Age Mobility",GREAVESCOT,Greaves Cotton (Ampere EV),core,explicit-editorial
+passenger-cars-ev,Passenger Vehicles & SUV Leaders,MARUTI,Maruti Suzuki India Ltd,core,explicit-editorial
+passenger-cars-ev,Passenger Vehicles & SUV Leaders,M&M,Mahindra & Mahindra Ltd,core,explicit-editorial
+passenger-cars-ev,Passenger Vehicles & SUV Leaders,TATAMOTORS,Tata Motors Passenger & EV,core,explicit-editorial
+passenger-cars-ev,Passenger Vehicles & SUV Leaders,HYUNDAI,Hyundai Motor India Ltd,core,explicit-editorial
+passenger-cars-ev,Passenger Vehicles & SUV Leaders,FORCE,Force Motors Ltd,core,explicit-editorial
+passenger-cars-ev,Passenger Vehicles & SUV Leaders,BOSCHLTD,Bosch Limited,adjacent,explicit-editorial
+two-wheelers,2/3 Wheelers & Premium Motorcycles,BAJAJ-AUTO,Bajaj Auto Ltd,core,provisional
+two-wheelers,2/3 Wheelers & Premium Motorcycles,EICHERMOT,Eicher Motors Ltd (Royal Enfield),core,provisional
+two-wheelers,2/3 Wheelers & Premium Motorcycles,TVSMOTOR,TVS Motor Company Ltd,core,provisional
+two-wheelers,2/3 Wheelers & Premium Motorcycles,HEROMOTOCO,Hero MotoCorp Ltd,core,provisional
+two-wheelers,2/3 Wheelers & Premium Motorcycles,OLAELEC,Ola Electric 2-Wheelers,core,provisional
+two-wheelers,2/3 Wheelers & Premium Motorcycles,ATULAUTO,Atul Auto Limited,core,provisional
+commercial-vehicles,"Commercial Vehicles, Trucks & Buses",ASHOKLEY,Ashok Leyland Ltd,core,explicit-editorial
+commercial-vehicles,"Commercial Vehicles, Trucks & Buses",TMCV,Tata Motors Ltd,core,explicit-editorial
+commercial-vehicles,"Commercial Vehicles, Trucks & Buses",EICHERMOT,VE Commercial Vehicles (Eicher),core,explicit-editorial
+commercial-vehicles,"Commercial Vehicles, Trucks & Buses",FORCEMOT,Force Motors Limited,core,explicit-editorial
+commercial-vehicles,"Commercial Vehicles, Trucks & Buses",OLECTRA,Olectra Greentech Limited,core,explicit-editorial
+commercial-vehicles,"Commercial Vehicles, Trucks & Buses",JBMA,JBM Auto Limited,core,explicit-editorial
+auto-components,"Auto Components, Forgings & Ancillaries",MOTHERSON,Samvardhana Motherson Int,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",BOSCHLTD,Bosch Limited,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",UNOMINDA,Uno Minda Ltd,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",SONACOMS,Sona BLW Precision Forgings,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",ENDURANCE,Endurance Technologies Ltd,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",SCHAEFFLER,Schaeffler India Limited,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",CRAFTSMAN,Craftsman Automation Ltd,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",SANSERA,Sansera Engineering Limited,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",SUPRAJIT,Suprajit Engineering Limited,core,provisional
+auto-components,"Auto Components, Forgings & Ancillaries",GABRIEL,Gabriel India Limited,core,provisional
+tyres-rubber-carbon,"Tyres, Rubber & Carbon Black",MRF,MRF Limited,core,provisional
+tyres-rubber-carbon,"Tyres, Rubber & Carbon Black",BALKRISIND,Balkrishna Industries (BKT),core,provisional
+tyres-rubber-carbon,"Tyres, Rubber & Carbon Black",APOLLOTYRE,Apollo Tyres Limited,core,provisional
+tyres-rubber-carbon,"Tyres, Rubber & Carbon Black",CEATLTD,CEAT Limited,core,provisional
+tyres-rubber-carbon,"Tyres, Rubber & Carbon Black",JKTYRE,JK Tyre & Industries Ltd,core,provisional
+tyres-rubber-carbon,"Tyres, Rubber & Carbon Black",PCBL,PCBL Chemical Limited,core,provisional
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,APOLLOHOSP,Apollo Hospitals Enterprise Ltd,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,FORTIS,Fortis Healthcare Ltd,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,MANIPALHOS,Manipal Health Enterprises,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,ASTERDM,Aster DM Healthcare Ltd,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,KIMS,Krishna Institute of Med Sciences,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,JLHL,Jupiter Life Line Hospitals,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,HCG,HealthCare Global Enterprises,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,KMCSHIL,Kovai Medical Center & Hospital,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,INDRAMEDCO,Indraprastha Medical Corp,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,ARTEMISMED,Artemis Medicare Services Ltd,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,KOVAI,KMC Speciality Hospitals,core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,GPTHEALTH,GPT Healthcare Ltd (ILS),core,explicit-editorial
+hospitals,Hospitals & Multi-Specialty Healthcare Chains,DRAGARWQ,Dr. Agarwals Eye Hospital Ltd,adjacent,explicit-editorial
+pharma-formulations,Pharma - Formulations & Domestic Leaders,SUNPHARMA,Sun Pharmaceutical Ind Ltd,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,CIPLA,Cipla Limited,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,DRREDDY,Dr Reddys Laboratories Ltd,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,TORNTPHARM,Torrent Pharmaceuticals Ltd,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,MANKIND,Mankind Pharma Ltd,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,ZYDUSLIFE,Zydus Lifesciences Limited,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,LUPIN,Lupin Limited,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,AUROPHARMA,Aurobindo Pharma Limited,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,ALKEM,Alkem Laboratories Limited,core,provisional
+pharma-formulations,Pharma - Formulations & Domestic Leaders,GLENMARK,Glenmark Pharmaceuticals Ltd,core,provisional
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",DIVISLAB,Divis Laboratories Ltd,core,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",SYNGENE,Syngene International Ltd,core,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",SUVENPHAR,Suven Pharmaceuticals / Cohance,core,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",LAURUSLABS,Laurus Labs Ltd,core,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",PPLPHARMA,Piramal Pharma Limited,adjacent,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",NEULANDLAB,Neuland Laboratories Limited,core,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",GRANULES,Granules India Limited,adjacent,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",JUBLPHARMA,Jubilant Pharmova Limited,adjacent,explicit-editorial
+pharma-api-cdmo,"Pharma API, CRAMS & CDMO",BLUEJET,Blue Jet Healthcare Limited,core,explicit-editorial
+diagnostics,"Diagnostics, Pathlabs & Imaging Chains",LALPATHLAB,Dr. Lal PathLabs Ltd,core,explicit-editorial
+diagnostics,"Diagnostics, Pathlabs & Imaging Chains",METROPOLIS,Metropolis Healthcare Ltd,core,explicit-editorial
+diagnostics,"Diagnostics, Pathlabs & Imaging Chains",VIJAYA,Vijaya Diagnostic Centre Ltd,core,explicit-editorial
+diagnostics,"Diagnostics, Pathlabs & Imaging Chains",THYROCARE,Thyrocare Technologies Ltd,core,explicit-editorial
+diagnostics,"Diagnostics, Pathlabs & Imaging Chains",KRSNAA,Krsnaa Diagnostics Limited,core,explicit-editorial
+diagnostics,"Diagnostics, Pathlabs & Imaging Chains",SURYODAY,Suryoday Healthcare & Fin,excluded,explicit-editorial
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,PIIND,PI Industries Ltd,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,SRF,SRF Limited,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,DEEPAKNTR,Deepak Nitrite Ltd,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,TATACHEM,Tata Chemicals Ltd,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,ATUL,Atul Limited,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,VINATIORGA,Vinati Organics Limited,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,NAVINFLUOR,Navin Fluorine International,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,CLEAN,Clean Science and Technology,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,FINEORG,Fine Organic Industries Ltd,core,provisional
+chemicals-speciality,Speciality Chemicals & Fluorochemicals,AARTIIND,Aarti Industries Limited,core,provisional
+agro-chemicals,Agro Chemicals & Crop Protection,UPL,UPL Limited,core,provisional
+agro-chemicals,Agro Chemicals & Crop Protection,BAYERCROP,Bayer CropScience Ltd,core,provisional
+agro-chemicals,Agro Chemicals & Crop Protection,SUMICHEM,Sumitomo Chemical India Ltd,core,provisional
+agro-chemicals,Agro Chemicals & Crop Protection,DHANUKA,Dhanuka Agritech Ltd,core,provisional
+agro-chemicals,Agro Chemicals & Crop Protection,RALLIS,Rallis India Limited (Tata),core,provisional
+agro-chemicals,Agro Chemicals & Crop Protection,SHARDACROP,Sharda Cropchem Limited,core,provisional
+agro-chemicals,Agro Chemicals & Crop Protection,BHARATRAS,Bharat Rasayan Limited,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,COROMANDEL,Coromandel International Ltd,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,FACT,Fertilisers and Chemicals Travancore,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,CHAMBLFERT,Chambal Fertilisers & Chem,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,DEEPAKFERT,Deepak Fertilisers & Petrochem,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,RCF,Rashtriya Chemicals & Fertilisers,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,GNFC,Gujarat Narmada Valley Fert,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,PARADEEP,Paradeep Phosphates Limited,core,provisional
+fertilisers,Fertilisers & Soil Nutrients,GSFC,Gujarat State Fertilizers & Chem,core,provisional
+sugar-biofuels,"Sugar, Biofuels & Ethanol",EIDPARRY,E.I.D. Parry (India) Ltd,core,provisional
+sugar-biofuels,"Sugar, Biofuels & Ethanol",BALRAMCHIN,Balrampur Chini Mills Ltd,core,provisional
+sugar-biofuels,"Sugar, Biofuels & Ethanol",TRIVENI,Triveni Engineering & Ind,core,provisional
+sugar-biofuels,"Sugar, Biofuels & Ethanol",RENUKA,Shree Renuka Sugars Limited,core,provisional
+sugar-biofuels,"Sugar, Biofuels & Ethanol",PRAJIND,Praj Industries (Ethanol Tech),core,provisional
+sugar-biofuels,"Sugar, Biofuels & Ethanol",DALMIASUG,Dalmia Bharat Sugar and Ind,core,provisional
+sugar-biofuels,"Sugar, Biofuels & Ethanol",DWARKESH,Dwarikesh Sugar Industries,core,provisional
+cement-products,Cement & Clinker Manufacturers,ULTRACEMCO,UltraTech Cement Ltd,core,provisional
+cement-products,Cement & Clinker Manufacturers,AMBUJACEM,Ambuja Cements Ltd,core,provisional
+cement-products,Cement & Clinker Manufacturers,SHREECEM,Shree Cement Ltd,core,provisional
+cement-products,Cement & Clinker Manufacturers,JKCEMENT,JK Cement Limited,core,provisional
+cement-products,Cement & Clinker Manufacturers,DALBHARAT,Dalmia Bharat Ltd,core,provisional
+cement-products,Cement & Clinker Manufacturers,RAMCOCEM,The Ramco Cements Limited,core,provisional
+cement-products,Cement & Clinker Manufacturers,NUVOCO,Nuvoco Vistas Corp Limited,core,provisional
+cement-products,Cement & Clinker Manufacturers,BIRLACORPN,Birla Corporation Limited,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",JSWSTEEL,JSW Steel Ltd,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",TATASTEEL,Tata Steel Ltd,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",JINDALSTEL,Jindal Steel & Power Ltd,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",JSL,Jindal Stainless Limited,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",SAIL,Steel Authority of India Ltd,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",APLAPOLLO,APL Apollo Tubes Limited,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",JINDALSAW,Jindal Saw Limited,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",RATNAMANI,Ratnamani Metals & Tubes,core,provisional
+steel-iron,"Steel, Tubes & Structural Pipes",WELCORP,Welspun Corp Limited,core,provisional
+non-ferrous-metals,"Non-Ferrous Metals (Aluminium, Zinc, Copper)",HINDZINC,Hindustan Zinc Ltd,core,provisional
+non-ferrous-metals,"Non-Ferrous Metals (Aluminium, Zinc, Copper)",VEDL,Vedanta Limited,core,provisional
+non-ferrous-metals,"Non-Ferrous Metals (Aluminium, Zinc, Copper)",HINDALCO,Hindalco Industries Ltd,core,provisional
+non-ferrous-metals,"Non-Ferrous Metals (Aluminium, Zinc, Copper)",NATIONALUM,National Aluminium Co (NALCO),core,provisional
+non-ferrous-metals,"Non-Ferrous Metals (Aluminium, Zinc, Copper)",HINDCOPPER,Hindustan Copper Limited,core,provisional
+non-ferrous-metals,"Non-Ferrous Metals (Aluminium, Zinc, Copper)",GRAVITA,Gravita India (Lead & Aluminium),core,provisional
+mining-coal,"Mining, Iron Ore & Coal",COALINDIA,Coal India Ltd,core,provisional
+mining-coal,"Mining, Iron Ore & Coal",NMDC,NMDC Limited,core,provisional
+mining-coal,"Mining, Iron Ore & Coal",KIOCL,KIOCL Limited,core,provisional
+mining-coal,"Mining, Iron Ore & Coal",LLOYDSME,Lloyds Metals and Energy,core,provisional
+mining-coal,"Mining, Iron Ore & Coal",MOIL,MOIL Limited,core,provisional
+mining-coal,"Mining, Iron Ore & Coal",SANDUMA,Sandur Manganese & Iron Ores,core,provisional
+ceramics-sanitaryware,"Ceramics, Sanitaryware, Woodpanel & Tiles",KAJARIACER,Kajaria Ceramics Ltd,core,provisional
+ceramics-sanitaryware,"Ceramics, Sanitaryware, Woodpanel & Tiles",CENTURYPLY,Century Plyboards (India) Ltd,core,provisional
+ceramics-sanitaryware,"Ceramics, Sanitaryware, Woodpanel & Tiles",CERA,Cera Sanitaryware Ltd,core,provisional
+ceramics-sanitaryware,"Ceramics, Sanitaryware, Woodpanel & Tiles",GREENPANEL,Greenpanel Industries Limited,core,provisional
+ceramics-sanitaryware,"Ceramics, Sanitaryware, Woodpanel & Tiles",GREENPLY,Greenply Industries Limited,core,provisional
+ceramics-sanitaryware,"Ceramics, Sanitaryware, Woodpanel & Tiles",SOMANYCERA,Somany Ceramics Ltd,core,provisional
+paints-coatings,"Paints, Surface Coatings & Adhesives",ASIANPAINT,Asian Paints Ltd,core,provisional
+paints-coatings,"Paints, Surface Coatings & Adhesives",BERGEPAINT,Berger Paints India Ltd,core,provisional
+paints-coatings,"Paints, Surface Coatings & Adhesives",KANSAINER,Kansai Nerolac Paints Ltd,core,provisional
+paints-coatings,"Paints, Surface Coatings & Adhesives",INDIGOPNTS,Indigo Paints Limited,core,provisional
+paints-coatings,"Paints, Surface Coatings & Adhesives",SIRCA,Sirca Paints India Limited,core,provisional
+paints-coatings,"Paints, Surface Coatings & Adhesives",SHALPAINTS,Shalimar Paints Limited,core,provisional
+packaging-materials,"Packaging - Flexible, Paper, Plastic & Glass",EPL,EPL Limited (Essel Propack),core,provisional
+packaging-materials,"Packaging - Flexible, Paper, Plastic & Glass",AGI,AGI Greenpac Limited,core,provisional
+packaging-materials,"Packaging - Flexible, Paper, Plastic & Glass",UFLEX,UFLEX Limited,core,provisional
+packaging-materials,"Packaging - Flexible, Paper, Plastic & Glass",POLYPLEX,Polyplex Corporation Ltd,core,provisional
+packaging-materials,"Packaging - Flexible, Paper, Plastic & Glass",HUHTAMAKI,Huhtamaki India Ltd,core,provisional
+packaging-materials,"Packaging - Flexible, Paper, Plastic & Glass",MOLDTKPAC,Mold-Tek Packaging Limited,core,provisional
+packaging-materials,"Packaging - Flexible, Paper, Plastic & Glass",TCPLPACK,TCPL Packaging Limited,core,provisional
+paper-forest,"Paper, Pulp & Forest Products",JKPAPER,JK Paper Ltd,core,provisional
+paper-forest,"Paper, Pulp & Forest Products",WSTCSTPAPR,West Coast Paper Mills Ltd,core,provisional
+paper-forest,"Paper, Pulp & Forest Products",ANDHRAPAP,Andhra Paper Ltd,core,provisional
+paper-forest,"Paper, Pulp & Forest Products",TNPL,Tamil Nadu Newsprint & Papers,core,provisional
+paper-forest,"Paper, Pulp & Forest Products",SATIA,Satia Industries Limited,core,provisional
+paper-forest,"Paper, Pulp & Forest Products",KUANTUM,Kuantum Papers Limited,core,provisional
