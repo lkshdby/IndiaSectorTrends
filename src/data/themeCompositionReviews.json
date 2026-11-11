@@ -399,6 +399,55 @@
       "reviewedAt": "2026-11-11T10:13:27.870Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 38
+    },
+    {
+      "themeId": "chemicals-speciality",
+      "assignments": [
+        {
+          "ticker": "AARTIIND",
+          "tier": "core"
+        },
+        {
+          "ticker": "ATUL",
+          "tier": "core"
+        },
+        {
+          "ticker": "CLEAN",
+          "tier": "core"
+        },
+        {
+          "ticker": "DEEPAKNTR",
+          "tier": "core"
+        },
+        {
+          "ticker": "FINEORG",
+          "tier": "core"
+        },
+        {
+          "ticker": "NAVINFLUOR",
+          "tier": "core"
+        },
+        {
+          "ticker": "PIIND",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "SRF",
+          "tier": "core"
+        },
+        {
+          "ticker": "TATACHEM",
+          "tier": "core"
+        },
+        {
+          "ticker": "VINATIORGA",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:15:09.725Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 40
     }
   ]
 }
