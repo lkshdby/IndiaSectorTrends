@@ -60,3 +60,29 @@ Importantly, public diary snapshots do not use Screener-derived private classifi
 The point-in-time observation mechanism removes *retroactive signal reconstruction*, but not survivorship bias from current theme memberships, non-independence from shared constituents, price-adjustment revisions, benchmark universe issues, or execution costs. We will need a longer evaluation period and independent research baseline before treating this as predictive evidence.
 
 CI also runs `npx tsx --test scripts/record-rotation-signals.test.ts` to prove events have **no forward outcome** at creation and do acquire one only after five additional benchmark closes.
+
+## Core-membership audit and why the radar suppresses provisional alerts (11 Nov 2026)
+
+A code-level audit of the **62 frozen thematic baskets**, distinct from source-verified basic-industry classification, found:
+
+| Core membership status | Observed count |
+| --- | ---: |
+| Themes with explicit hand-reviewed editorial membership rules | **21** |
+| Themes with **no explicit rule** and all stock entries provisionally treated as core | **41** |
+| Provisional core stock positions across the 41 baskets | **314 of 421** total core positions (74.6%) |
+| Core baskets with fewer than five members | **9** |
+| Distinct stocks in all themed baskets | **452** |
+
+An explicit editorial rule is not independent verification of business-segment exposure. Notably, the `Geospatial, Drones & Smart Metering Tech` basket contains distinct end markets; it is a broader technology umbrella, not a pure-play geospatial industry. Narrow thematic baskets can still be useful research watchlists without meeting an index signal's five-stock sample gate. **Do not add unrelated securities merely to make a sample size threshold.**
+
+Consequently, the Radar now labels the 41 unreviewed baskets as **Provisional composition** and keeps them visible under *All themes*, but they **cannot** trigger **Early turn**, **Broad leader**, or **Losing steam** labels until a curated explicit core rule exists. Only editorial-reviewed theme memberships with sufficient valid price history enter the historical baseline or prospective diary. This is an **integrity gate**, not a claim that the 21 already-reviewed baskets have independently validated financial exposures.
+
+### Recommended membership design
+
+1. **Freeze the structural theme universe using business fundamentals**, not recent price appreciation. Review business-segment revenue disclosures, business type (product/service operator vs financier vs supplier), liquidity, active NSE identity/ISIN, and date of the evidence. Maintain an independent rejected/excluded reason for false thematic associations.
+2. **Core members:** defensible primary or material, well-documented theme exposure. **Adjacent:** ancillary ecosystem involvement that matters but does not represent the primary company theme. **Proxy:** loosely correlated companies, not part of the core basket. A broad theme may have only two genuine pure plays; label it concentrated instead of manufacturing five.
+3. **Leadership overlay, separated from membership:** rank confirmed theme members using benchmark-relative returns, accelerating breadth, liquidity, stock contribution and price-history confidence. Consider earnings/revenue developments only as a separate fundamental layer with timestamped disclosures. Choosing historical winners retroactively as constituents introduces look-ahead and momentum-selection bias.
+4. Review membership on **dated quarterly snapshots** or material corporate actions, and record additions/removals. Keep the current list fixed for each daily signal. Compare leaders against the full eligible core set without replacing laggards inside the measured basket.
+5. Use Screener's NSE-code and basic-industry coverage to generate **candidate lists**, not automatic theme memberships: basic industry and investment-theme exposure are different taxonomies. The full Screener CSV does not supply current daily prices for previously untracked companies.
+
+Exchange indices also use objective liquidity, listing and free-float constraints: https://niftyindices.com/resources/tutorial/review-of-indices . Those are useful governance benchmarks, not evidence that an individual company's theme exposure is correct.
