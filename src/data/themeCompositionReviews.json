@@ -366,6 +366,39 @@
       "reviewedAt": "2026-11-11T10:13:02.170Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 36
+    },
+    {
+      "themeId": "mining-coal",
+      "assignments": [
+        {
+          "ticker": "COALINDIA",
+          "tier": "core"
+        },
+        {
+          "ticker": "KIOCL",
+          "tier": "core"
+        },
+        {
+          "ticker": "LLOYDSME",
+          "tier": "core"
+        },
+        {
+          "ticker": "MOIL",
+          "tier": "core"
+        },
+        {
+          "ticker": "NMDC",
+          "tier": "core"
+        },
+        {
+          "ticker": "SANDUMA",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:13:27.870Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 38
     }
   ]
 }
