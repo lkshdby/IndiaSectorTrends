@@ -221,10 +221,10 @@ export function MonitoringApprovalPanel({pool,themeId,minCap,classifications,sna
                       <p className="text-[10px] text-[#08090a]/50">{p.lastObserved?'Price session '+p.lastObserved:'Awaiting validated NSE close'}</p>
                     </td>
                     <td className="p-2 font-semibold">{p.phase}</td>
-                    <td className="p-2 font-mono">{fmt(p.return5)}%</td>
-                    <td className="p-2 font-mono">{fmt(p.rs5)} pp</td>
-                    <td className="p-2 font-mono">{fmt(p.rs21)} pp</td>
-                    <td className="p-2 font-mono font-bold">{fmt(p.acceleration)} pp</td>
+                    <td className="p-2 font-mono">{p.return5===null?'—':fmt(p.return5)+'%'}</td>
+                    <td className="p-2 font-mono">{p.rs5===null?'—':fmt(p.rs5)+' pp'}</td>
+                    <td className="p-2 font-mono">{p.rs21===null?'—':fmt(p.rs21)+' pp'}</td>
+                    <td className="p-2 font-mono font-bold">{p.acceleration===null?'—':fmt(p.acceleration)+' pp'}</td>
                   </tr>;
                 })}
               </tbody>
