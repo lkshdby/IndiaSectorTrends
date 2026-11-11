@@ -329,6 +329,43 @@
       "reviewedAt": "2026-11-11T10:12:26.253Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 35
+    },
+    {
+      "themeId": "sugar-biofuels",
+      "assignments": [
+        {
+          "ticker": "BALRAMCHIN",
+          "tier": "core"
+        },
+        {
+          "ticker": "DALMIASUG",
+          "tier": "core"
+        },
+        {
+          "ticker": "DWARKESH",
+          "tier": "core"
+        },
+        {
+          "ticker": "EIDPARRY",
+          "tier": "core"
+        },
+        {
+          "ticker": "PRAJIND",
+          "tier": "core"
+        },
+        {
+          "ticker": "RENUKA",
+          "tier": "core"
+        },
+        {
+          "ticker": "TRIVENI",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:13:02.170Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 36
     }
   ]
 }
