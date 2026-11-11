@@ -2,7 +2,7 @@
 export interface RadarDiaryTheme {
   themeId: string;
   themeName: string;
-  phase: 'Early turn' | 'Broad leader' | 'Losing steam' | 'Still lagging' | 'Thin evidence';
+  phase: 'Early turn' | 'Broad leader' | 'Losing steam' | 'Still lagging' | 'Thin evidence' | 'Provisional composition';
   rs5: number;
   rs21: number;
   acceleration: number;
