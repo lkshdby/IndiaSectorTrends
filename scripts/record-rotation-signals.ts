@@ -9,32 +9,11 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { computeRotationRadar, type RotationPhase } from '../src/utils/rotationRadar';
+import { computeRotationRadar } from '../src/utils/rotationRadar';
+import { summarizeRadarDiary, type RadarDiary } from '../src/utils/rotationDiary';
 import { sanitizeSnapshot } from '../src/utils/priceQuality';
 import type { BrowserMarketSnapshot } from '../src/utils/marketSnapshotClient';
 
-export interface FrozenRadarTheme {
-  themeId: string;
-  themeName: string;
-  phase: RotationPhase;
-  rs5: number;
-  rs21: number;
-  acceleration: number;
-  breadth5: number;
-  coveragePct: number;
-  members: string[];
-  forwardExcess5: number | null;
-}
-export interface FrozenRadarDay {
-  date: string;
-  firstRecordedAt: string;
-  sourceSnapshotAt: string;
-  themes: FrozenRadarTheme[];
-}
-export interface RadarDiary {
-  version: 1;
-  days: FrozenRadarDay[];
-}
 const isoDay = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 const ret = (newer: number, earlier: number) => 100 * (newer / earlier - 1);
 
@@ -94,35 +73,6 @@ export function recordRadarDiary(existing: RadarDiary, snapshot: BrowserMarketSn
   return { version: 1, days: days.slice(-550) };
 }
 
-export interface DiaryForwardScore {
-  observedDates: number;
-  totalMatured: number;
-  earlyMatured: number;
-  distinctEarlyThemes: number;
-  earlyHitRate: number | null;
-  earlyMeanExcess: number | null;
-  baselineHitRate: number | null;
-  baselineMeanExcess: number | null;
-}
-export function summarizeRadarDiary(diary: RadarDiary): DiaryForwardScore {
-  const outcomes = diary.days.flatMap(d=>d.themes.filter(t=>t.forwardExcess5!==null));
-  const early = outcomes.filter(t=>t.phase==='Early turn');
-  const mean = (r: FrozenRadarTheme[]) => r.length ?
-    Number((r.reduce((sum,t)=>sum+t.forwardExcess5!,0)/r.length).toFixed(2)) : null;
-  const hit = (r: FrozenRadarTheme[]) => r.length ?
-    Number((100*r.filter(t=>t.forwardExcess5!>0).length/r.length).toFixed(1)) : null;
-  return {
-    observedDates: diary.days.length,
-    totalMatured: outcomes.length,
-    earlyMatured: early.length,
-    distinctEarlyThemes: new Set(early.map(x=>x.themeId)).size,
-    earlyHitRate: hit(early),
-    earlyMeanExcess: mean(early),
-    baselineHitRate: hit(outcomes),
-    baselineMeanExcess: mean(outcomes),
-  };
-}
-
 function main() {
   const source = JSON.parse(fs.readFileSync(
     path.join(process.cwd(),'src/data/verifiedLiveMarketData.json'),'utf8',
@@ -139,6 +89,6 @@ function main() {
   console.log('Rotation Radar diary: ',JSON.stringify(summarizeRadarDiary(next)));
 }
 
-if (process.argv[1]?.includes('record-rotation-signals')) {
+if (process.argv[1]?.endsWith('/scripts/record-rotation-signals.ts')) {
   main();
 }
