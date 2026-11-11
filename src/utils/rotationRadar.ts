@@ -8,12 +8,12 @@
  * No institutional flow is inferred. All RS windows are matched by exact ISO
  * trading dates. Research rules are predeclared, not fitted to past results.
  */
-import { CORE_SECTOR_INDICES } from '../data/sectorUniverse';
+import { CORE_SECTOR_INDICES, classifySectorMember } from '../data/sectorUniverse';
 import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS, type BasicIndustryAssignment } from '../data/basicIndustryMappings';
 import { sanitizeSnapshot } from './priceQuality';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
 
-export type RotationPhase = 'Early turn' | 'Broad leader' | 'Losing steam' | 'Still lagging' | 'Thin evidence';
+export type RotationPhase = 'Early turn' | 'Broad leader' | 'Losing steam' | 'Still lagging' | 'Thin evidence' | 'Provisional composition';
 export interface RotationStockPulse {
   ticker: string;
   name: string;
@@ -34,6 +34,7 @@ export interface ThemeRotationPulse {
   themeName: string;
   category: string;
   phase: RotationPhase;
+  membershipReview: 'explicit-editorial' | 'provisional';
   total: number;
   validCount: number;
   coveragePct: number;
@@ -68,6 +69,7 @@ export interface RotationRadarReport {
   coreThemes: number;
   evaluatedThemes: number;
   thinThemes: number;
+  provisionalThemes: number;
   earlyTurns: ThemeRotationPulse[];
   broadLeaders: ThemeRotationPulse[];
   losingSteam: ThemeRotationPulse[];
@@ -126,6 +128,12 @@ function evaluateTheme(
 
   const uniqueMembers = [...new Map(theme.stocks.map(stock => [stock.ticker.toUpperCase(), stock])).values()];
   if (!uniqueMembers.length) return null;
+  // Explicit membership rule is editorial review, NOT proof of segment revenue exposure.
+  // Unreviewed themes remain explorable, but cannot be called a reliable early turn.
+  const membershipReview: ThemeRotationPulse['membershipReview'] = uniqueMembers.every(stock => {
+    const member = classifySectorMember(theme.id, stock);
+    return member.tier === 'core' && member.reviewStatus === 'reviewed-theme-fit';
+  }) ? 'explicit-editorial' : 'provisional';
   const priced = uniqueMembers.flatMap(stock => {
     const history = stockCloses.get(stock.ticker.toUpperCase());
     const p0 = history?.get(current), p5 = history?.get(before5), p21 = history?.get(before21);
@@ -157,8 +165,8 @@ function evaluateTheme(
 
   // A small theme is still shown for research, but never called a signal.
   const quality = validCount >= 5 && coveragePct >= 75;
-  let phase: RotationPhase = 'Thin evidence';
-  if (quality) {
+  let phase: RotationPhase = membershipReview === 'provisional' ? 'Provisional composition' : 'Thin evidence';
+  if (quality && membershipReview === 'explicit-editorial') {
     if (relative21 <= 0 && relative5 > 0 && acceleration > 0 &&
         breadthNow >= 60 && breadthChange >= 10 && beatingBenchmark >= 50) {
       phase = 'Early turn';
@@ -190,7 +198,7 @@ function evaluateTheme(
     memberTickers: priced.map(p => p.stock.ticker.toUpperCase()),
     pulse: {
       themeId: theme.id, themeName: theme.name, category: theme.category,
-      phase, total: uniqueMembers.length, validCount, coveragePct,
+      phase, membershipReview, total: uniqueMembers.length, validCount, coveragePct,
       return5: round(theme5), return21: round(theme21),
       rs5: round(relative5), rs21: round(relative21), rsAcceleration: round(acceleration),
       advancingPct5: round(breadthNow),
@@ -214,7 +222,7 @@ export function computeRotationRadar(
   };
   const blank: RotationRadarReport = {
     asOf: null, universePriceSymbols: 0, coreThemes: CORE_SECTOR_INDICES.length,
-    evaluatedThemes: 0, thinThemes: CORE_SECTOR_INDICES.length,
+    evaluatedThemes: 0, thinThemes: CORE_SECTOR_INDICES.length, provisionalThemes: 0,
     earlyTurns: [], broadLeaders: [], losingSteam: [], allThemes: [],
     forwardCheck: emptyCheck,
   };
@@ -232,8 +240,9 @@ export function computeRotationRadar(
   // Primary ranking: demonstrated week-over-prior-relative acceleration,
   // with breadth/quality gates, not an opaque optimized composite.
   const sorted = observations.sort((a, b) => {
-    const aEligible = a.phase === 'Thin evidence' ? 0 : 1;
-    const bEligible = b.phase === 'Thin evidence' ? 0 : 1;
+    const isEligible = (p: ThemeRotationPulse) => p.phase !== 'Thin evidence' && p.phase !== 'Provisional composition';
+    const aEligible = isEligible(a) ? 1 : 0;
+    const bEligible = isEligible(b) ? 1 : 0;
     return bEligible - aEligible || b.rsAcceleration - a.rsAcceleration ||
       b.breadthChange - a.breadthChange || a.themeName.localeCompare(b.themeName);
   });
@@ -250,7 +259,7 @@ export function computeRotationRadar(
     const benchmarkNext5 = returnPct(bForward, bNow);
     for (const theme of CORE_SECTOR_INDICES) {
       const e = evaluateTheme(theme, i, dates, values, priceData, classifications);
-      if (!e || e.pulse.phase === 'Thin evidence') continue;
+      if (!e || e.pulse.phase === 'Thin evidence' || e.pulse.phase === 'Provisional composition') continue;
       // Exact same cohort required at exit, no forward-filled missing closes.
       const forwardReturns: number[] = [];
       for (const ticker of e.memberTickers) {
@@ -278,8 +287,9 @@ export function computeRotationRadar(
     asOf,
     universePriceSymbols: priceData.size,
     coreThemes: CORE_SECTOR_INDICES.length,
-    evaluatedThemes: sorted.filter(x => x.phase !== 'Thin evidence').length,
-    thinThemes: CORE_SECTOR_INDICES.length - sorted.filter(x => x.phase !== 'Thin evidence').length,
+    evaluatedThemes: sorted.filter(x => x.phase !== 'Thin evidence' && x.phase !== 'Provisional composition').length,
+    thinThemes: CORE_SECTOR_INDICES.length - sorted.filter(x => x.phase !== 'Thin evidence' && x.phase !== 'Provisional composition').length - sorted.filter(x => x.phase === 'Provisional composition').length,
+    provisionalThemes: sorted.filter(x => x.phase === 'Provisional composition').length,
     earlyTurns: sorted.filter(x => x.phase === 'Early turn'),
     broadLeaders: sorted.filter(x => x.phase === 'Broad leader'),
     losingSteam: sorted.filter(x => x.phase === 'Losing steam'),
