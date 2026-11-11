@@ -8,7 +8,8 @@
  * No institutional flow is inferred. All RS windows are matched by exact ISO
  * trading dates. Research rules are predeclared, not fitted to past results.
  */
-import { CORE_SECTOR_INDICES, classifySectorMember } from '../data/sectorUniverse';
+import { CORE_SECTOR_INDICES, classifySectorMember, getCoreSectorIndices } from '../data/sectorUniverse';
+import { COMMITTED_THEME_REVIEWS, type ThemeReviewBook } from './themeCompositionReviews';
 import { VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS, type BasicIndustryAssignment } from '../data/basicIndustryMappings';
 import { sanitizeSnapshot } from './priceQuality';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
@@ -117,6 +118,8 @@ function evaluateTheme(
   benchmark: CloseMap,
   stockCloses: StockCloses,
   classifications: ReadonlyMap<string, BasicIndustryAssignment>,
+  reviews:ThemeReviewBook,
+  asOfReviewDate?:string,
 ): Evaluation | null {
   if (at < 21 || at >= dates.length) return null;
   const current = dates[at], before5 = dates[at - 5], before21 = dates[at - 21];
@@ -131,7 +134,7 @@ function evaluateTheme(
   // Explicit membership rule is editorial review, NOT proof of segment revenue exposure.
   // Unreviewed themes remain explorable, but cannot be called a reliable early turn.
   const membershipReview: ThemeRotationPulse['membershipReview'] = uniqueMembers.every(stock => {
-    const member = classifySectorMember(theme.id, stock);
+    const member = classifySectorMember(theme.id, stock, reviews, asOfReviewDate);
     return member.tier === 'core' && member.reviewStatus === 'reviewed-theme-fit';
   }) ? 'explicit-editorial' : 'provisional';
   const priced = uniqueMembers.flatMap(stock => {
@@ -213,7 +216,9 @@ function evaluateTheme(
 export function computeRotationRadar(
   snapshot: BrowserMarketSnapshot | null,
   classifications: ReadonlyMap<string, BasicIndustryAssignment> = VERIFIED_BASIC_INDUSTRY_ASSIGNMENTS,
+  reviews:ThemeReviewBook = COMMITTED_THEME_REVIEWS,
 ): RotationRadarReport {
+  const coreThemes=getCoreSectorIndices(reviews);
   const emptyCheck: ForwardCheck = {
     signalEvents: 0, evaluatedThemes: 0, distinctSignalThemes: 0, sampleDates: 0,
     signalHitPct: null, baselineHitPct: null,
@@ -221,8 +226,8 @@ export function computeRotationRadar(
     label: 'exploratory-in-sample-membership',
   };
   const blank: RotationRadarReport = {
-    asOf: null, universePriceSymbols: 0, coreThemes: CORE_SECTOR_INDICES.length,
-    evaluatedThemes: 0, thinThemes: CORE_SECTOR_INDICES.length, provisionalThemes: 0,
+    asOf: null, universePriceSymbols: 0, coreThemes: coreThemes.length,
+    evaluatedThemes: 0, thinThemes: coreThemes.length, provisionalThemes: 0,
     earlyTurns: [], broadLeaders: [], losingSteam: [], allThemes: [],
     forwardCheck: emptyCheck,
   };
@@ -233,8 +238,8 @@ export function computeRotationRadar(
   if (dates.length < 27) return { ...blank, universePriceSymbols: priceData.size };
   const asOf = dates[dates.length - 1];
   const endIndex = dates.length - 1;
-  const observations = CORE_SECTOR_INDICES.flatMap(theme => {
-    const result = evaluateTheme(theme, endIndex, dates, values, priceData, classifications);
+  const observations = coreThemes.flatMap(theme => {
+    const result = evaluateTheme(theme, endIndex, dates, values, priceData, classifications,reviews);
     return result ? [result.pulse] : [];
   });
   // Primary ranking: demonstrated week-over-prior-relative acceleration,
@@ -257,8 +262,9 @@ export function computeRotationRadar(
     const curr = dates[i], forward = dates[i + 5];
     const bNow = values.get(curr)!, bForward = values.get(forward)!;
     const benchmarkNext5 = returnPct(bForward, bNow);
-    for (const theme of CORE_SECTOR_INDICES) {
-      const e = evaluateTheme(theme, i, dates, values, priceData, classifications);
+    // Never backdate an owner-reviewed theme classification in historical diagnostics.
+    for (const theme of getCoreSectorIndices(reviews,curr)) {
+      const e = evaluateTheme(theme, i, dates, values, priceData, classifications,reviews,curr);
       if (!e || e.pulse.phase === 'Thin evidence' || e.pulse.phase === 'Provisional composition') continue;
       // Exact same cohort required at exit, no forward-filled missing closes.
       const forwardReturns: number[] = [];
@@ -286,9 +292,9 @@ export function computeRotationRadar(
   return {
     asOf,
     universePriceSymbols: priceData.size,
-    coreThemes: CORE_SECTOR_INDICES.length,
+    coreThemes: coreThemes.length,
     evaluatedThemes: sorted.filter(x => x.phase !== 'Thin evidence' && x.phase !== 'Provisional composition').length,
-    thinThemes: CORE_SECTOR_INDICES.length - sorted.filter(x => x.phase !== 'Thin evidence' && x.phase !== 'Provisional composition').length - sorted.filter(x => x.phase === 'Provisional composition').length,
+    thinThemes: coreThemes.length - sorted.filter(x => x.phase !== 'Thin evidence' && x.phase !== 'Provisional composition').length - sorted.filter(x => x.phase === 'Provisional composition').length,
     provisionalThemes: sorted.filter(x => x.phase === 'Provisional composition').length,
     earlyTurns: sorted.filter(x => x.phase === 'Early turn'),
     broadLeaders: sorted.filter(x => x.phase === 'Broad leader'),
