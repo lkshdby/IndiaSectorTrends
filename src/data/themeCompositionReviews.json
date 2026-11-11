@@ -259,6 +259,39 @@
       "reviewedAt": "2026-11-11T10:10:55.482Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 33
+    },
+    {
+      "themeId": "ceramics-sanitaryware",
+      "assignments": [
+        {
+          "ticker": "CENTURYPLY",
+          "tier": "core"
+        },
+        {
+          "ticker": "CERA",
+          "tier": "core"
+        },
+        {
+          "ticker": "GREENPANEL",
+          "tier": "core"
+        },
+        {
+          "ticker": "GREENPLY",
+          "tier": "core"
+        },
+        {
+          "ticker": "KAJARIACER",
+          "tier": "core"
+        },
+        {
+          "ticker": "SOMANYCERA",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:11:30.776Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 34
     }
   ]
 }
