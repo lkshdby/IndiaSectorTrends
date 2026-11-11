@@ -78,6 +78,47 @@
       "reviewedAt": "2026-11-11T10:00:08.575Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 27
+    },
+    {
+      "themeId": "fertilisers",
+      "assignments": [
+        {
+          "ticker": "CHAMBLFERT",
+          "tier": "core"
+        },
+        {
+          "ticker": "COROMANDEL",
+          "tier": "core"
+        },
+        {
+          "ticker": "DEEPAKFERT",
+          "tier": "core"
+        },
+        {
+          "ticker": "FACT",
+          "tier": "core"
+        },
+        {
+          "ticker": "GNFC",
+          "tier": "core"
+        },
+        {
+          "ticker": "GSFC",
+          "tier": "core"
+        },
+        {
+          "ticker": "PARADEEP",
+          "tier": "core"
+        },
+        {
+          "ticker": "RCF",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:00:35.354Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 28
     }
   ]
 }
