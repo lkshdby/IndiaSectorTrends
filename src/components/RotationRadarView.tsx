@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowDownRight, ArrowUpRight, Activity, Compass, Info, Layers3, ShieldCheck, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 import { computeRotationRadar, type RotationPhase, type ThemeRotationPulse } from '../utils/rotationRadar';
+import { fetchRotationDiary, summarizeRadarDiary, type RadarDiary } from '../utils/rotationDiary';
 import { joinPrivateIndustryAssignments, loadPrivateIndustryEvidence } from '../utils/privateIndustryEvidence';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
 
@@ -40,6 +41,16 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
   const [focus, setFocus] = useState<'early'|'leaders'|'cooling'|'all'>('early');
   const [selectedId, setSelectedId] = useState('');
   const [search, setSearch] = useState('');
+  const [diary, setDiary] = useState<RadarDiary | null>(null);
+  const [diaryError, setDiaryError] = useState<string | null>(null);
+  useEffect(() => {
+    let active=true;
+    fetchRotationDiary()
+      .then(result=>{if(active){setDiary(result);setDiaryError(null);}})
+      .catch(error=>{if(active)setDiaryError(error instanceof Error ? error.message : 'Unavailable');});
+    return ()=>{active=false;};
+  }, []);
+  const liveStudy = useMemo(()=>diary ? summarizeRadarDiary(diary) : null,[diary]);
   const display = useMemo(() => {
     const rows = focus === 'early' ? radar.earlyTurns :
       focus === 'leaders' ? radar.broadLeaders :
@@ -228,10 +239,45 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
       </div>
 
       <section className="rounded-2xl bg-white border border-[#b1ada1]/30 p-4 sm:p-5 space-y-3">
+        <h3 className="text-base font-extrabold flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-700"/> Prospective forward diary · real alerts as recorded
+        </h3>
+        <p className="text-xs text-[#08090a]/70">
+          Each accepted market snapshot freezes the day's eligible theme labels and exact constituent tickers.
+          Five trading sessions later, the collector attaches their observed returns relative to NIFTY 500.
+          Historical signals are never recreated using future theme selections.
+        </p>
+        {liveStudy ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {([
+              ['Trading dates recorded',String(liveStudy.observedDates)],
+              ['Matured early-turn events',String(liveStudy.earlyMatured)],
+              ['Early-turn next-5D hit rate',liveStudy.earlyHitRate===null?'Awaiting results':liveStudy.earlyHitRate.toFixed(1)+'%'],
+              ['Mean next-5D excess',num(liveStudy.earlyMeanExcess,' pp')],
+            ] as const).map(([label,value])=>(
+              <div key={label} className="bg-[#f4f3ee] border border-[#b1ada1]/20 rounded-xl p-3">
+                <p className="text-[11px] text-[#08090a]/60">{label}</p>
+                <p className="font-extrabold text-lg font-mono mt-1">{value}</p>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-sm text-[#08090a]/60">{diaryError ?
+          'Point-in-time diary unavailable: '+diaryError :
+          'Reading the first point-in-time observations…'}</p>}
+        <p className="text-xs text-[#92400e]">
+          {liveStudy && liveStudy.totalMatured>0 ?
+            'Comparison across '+liveStudy.totalMatured+' matured eligible theme events: baseline mean excess '+num(liveStudy.baselineMeanExcess,' pp')+
+              ', hit rate '+(liveStudy.baselineHitRate===null?'—':liveStudy.baselineHitRate.toFixed(1)+'%')+'.' :
+            'Results appear only after enough new daily snapshots have accumulated. We do not backfill fictional alerts.'}
+          {' '}Too few observed dates, correlated themes and missing execution costs still preclude claims of a proven trading advantage.
+        </p>
+      </section>
+
+      <section className="rounded-2xl bg-white border border-[#b1ada1]/30 p-4 sm:p-5 space-y-3">
         <h3 className="font-extrabold text-base flex items-center gap-2"><Info className="w-4 h-4 text-blue-600"/> Does the early-turn rule work? Historical sanity check</h3>
         <p className="text-xs text-[#08090a]/70 leading-relaxed">
           At every fifth historical close, the same predefined early-turn rule evaluates only preceding prices.
-          We then check **the following five trading sessions** versus NIFTY 500, compared with all eligible theme observations.
+          We then check the following five trading sessions versus NIFTY 500, compared with all eligible theme observations.
           This is an **exploratory, look-ahead-separated calculation**, not a valid out-of-sample backtest.
         </p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
