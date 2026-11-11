@@ -1,11 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CORE_SECTOR_INDICES } from '../src/data/sectorUniverse';
+import { CORE_SECTOR_INDICES, classifySectorMember } from '../src/data/sectorUniverse';
 import type { BrowserMarketSnapshot } from '../src/utils/marketSnapshotClient';
 import { summarizeRadarDiary, type RadarDiary } from '../src/utils/rotationDiary';
 import { recordRadarDiary } from './record-rotation-signals';
 
-const t=CORE_SECTOR_INDICES.find(x=>x.stocks.length>=5 && x.stocks.length<=7);
+const t=CORE_SECTOR_INDICES.find(x=>x.stocks.length>=5 && x.stocks.length<=7 &&
+  x.stocks.every(stock=>classifySectorMember(x.id,stock).reviewStatus==='reviewed-theme-fit'));
 if (!t) throw new Error('Need synthetic theme fixture');
 function snapshot(length:number):BrowserMarketSnapshot {
   const days:string[]=[];
