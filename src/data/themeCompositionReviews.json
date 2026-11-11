@@ -292,6 +292,43 @@
       "reviewedAt": "2026-11-11T10:11:30.776Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 34
+    },
+    {
+      "themeId": "agro-chemicals",
+      "assignments": [
+        {
+          "ticker": "BAYERCROP",
+          "tier": "core"
+        },
+        {
+          "ticker": "BHARATRAS",
+          "tier": "core"
+        },
+        {
+          "ticker": "DHANUKA",
+          "tier": "core"
+        },
+        {
+          "ticker": "RALLIS",
+          "tier": "core"
+        },
+        {
+          "ticker": "SHARDACROP",
+          "tier": "core"
+        },
+        {
+          "ticker": "SUMICHEM",
+          "tier": "core"
+        },
+        {
+          "ticker": "UPL",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:12:26.253Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 35
     }
   ]
 }
