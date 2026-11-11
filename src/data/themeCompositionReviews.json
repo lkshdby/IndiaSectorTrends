@@ -37,6 +37,47 @@
       "reviewedAt": "2026-11-11T09:59:43.613Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 26
+    },
+    {
+      "themeId": "psu-banks",
+      "assignments": [
+        {
+          "ticker": "BANKBARODA",
+          "tier": "core"
+        },
+        {
+          "ticker": "BANKINDIA",
+          "tier": "core"
+        },
+        {
+          "ticker": "CANBK",
+          "tier": "core"
+        },
+        {
+          "ticker": "INDIANB",
+          "tier": "core"
+        },
+        {
+          "ticker": "MAHABANK",
+          "tier": "core"
+        },
+        {
+          "ticker": "PNB",
+          "tier": "core"
+        },
+        {
+          "ticker": "SBIN",
+          "tier": "core"
+        },
+        {
+          "ticker": "UNIONBANK",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:00:08.575Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 27
     }
   ]
 }
