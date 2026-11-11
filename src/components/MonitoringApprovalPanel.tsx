@@ -3,6 +3,7 @@ import { CheckSquare, ExternalLink, RefreshCw, ShieldCheck, Square, Telescope } 
 import { THEMATIC_SECTOR_INDICES } from '../data/sectorUniverse';
 import type { BasicIndustryAssignment } from '../data/basicIndustryMappings';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
+import { monitorLeadership } from '../utils/monitoringLeadership';
 import {
   discoverCrossThemeIndustryPeers, selectScreenerIndustryPeers, type ScreenerResearchPool,
   type IndustryPeerCandidate,
@@ -85,6 +86,8 @@ export function MonitoringApprovalPanel({pool,themeId,minCap,classifications,sna
     return {symbol,good,fresh};
   });
   const ready=current.filter(r=>r.fresh).length;
+  const pulses=useMemo(()=>monitorLeadership(snapshot,monitoring.symbols),[snapshot,monitoring.symbols]);
+  const companyDetails=useMemo(()=>new Map(pool.companies.map(c=>[c.ticker,c])),[pool]);
 
   return (
     <section className="mt-4 rounded-xl border border-blue-200 bg-blue-50/40 p-3 sm:p-4 space-y-3" aria-label="Approve NSE stocks for daily price monitoring">
@@ -190,6 +193,48 @@ export function MonitoringApprovalPanel({pool,themeId,minCap,classifications,sna
         Monitoring batches are limited to {MAX_APPROVAL_BATCH} and {MAX_MONITORED_TICKERS} total to protect data quality and API limits.
         The GitHub issue and approved NSE codes are public, but your Screener classifications and raw CSV are not.
       </p>
+
+      {monitoring.symbols.length>0&&
+        <div className="bg-white rounded-xl border border-[#b1ada1]/25 p-3 sm:p-4 space-y-2">
+          <h5 className="font-extrabold text-sm">Emerging stock leaders in the approved monitoring universe</h5>
+          <p className="text-xs text-[#08090a]/65">
+            Once verified NSE daily histories arrive, these monitored candidates are ranked by
+            5D benchmark-relative acceleration versus the preceding 16 sessions. This is a
+            price-only research ranking, <strong>not an automatic addition to any theme</strong>.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[660px] text-left text-xs">
+              <thead className="bg-[#f4f3ee] text-[#08090a]/65">
+                <tr>
+                  {['Monitored NSE stock','Observed phase','5D return','5D vs NIFTY 500','21D vs NIFTY 500','RS acceleration'].map(label=>
+                    <th key={label} className="p-2 font-bold">{label}</th>)}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#b1ada1]/20">
+                {pulses.slice(0,30).map(p=>{
+                  const company=companyDetails.get(p.ticker);
+                  const fmt=(value:number|null)=>value===null?'—':(value>0?'+':'')+value.toFixed(2);
+                  return <tr key={p.ticker}>
+                    <td className="p-2">
+                      <strong>{p.ticker}</strong>
+                      {company&&<p className="text-[11px] text-[#08090a]/55">{company.name} · {company.industry}</p>}
+                      <p className="text-[10px] text-[#08090a]/50">{p.lastObserved?'Price session '+p.lastObserved:'Awaiting validated NSE close'}</p>
+                    </td>
+                    <td className="p-2 font-semibold">{p.phase}</td>
+                    <td className="p-2 font-mono">{fmt(p.return5)}%</td>
+                    <td className="p-2 font-mono">{fmt(p.rs5)} pp</td>
+                    <td className="p-2 font-mono">{fmt(p.rs21)} pp</td>
+                    <td className="p-2 font-mono font-bold">{fmt(p.acceleration)} pp</td>
+                  </tr>;
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-[#08090a]/60">
+            Showing first 30 of {pulses.length} monitored symbols. Price windows require observed closes at matching
+            benchmark dates; a missing or quarantined history is not treated as a loser.
+          </p>
+        </div>}
       {monitoring.symbols.length>0&&
         <details className="text-xs bg-white rounded-lg border border-[#b1ada1]/20 p-3">
           <summary className="cursor-pointer font-bold">Monitored NSE stocks and price status ({current.length})</summary>
