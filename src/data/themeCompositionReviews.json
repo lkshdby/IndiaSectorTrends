@@ -189,6 +189,39 @@
       "reviewedAt": "2026-11-11T10:09:54.929Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 31
+    },
+    {
+      "themeId": "non-ferrous-metals",
+      "assignments": [
+        {
+          "ticker": "GRAVITA",
+          "tier": "core"
+        },
+        {
+          "ticker": "HINDALCO",
+          "tier": "core"
+        },
+        {
+          "ticker": "HINDCOPPER",
+          "tier": "core"
+        },
+        {
+          "ticker": "HINDZINC",
+          "tier": "core"
+        },
+        {
+          "ticker": "NATIONALUM",
+          "tier": "core"
+        },
+        {
+          "ticker": "VEDL",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:10:29.386Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 32
     }
   ]
 }
