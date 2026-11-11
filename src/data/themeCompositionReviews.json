@@ -448,6 +448,47 @@
       "reviewedAt": "2026-11-11T10:15:09.725Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 40
+    },
+    {
+      "themeId": "cables-wires",
+      "assignments": [
+        {
+          "ticker": "ASTRAL",
+          "tier": "core"
+        },
+        {
+          "ticker": "FINCABLES",
+          "tier": "core"
+        },
+        {
+          "ticker": "FINPIPE",
+          "tier": "core"
+        },
+        {
+          "ticker": "KEI",
+          "tier": "core"
+        },
+        {
+          "ticker": "POLYCAB",
+          "tier": "core"
+        },
+        {
+          "ticker": "PRINCEPIPE",
+          "tier": "core"
+        },
+        {
+          "ticker": "RRKABEL",
+          "tier": "core"
+        },
+        {
+          "ticker": "SUPREMEIND",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:15:37.706Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 42
     }
   ]
 }
