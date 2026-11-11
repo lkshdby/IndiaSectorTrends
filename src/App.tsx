@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Header } from './components/Header';
 import { IndexTrackerView } from './components/IndexTrackerView';
 import { IndustryDiscoveryView } from './components/IndustryDiscoveryView';
-import { Layers3, LineChart } from 'lucide-react';
+import { RotationRadarView } from './components/RotationRadarView';
+import { Layers3, LineChart, Compass } from 'lucide-react';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { fetchCommittedMarketSnapshot, type BrowserMarketSnapshot } from './utils/marketSnapshotClient';
 
@@ -13,7 +14,7 @@ export default function App() {
   } | null>(null);
 
   const [isSyncing, setIsSyncing] = useState(false);
-  const [workspace, setWorkspace] = useState<'themes' | 'industries'>('themes');
+  const [workspace, setWorkspace] = useState<'themes' | 'industries' | 'radar'>('radar');
   const [marketSnapshot, setMarketSnapshot] = useState<BrowserMarketSnapshot | null>(null);
   const [snapshotLoadError, setSnapshotLoadError] = useState<string | null>(null);
   const loadSequence = useRef(0);
@@ -103,6 +104,10 @@ export default function App() {
         <Header onRefresh={handleSyncMarketCloses} isSyncing={isSyncing} savedAt={marketSnapshot?.fetchedAt} snapshotSource={marketSnapshot?.source} loadError={!!snapshotLoadError} />
 
         <nav className="px-3 sm:px-5 lg:px-6 pt-4 flex flex-wrap items-center gap-2" aria-label="Market research workspace">
+          <button type="button" onClick={() => setWorkspace('radar')} aria-pressed={workspace === 'radar'}
+            className={workspace === 'radar' ? 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-[#08090a] text-white' : 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-white border border-[#b1ada1]/40'}>
+            <Compass className="h-4 w-4"/> Rotation Radar · Research
+          </button>
           <button type="button" onClick={() => setWorkspace('themes')} aria-pressed={workspace === 'themes'}
             className={workspace === 'themes' ? 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-[#08090a] text-white' : 'min-h-11 px-4 py-2.5 inline-flex items-center gap-2 text-sm font-bold rounded-xl bg-white border border-[#b1ada1]/40'}>
             <LineChart className="h-4 w-4"/> Investment themes · 62
@@ -118,6 +123,11 @@ export default function App() {
           </div>
           {workspace === 'industries' && (
             <IndustryDiscoveryView marketSnapshot={marketSnapshot} onOpenThemes={() => setWorkspace('themes')} />
+          )}
+          {workspace === 'radar' && (
+            <RotationRadarView marketSnapshot={marketSnapshot}
+              onOpenThemes={() => setWorkspace('themes')}
+              onOpenIndustries={() => setWorkspace('industries')}/>
           )}
         </main>
 
