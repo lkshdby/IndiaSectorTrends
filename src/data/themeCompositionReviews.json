@@ -119,6 +119,43 @@
       "reviewedAt": "2026-11-11T10:00:35.354Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 28
+    },
+    {
+      "themeId": "packaging-materials",
+      "assignments": [
+        {
+          "ticker": "AGI",
+          "tier": "core"
+        },
+        {
+          "ticker": "EPL",
+          "tier": "core"
+        },
+        {
+          "ticker": "HUHTAMAKI",
+          "tier": "core"
+        },
+        {
+          "ticker": "MOLDTKPAC",
+          "tier": "core"
+        },
+        {
+          "ticker": "POLYPLEX",
+          "tier": "core"
+        },
+        {
+          "ticker": "TCPLPACK",
+          "tier": "core"
+        },
+        {
+          "ticker": "UFLEX",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:09:23.259Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 29
     }
   ]
 }
