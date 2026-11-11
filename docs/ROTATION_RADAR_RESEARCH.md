@@ -48,3 +48,15 @@ This is **not** a valid backtest or evidence of a definitive edge: 3-month data 
 No changes to the GitHub daily price collector, 62 curated baskets or the existing industry analytics. The new radar is a separate research landing tab. Public GitHub does not receive any user's paid Screener dataset.
 
 QA: `npm run lint`; `npx tsx --test src/utils/rotationRadar.test.ts`; other price-quality and index tests; `npm run build`.
+
+## Prospective point-in-time diary (not retrospectively manufactured)
+
+The existing three-slot GitHub Actions market-data workflow now also runs `scripts/record-rotation-signals.ts` **after** its market-quality gate. Each distinct observed benchmark session captures the first accepted theme-label decision and exact core member tickers in `src/data/rotationRadarObservations.json` (a public file containing no Screener classifications). Subsequent same-date collections cannot overwrite that original signal, and at the first snapshot containing five further observed benchmark sessions the script appends the cohort's realized forward 5-session excess return versus NIFTY 500.
+
+The Radar tab loads this tiny point-in-time diary directly from GitHub Raw and displays the actual matured alert hit rate and mean excess return, with all matured eligible theme observations as a comparator. Until signals mature, it displays **Awaiting results**, not fabricated zero-performance statistics. Past alerts are never reconstructed from today's theme mix. The diary retains up to 550 observed trading-day vintages, roughly two years. The schedule is best-effort: missed provider or GitHub collection slots can delay observations; it does not guarantee a daily update.
+
+Importantly, public diary snapshots do not use Screener-derived private classification labels: classification is used only in the user's own browser for explaining the visible industry drivers. Every diary record contains only public curated theme IDs, tickers, measurable price signals and eventual outcomes.
+
+The point-in-time observation mechanism removes *retroactive signal reconstruction*, but not survivorship bias from current theme memberships, non-independence from shared constituents, price-adjustment revisions, benchmark universe issues, or execution costs. We will need a longer evaluation period and independent research baseline before treating this as predictive evidence.
+
+CI also runs `npx tsx --test scripts/record-rotation-signals.test.ts` to prove events have **no forward outcome** at creation and do acquire one only after five additional benchmark closes.
