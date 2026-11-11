@@ -1,4 +1,5 @@
 import { PREBUILT_SECTOR_INDICES } from './prebuiltIndices';
+import { COMMITTED_THEME_REVIEWS, mostRecentThemeReview, type ThemeReviewBook } from '../utils/themeCompositionReviews';
 import type { SectorIndexData, StockConstituent } from '../types/indexTracker';
 
 /**
@@ -120,7 +121,15 @@ function resolveStock(stock: StockConstituent, sectorId: string): StockConstitue
   return stock;
 }
 
-export function classifySectorMember(sectorId: string, stock: StockConstituent): ThemeMember {
+export function classifySectorMember(sectorId:string,stock:StockConstituent,
+  reviews:ThemeReviewBook=COMMITTED_THEME_REVIEWS,asOf?:string):ThemeMember{
+  const basket=SOURCE_BASKETS.find(s=>s.id===sectorId);
+  const review=basket?mostRecentThemeReview(reviews,sectorId,basket.stocks.map(s=>s.ticker),asOf):null;
+  const approvedTier=review?.assignments.find(a=>a.ticker===stock.ticker)?.tier;
+  if(approvedTier)return {stock,tier:approvedTier,
+    reason:'Owner-reviewed editorial theme role via GitHub issue #'+review!.githubIssue+
+      '; independent segment revenue exposure remains unverified',
+    reviewStatus:'reviewed-theme-fit'};
   const rule = SECTOR_RULES[sectorId];
   if (!rule) return { stock, tier: 'core', reason: 'Provisional core constituent; business-segment exposure not yet independently verified', reviewStatus: 'provisional' };
   if (rule.excluded?.[stock.ticker]) return { stock, tier: 'excluded', reason: rule.excluded[stock.ticker], reviewStatus: 'reviewed-theme-fit' };
@@ -136,10 +145,14 @@ const SOURCE_BASKETS: SectorIndexData[] = PREBUILT_SECTOR_INDICES.map(sector => 
 })).map(sector => ({ ...sector, companiesCount: sector.stocks.length }));
 
 export const THEMATIC_SECTOR_INDICES = SOURCE_BASKETS;
-export const CORE_SECTOR_INDICES: SectorIndexData[] = SOURCE_BASKETS.map(sector => {
-  const coreStocks = sector.stocks.filter(stock => classifySectorMember(sector.id, stock).tier === 'core');
-  return { ...sector, stocks: coreStocks, companiesCount: coreStocks.length };
-});
+export function getCoreSectorIndices(reviews:ThemeReviewBook=COMMITTED_THEME_REVIEWS,
+  asOf?:string):SectorIndexData[]{
+  return SOURCE_BASKETS.map(sector=>{
+    const coreStocks=sector.stocks.filter(stock=>classifySectorMember(sector.id,stock,reviews,asOf).tier==='core');
+    return {...sector,stocks:coreStocks,companiesCount:coreStocks.length};
+  });
+}
+export const CORE_SECTOR_INDICES:SectorIndexData[]=getCoreSectorIndices();
 export const CORE_SECTOR_BY_ID = new Map(CORE_SECTOR_INDICES.map(x => [x.id, x]));
 export const THEMATIC_SECTOR_BY_ID = new Map(THEMATIC_SECTOR_INDICES.map(x => [x.id, x]));
 
@@ -157,6 +170,7 @@ export function getUniverseDiagnostics() {
     coreUniqueSymbols: new Set(allCore.map(x => x.ticker)).size,
     thematicEntries: allTheme.length,
     thematicUniqueSymbols: new Set(allTheme.map(x => x.ticker)).size,
-    provisionalBaskets: CORE_SECTOR_INDICES.filter(x => !SECTOR_RULES[x.id]).length,
+    provisionalBaskets: CORE_SECTOR_INDICES.filter(x=>
+      x.stocks.some(stock=>classifySectorMember(x.id,stock).reviewStatus==='provisional')).length,
   };
 }
