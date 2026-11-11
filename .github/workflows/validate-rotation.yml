@@ -63,6 +63,8 @@ jobs:
         run: npx tsx --test scripts/record-rotation-signals.test.ts
       - name: Full thematic-membership and stock-leadership validation
         run: npx tsx --test src/utils/stockDiscovery.test.ts
+      - name: Safe owner-approved price-monitoring and private candidate import tests
+        run: npx tsx --test src/utils/priceMonitoring.test.ts
       - name: Production build
         run: npm run build
 
