@@ -1,0 +1,58 @@
+name: Approve owner-reviewed thematic composition
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: owner-theme-composition-review
+  cancel-in-progress: false
+
+jobs:
+  approve-theme:
+    if: >
+      github.actor == 'lkshdby' &&
+      github.event.issue.user.login == 'lkshdby' &&
+      github.event.issue.author_association == 'OWNER' &&
+      startsWith(github.event.issue.title, '[Review Theme] Approve composition: ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund --no-save --package-lock=false
+      - name: Validate exact owner-approved composition
+        run: npx tsx scripts/approve-theme-composition-issue.ts
+      - name: Commit dated approval record
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/data/themeCompositionReviews.json
+          git diff --cached --quiet && exit 1
+          git commit -m "data: record owner-reviewed theme composition [skip ci]"
+          git restore -- package-lock.json
+          if ! git diff --quiet; then
+            echo "::error::Unexpected tracked change"
+            exit 1
+          fi
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+      - name: Comment with instructions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE" --body "Owner-approved thematic composition recorded with timestamp. Return to Rotation Radar and click Refresh approved reviews. The audit is append-only and previously recorded signals remain unchanged. Editorial approval does not independently verify revenue exposure."
