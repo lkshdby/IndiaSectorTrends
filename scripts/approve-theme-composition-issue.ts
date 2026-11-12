@@ -73,7 +73,7 @@ export function approveThemeReviewEvent(
  */
 export async function verifyNewNseTickers(
   additions:readonly string[], hasKnownHistory:(ticker:string)=>boolean,
-  fetchChart:(symbol:string,range?:string,host?:'query1.finance.yahoo.com'|'query2.finance.yahoo.com')=fetchYahooChart,
+  fetchChart:typeof fetchYahooChart=fetchYahooChart,
 ):Promise<void>{
   for(const ticker of additions){
     if(hasKnownHistory(ticker))continue;
