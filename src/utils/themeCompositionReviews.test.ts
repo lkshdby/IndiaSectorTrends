@@ -4,7 +4,7 @@ import {
   COMMITTED_THEME_REVIEWS,buildThemeReviewIssueBody,parseThemeReviewIssueBody,
   parseThemeReviewBook,mostRecentThemeReview,cleanReviewAssignments,mergeThemeReviewBooks
 } from './themeCompositionReviews';
-import {approveThemeReviewEvent} from '../../scripts/approve-theme-composition-issue';
+import {approveThemeReviewEvent,verifyNewNseTickers} from '../../scripts/approve-theme-composition-issue';
 import {THEMATIC_SECTOR_BY_ID,classifySectorMember,getCoreSectorIndices} from '../data/sectorUniverse';
 
 const theme=THEMATIC_SECTOR_BY_ID.get('hospitals')!;
@@ -64,7 +64,8 @@ test('audit merge rejects same issue number with conflicting contents',()=>{
 test('all 21 owner-authored theme approvals are baked into the application',()=>{
   const issueNumbers=[26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46];
   const recorded=COMMITTED_THEME_REVIEWS.reviews.map(r=>r.githubIssue).sort((a,b)=>a-b);
-  assert.deepEqual(recorded,issueNumbers);
+  assert.ok(issueNumbers.every(n=>recorded.includes(n)),
+    'All 21 original owner approvals must remain after new ticker additions');
   const rechecked=COMMITTED_THEME_REVIEWS.reviews;
   for(const review of rechecked){
     const theme=THEMATIC_SECTOR_BY_ID.get(review.themeId);
@@ -84,4 +85,49 @@ test('all 21 owner-authored theme approvals are baked into the application',()=>
   const brokers=getCoreSectorIndices().find(x=>x.id==='brokers-depositories');
   assert.equal(brokers?.stocks.length,9,'Brokers issue #39 explicitly added Groww');
   assert.ok(brokers?.stocks.some(x=>x.ticker==='GROWW'),'GROWW must stay in reviewed core basket');
+});
+
+test('owner can add a new NSE ticker, but cannot silently remove an existing constituent',()=>{
+  const extra={ticker:'ICICIAMC',tier:'core' as const};
+  const first=approveThemeReviewEvent(event(buildThemeReviewIssueBody(theme.id,
+    [...candidates,extra])),{version:1,reviews:[]},accepted);
+  assert.ok(first.reviews[0].assignments.some(x=>x.ticker==='ICICIAMC'));
+  assert.throws(()=>approveThemeReviewEvent(event(),first,accepted),
+    /exactly match CURRENT basket tickers/);
+  const second=approveThemeReviewEvent({
+    ...event(buildThemeReviewIssueBody(theme.id,[...candidates,extra,{ticker:'MAXHEALTH',tier:'adjacent'}])),
+    issue:{...event().issue,number:123457,body:buildThemeReviewIssueBody(
+      theme.id,[...candidates,extra,{ticker:'MAXHEALTH',tier:'adjacent'}])},
+  },first,'2026-11-12T09:00:00.000Z');
+  assert.equal(second.reviews.length,2);
+  assert.ok(second.reviews[1].assignments.some(x=>x.ticker==='ICICIAMC'));
+  assert.ok(second.reviews[1].assignments.some(x=>x.ticker==='MAXHEALTH'));
+});
+
+test('approval refuses BSE suffixes, invalid NSE symbols, and excessive additions',()=>{
+  for(const ticker of ['FAKE.BO','FAKE.NS','NOT A TICKER']){
+    assert.throws(()=>approveThemeReviewEvent(event(buildThemeReviewIssueBody(
+      theme.id,[...candidates,{ticker,tier:'core'}])),
+      {version:1,reviews:[]},accepted));
+  }
+  assert.throws(()=>approveThemeReviewEvent(event(buildThemeReviewIssueBody(
+    theme.id,[...candidates,...['NEWSTK1','NEWSTK2','NEWSTK3','NEWSTK4','NEWSTK5','NEWSTK6']
+      .map(ticker=>({ticker,tier:'adjacent' as const}))])),
+    {version:1,reviews:[]},accepted),/At most five/);
+});
+
+test('new NSE ticker verifier accepts confirmed chart history and rejects unverified symbols',async()=>{
+  const validChart={
+    symbol:'SAMPLE.NS',price:120,change1D:1,change1W:2,change3M:3,
+    history:[{date:'2026-11-11',value:100},{date:'2026-11-12',value:101}],
+    rawHistory:[{date:'2026-11-11',close:100},{date:'2026-11-12',close:120}],
+  };
+  const seen:string[]=[];
+  await verifyNewNseTickers(['SAMPLE'],()=>false,async symbol=>{
+    seen.push(symbol);
+    return validChart;
+  });
+  assert.deepEqual(seen,['SAMPLE.NS']);
+  await verifyNewNseTickers(['SAMPLE'],()=>true,async()=>{throw new Error('Should not refetch known verified NSE ticker');});
+  await assert.rejects(verifyNewNseTickers(['UNKNOWN'],()=>false,async()=>{throw new Error('Yahoo 404');}),/Unable to verify UNKNOWN/);
 });
