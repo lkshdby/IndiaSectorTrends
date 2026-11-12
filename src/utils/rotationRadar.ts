@@ -39,6 +39,7 @@ export interface ThemeRotationPulse {
   total: number;
   validCount: number;
   coveragePct: number;
+  missingPriceDetails: string[];
   return5: number;
   return21: number;
   rs5: number;
@@ -153,6 +154,12 @@ function evaluateTheme(
   });
   if (!priced.length) return null;
 
+  const missingPriceDetails = uniqueMembers.flatMap(stock => {
+    const ticker = stock.ticker.toUpperCase();
+    const history = stockCloses.get(ticker);
+    const missing = [current, before5, before21].filter(day => !history?.has(day));
+    return missing.length ? [ticker + ': missing closes on ' + missing.join(', ')] : [];
+  });
   const validCount = priced.length;
   const coveragePct = Math.round(100 * validCount / uniqueMembers.length);
   const theme5 = average(priced.map(p => p.r5));
@@ -201,7 +208,7 @@ function evaluateTheme(
     memberTickers: priced.map(p => p.stock.ticker.toUpperCase()),
     pulse: {
       themeId: theme.id, themeName: theme.name, category: theme.category,
-      phase, membershipReview, total: uniqueMembers.length, validCount, coveragePct,
+      phase, membershipReview, total: uniqueMembers.length, validCount, coveragePct, missingPriceDetails,
       return5: round(theme5), return21: round(theme21),
       rs5: round(relative5), rs21: round(relative21), rsAcceleration: round(acceleration),
       advancingPct5: round(breadthNow),

@@ -33,8 +33,8 @@ jobs:
         run: npm run lint
       - name: Index math tests
         run: npx tsx --test src/utils/sectorIndexMath.test.ts
-      - name: Price quality tests
-        run: npx tsx --test src/utils/priceQuality.test.ts
+      - name: Price quality and Yahoo trading-session freshness tests
+        run: npx tsx --test src/utils/priceQuality.test.ts src/utils/marketSessionFreshness.test.ts
       - name: Sector membership tests
         run: npx tsx --test src/data/sectorUniverse.test.ts
       - name: Three-slot scheduling and credential-free reload tests

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { runFullUniverseSync } from '../server/marketSync';
 import { CORE_SECTOR_INDICES, THEMATIC_SECTOR_INDICES } from '../src/data/sectorUniverse';
 import { validateAndRepairStock } from '../src/utils/priceQuality';
+import { hasObservedSession, latestObservedTradingDate } from '../src/utils/marketSessionFreshness';
 
 /** GitHub Actions collects 3 times per IST calendar day. It never
  * overwrites the saved file if network/provider coverage is insufficient. */
@@ -24,6 +25,17 @@ async function main() {
       Boolean(validateAndRepairStock(stock).record);
   });
   const ratio = expected.length ? fresh.length / expected.length : 0;
+  // Exchange-session coverage is distinct from successful HTTP retrieval.
+  const referenceTradingDate = latestObservedTradingDate(snapshot.benchmarks?.nifty500?.history);
+  const currentSessionTickers = fresh.filter(ticker =>
+    hasObservedSession(snapshot.stocks?.[ticker]?.rawHistory, referenceTradingDate)
+  );
+  const sessionCoverageRatio = fresh.length
+    ? currentSessionTickers.length / fresh.length : 0;
+  const staleSessionTickers = fresh.filter(ticker =>
+    !hasObservedSession(snapshot.stocks?.[ticker]?.rawHistory, referenceTradingDate)
+  );
+
   const benchmarkNames = ['nifty50', 'niftyMidcap', 'niftySmallcap', 'nifty500'];
   const invalidBenchmarks = benchmarkNames.filter(key => {
     const benchmark = snapshot.benchmarks?.[key];
@@ -44,11 +56,17 @@ async function main() {
 
   console.info('Scheduled refresh quality report:', JSON.stringify({
     report, expectedStocks: expected.length, freshStocks: fresh.length,
-    coveragePercent: Number((ratio * 100).toFixed(1)), invalidBenchmarks,
+    coveragePercent: Number((ratio * 100).toFixed(1)),
+    referenceTradingDate, currentSessionStocks: currentSessionTickers.length,
+    currentSessionCoveragePercent: Number((sessionCoverageRatio * 100).toFixed(1)),
+    staleSessionStocks: staleSessionTickers.length,
+    staleSessionTickerExamples: staleSessionTickers.slice(0, 35).map(ticker => ({
+      ticker, latest: latestObservedTradingDate(snapshot.stocks?.[ticker]?.rawHistory),
+    })), invalidBenchmarks,
     emptyCoreBaskets, sampleCoreCoverage: coreCoverage.slice(0, 5),
   }));
 
-  if (!report.success || ratio < 0.90 || invalidBenchmarks.length ||
+  if (!report.success || ratio < 0.90 || !referenceTradingDate || invalidBenchmarks.length ||
       emptyCoreBaskets.length || !Number.isFinite(Date.parse(snapshot.fetchedAt))) {
     throw new Error(
       'Collection did not meet quality thresholds (>=90% freshly verified ' +
@@ -62,6 +80,15 @@ async function main() {
   snapshot.totalExpectedStocks = expected.length;
   snapshot.freshStocksCount = fresh.length;
   snapshot.freshCoveragePct = Number((ratio * 100).toFixed(1));
+  snapshot.referenceTradingDate = referenceTradingDate;
+  snapshot.currentSessionStocksCount = currentSessionTickers.length;
+  snapshot.currentSessionCoveragePct = Number((sessionCoverageRatio * 100).toFixed(1));
+  snapshot.staleSessionTickers = staleSessionTickers;
+  if (sessionCoverageRatio < 0.75) {
+    console.warn('[PARTIAL-MARKET-SESSION] Only ' + snapshot.currentSessionCoveragePct +
+      '% of freshly fetched thematic stocks have closes through benchmark date ' +
+      referenceTradingDate + '. This snapshot is retained with explicit partial-coverage metadata.');
+  }
   snapshot.collectionMethod = 'GitHub Actions scheduled pull — Yahoo daily closes';
   fs.writeFileSync(filename, JSON.stringify(snapshot) + '\n');
   console.info('Accepted market snapshot; all quality gates passed.');

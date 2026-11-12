@@ -4,6 +4,7 @@ import path from 'path';
 import { THEMATIC_SECTOR_INDICES } from '../src/data/sectorUniverse';
 import { parseMonitoringManifest, MONITORING_MANIFEST_PATH } from '../src/utils/priceMonitoring';
 import { validateAndRepairStock, sanitizeSnapshot } from '../src/utils/priceQuality';
+import { hasObservedSession, latestObservedTradingDate, preferFresherChart } from '../src/utils/marketSessionFreshness';
 
 export interface MarketHistoryPoint {
   date: string;
@@ -21,7 +22,7 @@ export interface BenchmarkQuote {
 }
 
 // Fetch historical chart data from Yahoo Finance v8 (reliable, no auth required)
-export function fetchYahooChart(symbol: string, range = '3mo'): Promise<{
+export function fetchYahooChart(symbol: string, range = '3mo', chartHost: 'query1.finance.yahoo.com' | 'query2.finance.yahoo.com' = 'query1.finance.yahoo.com'): Promise<{
   symbol: string;
   price: number;
   change1D: number;
@@ -31,7 +32,7 @@ export function fetchYahooChart(symbol: string, range = '3mo'): Promise<{
   rawHistory: { date: string; close: number }[];
 }> {
   return new Promise((resolve, reject) => {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
+    const url = `https://${chartHost}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
 
     const req = https.get(
       url,
@@ -214,10 +215,10 @@ function transientYahooFailure(error: unknown): boolean {
   return /timed out|ECONNRESET|ETIMEDOUT|ECONNREFUSED|socket hang up/i.test(String(error));
 }
 
-async function yahooWithRetry(symbol: string): Promise<Awaited<ReturnType<typeof fetchYahooChart>>> {
+async function yahooWithRetry(symbol: string, chartHost: 'query1.finance.yahoo.com' | 'query2.finance.yahoo.com' = 'query1.finance.yahoo.com'): Promise<Awaited<ReturnType<typeof fetchYahooChart>>> {
   for (let attempt = 0; attempt <= YAHOO_RETRY_DELAYS_MS.length; attempt++) {
     try {
-      return await fetchYahooChart(symbol);
+      return await fetchYahooChart(symbol, '3mo', chartHost);
     } catch (error) {
       if (!transientYahooFailure(error) || attempt === YAHOO_RETRY_DELAYS_MS.length) throw error;
       const wait = YAHOO_RETRY_DELAYS_MS[attempt] + Math.floor(Math.random() * 1000);
@@ -232,6 +233,7 @@ export async function fetchStocksBatch(
   tickers: string[],
   forceRefresh = false,
   nseOnlyTickers: ReadonlySet<string> = new Set(),
+  referenceTradingDate: string | null = null,
 ): Promise<Record<string, any>> {
   const now = Date.now();
   const results: Record<string, any> = {};
@@ -270,12 +272,40 @@ export async function fetchStocksBatch(
           console.warn('[QUARANTINED] ' + ticker + ': ' + checked.warnings.join('; '));
           return;
         }
+        // Never regress a previously verified stock to an older observed
+        // exchange session just because a new HTTP request succeeded.
+        const previous = stockHistoryCache.get(ticker)?.data;
+        const earlierDate = latestObservedTradingDate(previous?.rawHistory);
+        const newDate = latestObservedTradingDate(checked.record.rawHistory);
+        if (previous && earlierDate && newDate && earlierDate > newDate) {
+          console.warn('[YAHOO-OLDER-THAN-SAVED] ' + ticker + ': received ' +
+            newDate + ', retaining ' + earlierDate);
+          results[ticker] = previous;
+          return;
+        }
         stockHistoryCache.set(ticker, { data: checked.record, cachedAt: Date.now() });
         results[ticker] = checked.record;
       };
 
       try {
-        storeValidated(await yahooWithRetry(symbol), symbol);
+        let chart = await yahooWithRetry(symbol);
+        // A response downloaded today may still end two trading sessions ago.
+        // Query2 is a separate Yahoo chart host; try it only for lagging bars,
+        // and never overwrite a newer series with an older one.
+        if (referenceTradingDate && !hasObservedSession(chart.rawHistory, referenceTradingDate)) {
+          try {
+            const alternate = await yahooWithRetry(symbol, 'query2.finance.yahoo.com');
+            chart = preferFresherChart(chart, alternate);
+          } catch (alternateError) {
+            console.warn('[YAHOO-MIRROR-FAILED] ' + ticker + ': ' + String(alternateError));
+          }
+        }
+        const actualSession = latestObservedTradingDate(chart.rawHistory);
+        if (referenceTradingDate && !hasObservedSession(chart.rawHistory, referenceTradingDate)) {
+          console.warn('[YAHOO-STALE-SESSION] ' + ticker + ': latest ' +
+            (actualSession || 'none') + ', benchmark ' + referenceTradingDate);
+        }
+        storeValidated(chart, symbol);
       } catch (error) {
         // A rate limit or provider outage is not evidence that an NSE ticker
         // has moved to BSE. Do not double the load with a .BO fallback.
@@ -348,16 +378,6 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
       ])
     );
 
-    const syncStartedAt = Date.now();
-    const refreshedStocks = await fetchStocksBatch(allTickers, true, nseOnlyMonitored);
-    const mergedStocks = {
-      ...sanitizeSnapshot(existingJson.stocks || {}),
-      ...refreshedStocks,
-    };
-    const refreshedCount = Object.values(refreshedStocks).filter((s: any) =>
-      s?.fetchedAt && Date.parse(s.fetchedAt) >= syncStartedAt
-    ).length;
-
     // Refresh the 4 benchmarks as well
     const benchmarkConfigs = [
       { key: 'nifty50', symbol: '^NSEI', name: 'NIFTY 50', category: 'Large Cap Benchmark (Top 50 Giants)', indexPrice: 25030.35 },
@@ -371,6 +391,13 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     for (const cfg of benchmarkConfigs) {
       try {
         const data = await yahooWithRetry(cfg.symbol);
+        const previousSession = latestObservedTradingDate(refreshedBenchmarks[cfg.key]?.history);
+        const fetchedSession = latestObservedTradingDate(data.history);
+        if (previousSession && (!fetchedSession || fetchedSession < previousSession)) {
+          console.warn('[BENCHMARK-OLDER-THAN-SAVED] ' + cfg.key + ': received ' +
+            (fetchedSession || 'none') + ', retaining ' + previousSession);
+          continue;
+        }
         refreshedBenchmarks[cfg.key] = {
           ...cfg,
           price: data.price,
@@ -387,6 +414,21 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
       }
       await pauseYahoo(YAHOO_PAUSE_BETWEEN_BATCHES_MS);
     }
+
+    // Use the newly fetched benchmark trading date (not download time) to
+    // identify lagging stock histories and selectively retry the Yahoo mirror.
+    const referenceTradingDate = latestObservedTradingDate(refreshedBenchmarks.nifty500?.history);
+    console.info('[MARKET-REFERENCE-SESSION] ' + (referenceTradingDate || 'missing'));
+
+    const syncStartedAt = Date.now();
+    const refreshedStocks = await fetchStocksBatch(allTickers, true, nseOnlyMonitored, referenceTradingDate);
+    const mergedStocks = {
+      ...sanitizeSnapshot(existingJson.stocks || {}),
+      ...refreshedStocks,
+    };
+    const refreshedCount = Object.values(refreshedStocks).filter((s: any) =>
+      s?.fetchedAt && Date.parse(s.fetchedAt) >= syncStartedAt
+    ).length;
 
     const nowIso = new Date().toISOString();
     lastSyncAt = nowIso;
