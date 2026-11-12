@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   COMMITTED_THEME_REVIEWS,buildThemeReviewIssueBody,parseThemeReviewIssueBody,
-  parseThemeReviewBook,mostRecentThemeReview,cleanReviewAssignments
+  parseThemeReviewBook,mostRecentThemeReview,cleanReviewAssignments,mergeThemeReviewBooks
 } from './themeCompositionReviews';
 import {approveThemeReviewEvent} from '../../scripts/approve-theme-composition-issue';
 import {THEMATIC_SECTOR_BY_ID,classifySectorMember,getCoreSectorIndices} from '../data/sectorUniverse';
@@ -43,5 +43,20 @@ test('issue input is strict and existing editorial defaults remain unchanged',()
   assert.deepEqual(parseThemeReviewIssueBody(body).assignments,roles);
   assert.throws(()=>cleanReviewAssignments([{ticker:'AAA',tier:'excluded'}]),/core/);
   assert.throws(()=>cleanReviewAssignments([{ticker:'AAA',tier:'core'},{ticker:'AAA',tier:'core'}]),/Duplicate/);
-  assert.deepEqual(COMMITTED_THEME_REVIEWS,parseThemeReviewBook({version:1,reviews:[]}));
+  // The public audit now contains genuine owner approvals; do not assume an empty fixture.
+  assert.deepEqual(parseThemeReviewBook(COMMITTED_THEME_REVIEWS),COMMITTED_THEME_REVIEWS);
+});
+
+test('last approved review survives an older or empty remote audit',()=>{
+  const book=approveThemeReviewEvent(event(),{version:1,reviews:[]},accepted);
+  const saved=mergeThemeReviewBooks(COMMITTED_THEME_REVIEWS,book,{version:1,reviews:[]});
+  assert.ok(saved.reviews.some(r=>r.githubIssue===123456));
+  const reloaded=mergeThemeReviewBooks(COMMITTED_THEME_REVIEWS,saved);
+  assert.deepEqual(saved,reloaded);
+  assert.ok(mostRecentThemeReview(reloaded,theme.id,theme.stocks.map(s=>s.ticker)));
+});
+test('audit merge rejects same issue number with conflicting contents',()=>{
+  const book=approveThemeReviewEvent(event(),{version:1,reviews:[]},accepted);
+  const altered={version:1 as const,reviews:book.reviews.map(r=>({...r,note:'tampered'}))};
+  assert.throws(()=>mergeThemeReviewBooks(book,altered),/Conflicting/);
 });

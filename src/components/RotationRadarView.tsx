@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowDownRight, ArrowUpRight, Activity, Compass, Info, Layers3, ShieldCheck, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 import { computeRotationRadar, type RotationPhase, type ThemeRotationPulse } from '../utils/rotationRadar';
 import { ThemeCompositionReviewPanel } from './ThemeCompositionReviewPanel';
-import { COMMITTED_THEME_REVIEWS, fetchThemeReviews, type ThemeReviewBook } from '../utils/themeCompositionReviews';
+import { fetchThemeReviews, loadRememberedThemeReviews, mergeThemeReviewBooks, rememberThemeReviews, type ThemeReviewBook } from '../utils/themeCompositionReviews';
 import { fetchRotationDiary, summarizeRadarDiary, type RadarDiary } from '../utils/rotationDiary';
 import { joinPrivateIndustryAssignments, loadPrivateIndustryEvidence } from '../utils/privateIndustryEvidence';
 import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
@@ -40,13 +40,28 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
   // Read only private browser state, never add source records to a public build.
   const [privateAssignments] = useState(() => loadPrivateIndustryEvidence()?.assignments || new Map());
   const classifications = useMemo(() => joinPrivateIndustryAssignments(privateAssignments), [privateAssignments]);
-  const [themeReviews,setThemeReviews] = useState<ThemeReviewBook>(COMMITTED_THEME_REVIEWS);
+  // Start from approvals embedded in the current build plus the last successful
+  // browser verification. Never display an empty provisional universe simply
+  // because GitHub's public raw endpoint is temporarily inaccessible.
+  const [themeReviews,setThemeReviews] = useState<ThemeReviewBook>(()=>loadRememberedThemeReviews());
   const [themeReviewError,setThemeReviewError] = useState<string|null>(null);
+  const [themeReviewStatus,setThemeReviewStatus] = useState<'checking'|'verified'|'cached'>('checking');
   const refreshThemeReviews = async () => {
-    try {setThemeReviews(await fetchThemeReviews());setThemeReviewError(null);}
-    catch(err){setThemeReviewError(err instanceof Error?err.message:String(err));}
+    setThemeReviewStatus('checking');
+    try{
+      const fresh=await fetchThemeReviews();
+      setThemeReviews(prev=>mergeThemeReviewBooks(prev,fresh));
+      setThemeReviewError(null);
+      setThemeReviewStatus('verified');
+    }catch(err){
+      // Keep existing successfully validated editorial decisions, including
+      // when a new session starts without network connectivity.
+      setThemeReviewError(err instanceof Error?err.message:String(err));
+      setThemeReviewStatus('cached');
+    }
   };
   useEffect(()=>{void refreshThemeReviews();},[]);
+  useEffect(()=>{rememberThemeReviews(themeReviews);},[themeReviews]);
   const radar = useMemo(() => computeRotationRadar(marketSnapshot, classifications,themeReviews),
     [marketSnapshot, classifications,themeReviews]);
   const [focus, setFocus] = useState<'early'|'leaders'|'cooling'|'all'>('early');
@@ -88,6 +103,19 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
           <div className="text-xs font-semibold rounded-xl px-3 py-2 border border-[#b1ada1]/30 bg-[#f4f3ee]">
             {radar.asOf ? 'Last observed trading close: ' + radar.asOf : 'Waiting for validated price histories'}
           </div>
+        </div>
+        <div role="status" aria-live="polite"
+          className={'mt-4 rounded-lg border px-3 py-2 text-xs '+(themeReviewStatus==='cached'?
+            'border-amber-300 bg-amber-50 text-amber-900':
+            'border-[#b1ada1]/30 bg-[#f4f3ee] text-[#08090a]/70')}>
+          <strong>Theme approvals:</strong>{' '}
+          {themeReviews.reviews.length} saved GitHub review records.
+          {themeReviewStatus==='verified'?' Latest public GitHub audit checked.':
+            themeReviewStatus==='checking'?' Checking the latest GitHub audit…':
+            ' Live check unavailable; using the latest approved records saved in the build or this browser.'}
+          {themeReviewError&&<span className="block mt-1">
+            The saved approvals are retained. Open Review theme composition below to retry.
+          </span>}
         </div>
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 mt-5">
           {[
