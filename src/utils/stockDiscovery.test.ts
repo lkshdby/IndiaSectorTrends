@@ -18,9 +18,14 @@ describe('one-pass 62-theme structural membership audit',()=>{
       assert.equal(theme.explicitlyReviewed+theme.provisional,theme.total,theme.themeId);
       assert.equal(theme.reviewState==='provisional',theme.provisional>0,theme.themeId);
     }
-    assert.equal(audit.provisionalThemes,41);
-    assert.equal(audit.provisionalCoreEntries,314);
-    assert.equal(audit.narrowCoreThemes,9);
+    // Owner reviews are append-only: these counts legitimately decrease as
+    // compositions are approved. Verify records rather than frozen 2026-11-10 counts.
+    assert.equal(audit.provisionalThemes,
+      audit.themes.filter(theme=>theme.reviewState==='provisional').length);
+    assert.equal(audit.provisionalCoreEntries,
+      audit.rows.filter(row=>row.tier==='core'&&row.membershipReview==='provisional').length);
+    assert.equal(audit.narrowCoreThemes,
+      audit.themes.filter(theme=>theme.lowSampleCore).length);
     assert.equal(audit.themeCount,audit.themes.length);
     const output=themeMembershipAuditCsv(audit);
     assert.equal(output.trim().split('\n').length,audit.themeEntries+1);
