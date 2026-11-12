@@ -272,6 +272,17 @@ export async function fetchStocksBatch(
           console.warn('[QUARANTINED] ' + ticker + ': ' + checked.warnings.join('; '));
           return;
         }
+        // Never regress a previously verified stock to an older observed
+        // exchange session just because a new HTTP request succeeded.
+        const previous = stockHistoryCache.get(ticker)?.data;
+        const earlierDate = latestObservedTradingDate(previous?.rawHistory);
+        const newDate = latestObservedTradingDate(checked.record.rawHistory);
+        if (previous && earlierDate && newDate && earlierDate > newDate) {
+          console.warn('[YAHOO-OLDER-THAN-SAVED] ' + ticker + ': received ' +
+            newDate + ', retaining ' + earlierDate);
+          results[ticker] = previous;
+          return;
+        }
         stockHistoryCache.set(ticker, { data: checked.record, cachedAt: Date.now() });
         results[ticker] = checked.record;
       };
@@ -380,6 +391,13 @@ export async function runFullUniverseSync(reason = 'Scheduled IST Pull'): Promis
     for (const cfg of benchmarkConfigs) {
       try {
         const data = await yahooWithRetry(cfg.symbol);
+        const previousSession = latestObservedTradingDate(refreshedBenchmarks[cfg.key]?.history);
+        const fetchedSession = latestObservedTradingDate(data.history);
+        if (previousSession && (!fetchedSession || fetchedSession < previousSession)) {
+          console.warn('[BENCHMARK-OLDER-THAN-SAVED] ' + cfg.key + ': received ' +
+            (fetchedSession || 'none') + ', retaining ' + previousSession);
+          continue;
+        }
         refreshedBenchmarks[cfg.key] = {
           ...cfg,
           price: data.price,
