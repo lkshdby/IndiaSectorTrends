@@ -91,8 +91,78 @@ export function buildThemeReviewIssueUrl(themeId:string,
     encodeURIComponent('[Review Theme] Approve composition: '+themeId)+
     '&body='+encodeURIComponent(body);
 }
+
+/** Maintain last verified owner approvals even when a CDN is briefly unavailable.
+ * The committed audit baked into the Vercel build is the first fallback;
+ * the browser's last successful, strictly parsed audit adds newer approvals.
+ */
+export const REVIEW_CACHE_KEY='india-sector-trends:confirmed-theme-reviews:v1';
+
+export function mergeThemeReviewBooks(...books:ThemeReviewBook[]):ThemeReviewBook{
+  const byIssue=new Map<number,ApprovedThemeReview>();
+  for(const book of books){
+    for(const row of parseThemeReviewBook(book).reviews){
+      const prev=byIssue.get(row.githubIssue);
+      if(prev&&JSON.stringify(prev)!==JSON.stringify(row)){
+        throw new Error('Conflicting GitHub theme review issue #'+row.githubIssue);
+      }
+      byIssue.set(row.githubIssue,row);
+    }
+  }
+  return parseThemeReviewBook({version:1,reviews:[...byIssue.values()].sort(
+    (a,b)=>a.reviewedAt.localeCompare(b.reviewedAt)||a.githubIssue-b.githubIssue
+  )});
+}
+
+export function loadRememberedThemeReviews():ThemeReviewBook{
+  if(typeof window==='undefined')return COMMITTED_THEME_REVIEWS;
+  try{
+    const saved=window.localStorage.getItem(REVIEW_CACHE_KEY);
+    return saved?mergeThemeReviewBooks(COMMITTED_THEME_REVIEWS,parseThemeReviewBook(JSON.parse(saved))):
+      COMMITTED_THEME_REVIEWS;
+  }catch{
+    return COMMITTED_THEME_REVIEWS;
+  }
+}
+
+export function rememberThemeReviews(book:ThemeReviewBook):void{
+  if(typeof window==='undefined')return;
+  try{window.localStorage.setItem(REVIEW_CACHE_KEY,JSON.stringify(parseThemeReviewBook(book)));}
+  catch{/* Storage can be disabled; the verified committed audit remains the fallback. */}
+}
+
+async function readReviewJson(url:string,apiContents:boolean):Promise<ThemeReviewBook>{
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+    const res=await fetch(url,{cache:'no-store',credentials:'omit',signal:controller.signal,
+      headers:apiContents?{'Accept':'application/vnd.github+json'}:undefined});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    if(!apiContents)return parseThemeReviewBook(await res.json());
+    const response=await res.json() as {encoding?:string;content?:string};
+    if(response.encoding!=='base64'||typeof response.content!=='string')
+      throw new Error('GitHub API did not provide base64 review contents');
+    const binary=atob(response.content.replace(/\s/g,''));
+    const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+    return parseThemeReviewBook(JSON.parse(new TextDecoder().decode(bytes)));
+  }finally{clearTimeout(timer);}
+}
+
 export async function fetchThemeReviews():Promise<ThemeReviewBook>{
-  const res=await fetch(PUBLIC_REVIEWS_URL+'?v='+Date.now(),{cache:'no-store',credentials:'omit'});
-  if(!res.ok)throw new Error('Theme reviews unavailable: HTTP '+res.status);
-  return parseThemeReviewBook(await res.json());
+  const version=Date.now();
+  let primaryFailure='';
+  try{
+    return await readReviewJson(PUBLIC_REVIEWS_URL+'?v='+version,false);
+  }catch(error){
+    primaryFailure=error instanceof Error?error.message:String(error);
+  }
+  // Independent contents endpoint helps when raw.githubusercontent.com is
+  // unavailable on the user's network. This endpoint is public, no token used.
+  const api='https://api.github.com/repos/lkshdby/IndiaSectorTrends/contents/'+
+    'src/data/themeCompositionReviews.json?ref=main';
+  try{return await readReviewJson(api,true);}
+  catch(error){
+    const secondary=error instanceof Error?error.message:String(error);
+    throw new Error('GitHub raw: '+primaryFailure+'; GitHub API: '+secondary);
+  }
 }
