@@ -1,7 +1,8 @@
 import React,{useEffect,useMemo,useState} from 'react';
-import {CheckCircle2,ExternalLink,RefreshCw,ShieldCheck} from 'lucide-react';
+import {CheckCircle2,ExternalLink,Plus,RefreshCw,ShieldCheck,X} from 'lucide-react';
 import {THEMATIC_SECTOR_INDICES,classifySectorMember} from '../data/sectorUniverse';
 import type {ThemeRotationPulse} from '../utils/rotationRadar';
+import {normalizeMonitorSymbol} from '../utils/priceMonitoring';
 import {
   buildThemeReviewIssueUrl,mostRecentThemeReview,
   type CompositionAssignment,type CompositionTier,type ThemeReviewBook
@@ -25,6 +26,7 @@ export function ThemeCompositionReviewPanel({
   const [themeId,setThemeId]=useState(firstUnreviewed?.id||THEMATIC_SECTOR_INDICES[0].id);
   const [draft,setDraft]=useState<CompositionAssignment[]>([]);
   const [note,setNote]=useState('');
+  const [tickerInput,setTickerInput]=useState('');
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
   useEffect(()=>{if(activeThemeId)setThemeId(activeThemeId);},[activeThemeId]);
@@ -36,9 +38,21 @@ export function ThemeCompositionReviewPanel({
       ticker:stock.ticker,tier:classifySectorMember(theme.id,stock,reviews).tier
     })).sort((a,b)=>a.ticker.localeCompare(b.ticker)));
     setNote('');
+    setTickerInput('');
     setError('');
   },[theme,reviews]);
   const coreCount=draft.filter(x=>x.tier==='core').length;
+  const newMembers=draft.filter(x=>!theme.stocks.some(stock=>stock.ticker===x.ticker));
+  const addTicker=()=>{
+    const input=tickerInput.trim().toUpperCase();
+    const ticker=normalizeMonitorSymbol(input.endsWith('.NS')?input.slice(0,-3):input);
+    if(!ticker){setError('Enter a valid NSE symbol, such as NETWEB or NETWEB.NS (not BSE or a company name).');return;}
+    if(draft.some(x=>x.ticker===ticker)){setError(ticker+' is already in this theme.');return;}
+    if(newMembers.length>=5){setError('At most five new NSE tickers can be added in one GitHub approval.');return;}
+    setDraft(rows=>[...rows,{ticker:ticker!,tier:'core'}].sort((a,b)=>a.ticker.localeCompare(b.ticker)));
+    setTickerInput('');
+    setError('');
+  };
   const identical=!!prior&&prior.assignments.length===draft.length&&
     prior.assignments.every((a,i)=>a.ticker===draft[i]?.ticker&&a.tier===draft[i]?.tier);
   const reviewed=theme.stocks.every(stock=>
@@ -58,7 +72,7 @@ export function ThemeCompositionReviewPanel({
           <ShieldCheck className="w-5 h-5 text-blue-700"/> Review theme composition
         </h3>
         <p className="text-xs text-[#08090a]/65 mt-1 max-w-2xl">
-          Confirm current companies as-is, or change their Core, Adjacent, Proxy or Excluded roles.
+          Confirm current companies, add a new NSE ticker, or change Core, Adjacent, Proxy or Excluded roles.
           GitHub owner approval clears Provisional composition; price history separately determines
           whether the theme is Thin evidence, Still lagging, an Early turn or a Broad leader.
         </p>
@@ -87,7 +101,7 @@ export function ThemeCompositionReviewPanel({
     </div>
     {activeRadarPulse?.themeId===theme.id&&
       <div role="status" className="rounded-lg border border-[#b1ada1]/30 bg-[#f4f3ee] p-3 text-xs">
-        <p><strong>This same theme in Rotation Radar:</strong> {activeRadarPulse.phase}</p>
+        <p><strong>This same theme in Rotation Radar:</strong> {activeRadarPulse.phase==='Thin evidence' && activeRadarPulse.total<5?'Small sample':activeRadarPulse.phase}</p>
         <p className="mt-1 text-[#08090a]/65">
           {activeRadarPulse.membershipReview==='explicit-editorial'?
             'Composition is recognized by the Radar. Its signal depends separately on price quality, relative strength and breadth.':
@@ -99,24 +113,56 @@ export function ThemeCompositionReviewPanel({
       <CheckCircle2 className="w-4 h-4 text-emerald-700"/>
       Last owner review: {new Date(prior.reviewedAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}
     </p>}
+    <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3 space-y-2">
+      <label htmlFor="new-composition-nse-ticker" className="block text-xs font-extrabold">Add an NSE ticker to this theme</label>
+      <div className="flex flex-wrap gap-2">
+        <input id="new-composition-nse-ticker" value={tickerInput}
+          onChange={e=>setTickerInput(e.target.value.toUpperCase())}
+          onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();addTicker();}}}
+          placeholder="e.g. ICICIAMC" autoCapitalize="characters"
+          className="min-w-[150px] flex-1 min-h-10 border border-[#b1ada1]/40 rounded-lg px-3 text-sm uppercase bg-white"/>
+        <button type="button" onClick={addTicker} disabled={busy||newMembers.length>=5}
+          className="rounded-lg min-h-10 px-3 border border-blue-300 bg-white text-blue-900 font-bold text-xs flex items-center gap-1 disabled:opacity-50">
+          <Plus className="w-4 h-4"/> Add ticker
+        </button>
+      </div>
+      <p className="text-[11px] text-[#08090a]/65">
+        Add up to five NSE symbols per approval, choose each stock's role below, then approve on GitHub.
+        The owner workflow verifies new NSE tickers and automatically requests price tracking.
+        An added stock affects Radar only when its price history meets the same rules as other stocks.
+      </p>
+      {newMembers.length>0&&<p className="text-xs font-semibold text-blue-800">
+        Pending approval: {newMembers.map(x=>x.ticker).join(', ')}
+      </p>}
+    </div>
     <div className="grid sm:grid-cols-2 gap-2">
-      {theme.stocks.map(stock=>{
-        const selected=draft.find(x=>x.ticker===stock.ticker)?.tier||'core';
-        return <label key={stock.ticker}
-          className="rounded-lg border border-[#b1ada1]/25 px-3 py-2 flex flex-wrap justify-between items-center gap-2">
+      {draft.map(member=>{
+        const stock=theme.stocks.find(x=>x.ticker===member.ticker);
+        const isNew=!stock;
+        return <div key={member.ticker}
+          className={'rounded-lg border px-3 py-2 flex flex-wrap justify-between items-center gap-2 '+(isNew?'border-blue-300 bg-blue-50/30':'border-[#b1ada1]/25')}>
           <span className="min-w-0">
-            <strong className="text-xs">{stock.ticker}</strong>
-            <span className="block text-[11px] text-[#08090a]/60">{stock.name}</span>
+            <strong className="text-xs">{member.ticker}</strong>
+            <span className="block text-[11px] text-[#08090a]/60">
+              {stock?.name||'New NSE symbol · pending owner and price verification'}
+            </span>
           </span>
-          <select aria-label={'Role for '+stock.ticker} value={selected}
-            onChange={e=>setDraft(rows=>rows.map(row=>row.ticker===stock.ticker?
-              {...row,tier:e.target.value as CompositionTier}:row))}
-            className="min-h-9 rounded-lg border border-[#b1ada1]/40 bg-white px-2 text-xs font-semibold">
-            {roles.map(role=><option key={role} value={role}>
-              {role==='core'?'Core':role==='adjacent'?'Adjacent':role==='proxy'?'Proxy':'Excluded'}
-            </option>)}
-          </select>
-        </label>;
+          <div className="flex gap-2 items-center">
+            <select aria-label={'Role for '+member.ticker} value={member.tier}
+              onChange={e=>setDraft(rows=>rows.map(row=>row.ticker===member.ticker?
+                {...row,tier:e.target.value as CompositionTier}:row))}
+              className="min-h-9 rounded-lg border border-[#b1ada1]/40 bg-white px-2 text-xs font-semibold">
+              {roles.map(role=><option key={role} value={role}>
+                {role==='core'?'Core':role==='adjacent'?'Adjacent':role==='proxy'?'Proxy':'Excluded'}
+              </option>)}
+            </select>
+            {isNew&&<button type="button" aria-label={'Remove new ticker '+member.ticker}
+              onClick={()=>setDraft(rows=>rows.filter(row=>row.ticker!==member.ticker))}
+              className="min-h-9 min-w-9 rounded-lg border border-[#b1ada1]/30 flex items-center justify-center">
+              <X className="w-4 h-4"/>
+            </button>}
+          </div>
+        </div>;
       })}
     </div>
     <p className="text-xs text-[#08090a]/65">
@@ -138,7 +184,7 @@ export function ThemeCompositionReviewPanel({
         {identical?'Already owner-approved':'Approve composition on GitHub'}
       </button>
       <p className="text-[11px] text-[#08090a]/65 max-w-lg">
-        Opens a prefilled GitHub issue. Sign in as repository owner and click
+        Opens a prefilled GitHub issue. New NSE symbols are saved to the permanent theme roster and tracked in the next automatic market collection. Sign in as repository owner and click
         <strong> Submit new issue</strong>. An owner-only workflow validates every ticker,
         commits a dated review and comments on the issue. Then refresh the status here.
       </p>
