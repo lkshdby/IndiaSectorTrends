@@ -121,6 +121,51 @@
       "githubIssue": 28
     },
     {
+      "themeId": "private-banks",
+      "assignments": [
+        {
+          "ticker": "AXISBANK",
+          "tier": "core"
+        },
+        {
+          "ticker": "FEDERALBNK",
+          "tier": "core"
+        },
+        {
+          "ticker": "HDFCBANK",
+          "tier": "core"
+        },
+        {
+          "ticker": "ICICIBANK",
+          "tier": "core"
+        },
+        {
+          "ticker": "IDFCFIRSTB",
+          "tier": "core"
+        },
+        {
+          "ticker": "INDUSINDBK",
+          "tier": "core"
+        },
+        {
+          "ticker": "KARURVYSYA",
+          "tier": "core"
+        },
+        {
+          "ticker": "KOTAKBANK",
+          "tier": "core"
+        },
+        {
+          "ticker": "RBLBANK",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:09:15Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 30
+    },
+    {
       "themeId": "packaging-materials",
       "assignments": [
         {
@@ -331,6 +376,39 @@
       "githubIssue": 35
     },
     {
+      "themeId": "tyres-rubber-carbon",
+      "assignments": [
+        {
+          "ticker": "APOLLOTYRE",
+          "tier": "core"
+        },
+        {
+          "ticker": "BALKRISIND",
+          "tier": "core"
+        },
+        {
+          "ticker": "CEATLTD",
+          "tier": "core"
+        },
+        {
+          "ticker": "JKTYRE",
+          "tier": "core"
+        },
+        {
+          "ticker": "MRF",
+          "tier": "core"
+        },
+        {
+          "ticker": "PCBL",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:12:42Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 37
+    },
+    {
       "themeId": "sugar-biofuels",
       "assignments": [
         {
@@ -401,6 +479,92 @@
       "githubIssue": 38
     },
     {
+      "themeId": "brokers-depositories",
+      "assignments": [
+        {
+          "ticker": "GROWW",
+          "tier": "core"
+        },
+        {
+          "ticker": "5PAISA",
+          "tier": "core"
+        },
+        {
+          "ticker": "ANGELONE",
+          "tier": "core"
+        },
+        {
+          "ticker": "BSE",
+          "tier": "core"
+        },
+        {
+          "ticker": "CDSL",
+          "tier": "core"
+        },
+        {
+          "ticker": "GEOJITFSL",
+          "tier": "core"
+        },
+        {
+          "ticker": "IIFLCAPS",
+          "tier": "core"
+        },
+        {
+          "ticker": "MCX",
+          "tier": "core"
+        },
+        {
+          "ticker": "MOTILALOFS",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:13:56Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 39
+    },
+    {
+      "themeId": "insurance-life-general",
+      "assignments": [
+        {
+          "ticker": "GODIGIT",
+          "tier": "core"
+        },
+        {
+          "ticker": "HDFCLIFE",
+          "tier": "core"
+        },
+        {
+          "ticker": "ICICIGI",
+          "tier": "core"
+        },
+        {
+          "ticker": "ICICIPRULI",
+          "tier": "core"
+        },
+        {
+          "ticker": "LICI",
+          "tier": "core"
+        },
+        {
+          "ticker": "NIVABUPA",
+          "tier": "core"
+        },
+        {
+          "ticker": "SBILIFE",
+          "tier": "core"
+        },
+        {
+          "ticker": "STARHEALTH",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:14:51Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 41
+    },
+    {
       "themeId": "chemicals-speciality",
       "assignments": [
         {
@@ -448,6 +612,47 @@
       "reviewedAt": "2026-11-11T10:15:09.725Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 40
+    },
+    {
+      "themeId": "cement-products",
+      "assignments": [
+        {
+          "ticker": "AMBUJACEM",
+          "tier": "core"
+        },
+        {
+          "ticker": "BIRLACORPN",
+          "tier": "core"
+        },
+        {
+          "ticker": "DALBHARAT",
+          "tier": "core"
+        },
+        {
+          "ticker": "JKCEMENT",
+          "tier": "core"
+        },
+        {
+          "ticker": "NUVOCO",
+          "tier": "core"
+        },
+        {
+          "ticker": "RAMCOCEM",
+          "tier": "core"
+        },
+        {
+          "ticker": "SHREECEM",
+          "tier": "core"
+        },
+        {
+          "ticker": "ULTRACEMCO",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-11T10:15:14Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 43
     },
     {
       "themeId": "cables-wires",

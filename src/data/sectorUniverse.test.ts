@@ -28,9 +28,14 @@ describe('core indices and adjacent opportunity universe', () => {
     assert.equal(getSectorOpportunityMembers('geospatial').find(x => x.stock.ticker === 'DRONE')?.tier, 'adjacent');
     assert.ok(!CORE_SECTOR_INDICES.find(x => x.id === 'geospatial')!.stocks.some(s => s.ticker === 'DRONE'));
   });
-  it('provides explicit provenance for provisional, non-reviewed baskets', () => {
-    const s = THEMATIC_SECTOR_INDICES.find(x => x.id === 'cement-products')!;
-    assert.equal(classifySectorMember(s.id, s.stocks[0]).reviewStatus, 'provisional');
+  it('preserves permanent owner approvals while retaining truly unreviewed baskets', () => {
+    const cement = THEMATIC_SECTOR_INDICES.find(x => x.id === 'cement-products')!;
+    assert.ok(cement.stocks.every(stock => classifySectorMember(cement.id,stock).reviewStatus === 'reviewed-theme-fit'),
+      'GitHub approval #43 must permanently confirm Cement');
+    const pending = THEMATIC_SECTOR_INDICES.find(theme =>
+      theme.stocks.some(stock => classifySectorMember(theme.id,stock).reviewStatus === 'provisional'));
+    assert.ok(pending, 'At least one theme must remain genuinely provisional');
+    assert.ok(pending.stocks.some(stock => classifySectorMember(pending.id,stock).reviewStatus === 'provisional'));
     const totals = getUniverseDiagnostics();
     assert.equal(totals.basketCount, 62);
     assert.ok(totals.provisionalBaskets > 0);
