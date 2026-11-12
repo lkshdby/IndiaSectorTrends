@@ -43,7 +43,13 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/data/themeCompositionReviews.json
           git diff --cached --quiet && exit 1
-          git commit -m "data: record owner-reviewed theme composition [skip ci]"
+          if [ "${{ steps.validate.outputs.added_count }}" != "0" ]; then
+            # New additions alter the compiled stock universe: do NOT skip
+            # Vercel's ordinary main-branch build/deployment.
+            git commit -m "feat: add owner-approved NSE theme constituent(s)"
+          else
+            git commit -m "data: record owner-reviewed theme composition [skip ci]"
+          fi
           git restore -- package-lock.json
           if ! git diff --quiet; then
             echo "::error::Unexpected tracked change"
