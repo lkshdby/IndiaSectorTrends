@@ -245,6 +245,14 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
                   {active.membershipReview === 'provisional' ? ' Core thematic membership is provisional; not eligible for rotation alert even if price coverage is strong.' :
                     active.validCount<5 || active.coveragePct<75 ? ' Not eligible for early-turn classification.' : ' Meets sampling and explicit editorial-membership thresholds (business revenue exposure still requires verification).'}
                 </p>
+                {active.missingPriceDetails.length>0&&(
+                  <div className="mt-2">
+                    <p className="font-semibold text-amber-900">Missing observed trading dates (not failed approvals):</p>
+                    <ul className="mt-1 space-y-1 list-disc pl-4 text-[#08090a]/75">
+                      {active.missingPriceDetails.map(detail=><li key={detail}>{detail}</li>)}
+                    </ul>
+                  </div>
+                )}
               </div>
               <div>
                 <h4 className="text-sm font-extrabold mb-2">Stocks driving this week's move</h4>
