@@ -139,10 +139,29 @@ export function classifySectorMember(sectorId:string,stock:StockConstituent,
   return { stock, tier: 'proxy', reason: 'Unclassified entry in an explicitly curated basket; needs verification', reviewStatus: 'provisional' };
 }
 
-const SOURCE_BASKETS: SectorIndexData[] = PREBUILT_SECTOR_INDICES.map(sector => ({
-  ...sector,
-  stocks: sector.stocks.map(stock => resolveStock(stock, sector.id)),
-})).map(sector => ({ ...sector, companiesCount: sector.stocks.length }));
+// The exact owner-approved Brokers & Depositories composition in GitHub issue
+// #39 includes GROWW, absent from the original prebuilt theme file.
+// Preserve that explicit editorial choice. Price/market cap are intentionally
+// unknown here (zero is the existing empty-data sentinel); only validated
+// daily market prices can contribute to rotation signals.
+const SOURCE_BASKETS: SectorIndexData[] = PREBUILT_SECTOR_INDICES.map(sector => {
+  const stocks = sector.stocks.map(stock => resolveStock(stock, sector.id));
+  if (sector.id === 'brokers-depositories' && !stocks.some(s => s.ticker === 'GROWW')) {
+    stocks.push({
+      ticker: 'GROWW',
+      name: 'Billionbrains Garage Ventures Limited (Groww)',
+      price: 0,
+      change1D: 0,
+      change1W: 0,
+      marketCapCr: 0,
+      pe: 0,
+      volume: 0,
+      logoBg: '#1d4ed8',
+      logoText: 'GR',
+    });
+  }
+  return { ...sector, stocks, companiesCount: stocks.length };
+});
 
 export const THEMATIC_SECTOR_INDICES = SOURCE_BASKETS;
 export function getCoreSectorIndices(reviews:ThemeReviewBook=COMMITTED_THEME_REVIEWS,
