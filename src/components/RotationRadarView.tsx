@@ -26,11 +26,22 @@ function num(n: number | null, unit = '%') {
 function tone(n: number | null): string {
   return n === null ? 'text-slate-500' : n > 0 ? 'text-emerald-700' : n < 0 ? 'text-rose-700' : 'text-slate-600';
 }
+function evidenceLabel(p: ThemeRotationPulse): string {
+  if (p.phase === 'Thin evidence' && p.total < 5) return 'Small sample';
+  if (p.phase === 'Thin evidence' && p.missingPriceDetails.length > 0) return 'Price-data gap';
+  return p.phase;
+}
 function stageExplain(p: ThemeRotationPulse): string {
   if (p.phase === 'Early turn') return 'Underperformed over 21 sessions, but the latest week beat NIFTY 500 with accelerating relative returns and broader participation';
   if (p.phase === 'Broad leader') return 'Outperformed over both five and 21 sessions with more than half the tracked constituents beating the benchmark';
   if (p.phase === 'Losing steam') return 'Previously ahead, but short-term relative strength, acceleration or breadth has deteriorated';
-  if (p.phase === 'Thin evidence') return 'Too few valid core constituents, or under 75% price-history coverage; not a reliable basket signal';
+  if (p.phase === 'Thin evidence') {
+    if (p.total < 5 && p.validCount === p.total)
+      return 'All core stocks have matching price histories, but the basket contains fewer than five companies. This is a small-sample limitation, not a Yahoo collection problem. Watchlist only; the ranking is not eligible for rotation alerts.';
+    if (p.total < 5)
+      return 'The basket contains fewer than five core companies and some have missing price dates. Watchlist only; not eligible for rotation alerts.';
+    return 'Some core constituents lack matching observed price histories, leaving fewer than five valid companies or less than 75% coverage. This is a market-data limitation, not a composition approval issue.';
+  }
   if (p.phase === 'Provisional composition') return 'Theme core membership is provisionally assigned without an explicit membership rule. Watchlist only; not eligible for rotation alerts until editorial membership review.';
   return 'Does not satisfy our predeclared broad-leadership or early-turn criteria';
 }
@@ -91,6 +102,8 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
     setSelectedId(themeId);
   };
   const check = radar.forwardCheck;
+  const smallSampleThemes = radar.allThemes.filter(p => p.phase === 'Thin evidence' && p.total < 5).length;
+  const priceLimitedThemes = radar.allThemes.filter(p => p.phase === 'Thin evidence' && p.total >= 5).length;
 
   return (
     <section className="space-y-4 text-[#08090a]" aria-label="Emerging thematic rotation radar">
@@ -139,7 +152,10 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
         </div>
         <p className="text-xs mt-4 text-[#08090a]/60">
           Rotation here means <strong>relative price-strength change</strong>, not observed institutional money flows.
-          {' '}Provisional theme baskets awaiting composition review: <strong>{radar.provisionalThemes}</strong>; they appear in All themes but cannot trigger Early turn alerts.
+          {' '}Ineligible themes: <strong>{smallSampleThemes}</strong> small samples (under five core stocks),
+          <strong> {priceLimitedThemes}</strong> with insufficient matching price histories,
+          and <strong>{radar.provisionalThemes}</strong> provisional compositions awaiting editorial review.
+          All remain visible for research but cannot trigger Early turn alerts.
           Our data covers the curated stock universe, <strong>not all companies in the Screener export</strong>.
           {privateAssignments.size ? ' Private industry classifications active on this browser: ' + privateAssignments.size + '.' :
             ' Import your private Screener classifications in Basic industries to label the industry drivers.'}
@@ -194,7 +210,7 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
                     <p className="font-bold text-sm">{p.themeName}</p>
                     <p className="text-[11px] text-[#08090a]/55 mt-0.5">{p.category} · {p.validCount}/{p.total} stocks</p>
                   </div>
-                  <span className={'text-[10px] font-bold border px-2 py-1 rounded-lg shrink-0 ' + PHASE_STYLE[p.phase]}>{p.phase}</span>
+                  <span className={'text-[10px] font-bold border px-2 py-1 rounded-lg shrink-0 ' + PHASE_STYLE[p.phase]}>{evidenceLabel(p)}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-1 mt-3 text-center">
                   <div className="bg-white/75 rounded-lg p-2">
@@ -221,7 +237,7 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
               <div>
                 <p className="text-xs uppercase text-blue-700 font-extrabold tracking-wide">Theme investigation</p>
                 <h3 className="text-lg font-extrabold mt-1">{active.themeName}</h3>
-                <span className={'inline-block mt-2 text-xs font-bold border rounded-lg px-2 py-1 '+PHASE_STYLE[active.phase]}>{active.phase}</span>
+                <span className={'inline-block mt-2 text-xs font-bold border rounded-lg px-2 py-1 '+PHASE_STYLE[active.phase]}>{evidenceLabel(active)}</span>
                 <p className="text-xs text-[#08090a]/65 mt-2 leading-relaxed">{stageExplain(active)}</p>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -243,7 +259,8 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
                 <p className="font-bold flex gap-1.5 items-center"><ShieldCheck className="w-4 h-4"/> Evidence quality</p>
                 <p className="mt-1 text-[#08090a]/70">{active.validCount} of {active.total} core companies had matching observed prices at all required dates; {active.coveragePct}% coverage.
                   {active.membershipReview === 'provisional' ? ' Core thematic membership is provisional; not eligible for rotation alert even if price coverage is strong.' :
-                    active.validCount<5 || active.coveragePct<75 ? ' Not eligible for early-turn classification.' : ' Meets sampling and explicit editorial-membership thresholds (business revenue exposure still requires verification).'}
+                    active.total<5 && active.validCount===active.total ? ' All constituent price histories are available; the only limiting factor is the minimum five-company sample rule.' :
+                    active.validCount<5 || active.coveragePct<75 ? ' Not eligible for early-turn classification because of insufficient matching price data or sample size.' : ' Meets sampling and explicit editorial-membership thresholds (business revenue exposure still requires verification).'}
                 </p>
                 {active.missingPriceDetails.length>0&&(
                   <div className="mt-2">
