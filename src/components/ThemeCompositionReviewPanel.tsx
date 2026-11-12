@@ -1,6 +1,7 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import {CheckCircle2,ExternalLink,RefreshCw,ShieldCheck} from 'lucide-react';
 import {THEMATIC_SECTOR_INDICES,classifySectorMember} from '../data/sectorUniverse';
+import type {ThemeRotationPulse} from '../utils/rotationRadar';
 import {
   buildThemeReviewIssueUrl,mostRecentThemeReview,
   type CompositionAssignment,type CompositionTier,type ThemeReviewBook
@@ -9,12 +10,16 @@ import {
 interface Props {
   reviews:ThemeReviewBook;
   activeThemeId:string|null;
+  activeRadarPulse:ThemeRotationPulse|null;
+  onSelectTheme:(themeId:string)=>void;
   refreshReviews:()=>Promise<void>;
   refreshError:string|null;
 }
 const roles:CompositionTier[]=['core','adjacent','proxy','excluded'];
 
-export function ThemeCompositionReviewPanel({reviews,activeThemeId,refreshReviews,refreshError}:Props){
+export function ThemeCompositionReviewPanel({
+  reviews,activeThemeId,activeRadarPulse,onSelectTheme,refreshReviews,refreshError
+}:Props){
   const firstUnreviewed=THEMATIC_SECTOR_INDICES.find(s=>s.stocks.some(st=>
     classifySectorMember(s.id,st,reviews).reviewStatus==='provisional'));
   const [themeId,setThemeId]=useState(firstUnreviewed?.id||THEMATIC_SECTOR_INDICES[0].id);
@@ -54,7 +59,8 @@ export function ThemeCompositionReviewPanel({reviews,activeThemeId,refreshReview
         </h3>
         <p className="text-xs text-[#08090a]/65 mt-1 max-w-2xl">
           Confirm current companies as-is, or change their Core, Adjacent, Proxy or Excluded roles.
-          GitHub owner approval removes Provisional composition if price-history quality is sufficient.
+          GitHub owner approval clears Provisional composition; price history separately determines
+          whether the theme is Thin evidence, Still lagging, an Early turn or a Broad leader.
         </p>
       </div>
       <button type="button" disabled={busy} onClick={refresh}
@@ -65,7 +71,10 @@ export function ThemeCompositionReviewPanel({reviews,activeThemeId,refreshReview
     <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
       <label className="text-xs font-bold">
         Theme
-        <select value={theme.id} onChange={e=>setThemeId(e.target.value)}
+        <select value={theme.id} onChange={e=>{
+          setThemeId(e.target.value);
+          onSelectTheme(e.target.value);
+        }}
           className="block w-full mt-1 min-h-11 rounded-lg border border-[#b1ada1]/35 px-3 text-sm bg-white">
           {THEMATIC_SECTOR_INDICES.map(s=><option value={s.id} key={s.id}>{s.name}</option>)}
         </select>
@@ -76,6 +85,16 @@ export function ThemeCompositionReviewPanel({reviews,activeThemeId,refreshReview
         {prior?'Owner-approved · GitHub #'+prior.githubIssue:reviewed?'Existing editorial review':'Provisional composition'}
       </span>
     </div>
+    {activeRadarPulse?.themeId===theme.id&&
+      <div role="status" className="rounded-lg border border-[#b1ada1]/30 bg-[#f4f3ee] p-3 text-xs">
+        <p><strong>This same theme in Rotation Radar:</strong> {activeRadarPulse.phase}</p>
+        <p className="mt-1 text-[#08090a]/65">
+          {activeRadarPulse.membershipReview==='explicit-editorial'?
+            'Composition is recognized by the Radar. Its signal depends separately on price quality, relative strength and breadth.':
+            prior?'GitHub approval exists but the Radar marks this same theme provisional. This is a classification mismatch, not a missing approval.':
+            'Composition not yet explicitly reviewed for Radar signals.'}
+        </p>
+      </div>}
     {prior&&<p className="text-xs text-[#08090a]/65 flex items-center gap-2">
       <CheckCircle2 className="w-4 h-4 text-emerald-700"/>
       Last owner review: {new Date(prior.reviewedAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})}

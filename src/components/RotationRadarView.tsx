@@ -84,6 +84,12 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
     return rows.filter(p => (p.themeName + ' ' + p.category).toLowerCase().includes(search.toLowerCase()));
   }, [radar, focus, search]);
   const active = radar.allThemes.find(p=>p.themeId===selectedId) || display[0] || null;
+  // The review selector and Radar must refer to the SAME theme.
+  const selectThemeForReview=(themeId:string)=>{
+    setFocus('all');
+    setSearch('');
+    setSelectedId(themeId);
+  };
   const check = radar.forwardCheck;
 
   return (
@@ -280,6 +286,7 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
       </div>
 
       <ThemeCompositionReviewPanel reviews={themeReviews} activeThemeId={active?.themeId||null}
+        activeRadarPulse={active} onSelectTheme={selectThemeForReview}
         refreshReviews={refreshThemeReviews} refreshError={themeReviewError}/>
 
       <section className="rounded-2xl bg-white border border-[#b1ada1]/30 p-4 sm:p-5 space-y-3">
