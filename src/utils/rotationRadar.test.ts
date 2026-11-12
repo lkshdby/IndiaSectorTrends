@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CORE_SECTOR_INDICES, classifySectorMember } from '../data/sectorUniverse';
+import { CORE_SECTOR_INDICES, classifySectorMember, getCoreSectorIndices } from '../data/sectorUniverse';
+import { COMMITTED_THEME_REVIEWS } from './themeCompositionReviews';
 import type { BrowserMarketSnapshot } from './marketSnapshotClient';
 import { computeRotationRadar } from './rotationRadar';
 
@@ -76,6 +77,33 @@ describe('Rotation Radar: cross-theme early transition and honest validation',()
     assert.equal(pulse.validCount,new Set(theme!.stocks.map(x=>x.ticker)).size);
     assert.ok(result.earlyTurns.some(p=>p.themeId===theme!.id));
     assert.equal(result.asOf,market.benchmarks.nifty500.history.at(-1)!.date);
+  });
+
+  it('classifies every saved owner-approved theme as reviewed in the actual Radar',()=>{
+    // The complete audit includes owner-approved Jewellery (GitHub #26).
+    const fixture=syntheticMarket();
+    const stocks={...fixture.stocks} as Record<string,unknown>;
+    const seed=Object.values(fixture.stocks)[0] as Record<string,unknown>;
+    const audited=COMMITTED_THEME_REVIEWS.reviews;
+    assert.ok(audited.some(r=>r.githubIssue===26),'Expected issue #26 in bundled audit');
+    for(const review of audited){
+      const core=getCoreSectorIndices(COMMITTED_THEME_REVIEWS)
+        .find(t=>t.id===review.themeId);
+      assert.ok(core,'Missing approved theme '+review.themeId);
+      for(const stock of core.stocks){
+        stocks[stock.ticker]={...seed,ticker:stock.ticker,symbol:stock.ticker+'.NS'};
+      }
+    }
+    const report=computeRotationRadar({...fixture,stocks} as BrowserMarketSnapshot);
+    for(const review of audited){
+      const row=report.allThemes.find(r=>r.themeId===review.themeId);
+      assert.ok(row,'Missing approved Radar theme '+review.themeId);
+      assert.equal(row.membershipReview,'explicit-editorial',review.themeId);
+      assert.notEqual(row.phase,'Provisional composition',review.themeId);
+    }
+    const jewellery=report.allThemes.find(r=>r.themeId==='jewellery-luxury-watches');
+    assert.equal(jewellery?.total,7);
+    assert.equal(jewellery?.coveragePct,100);
   });
 
   it('does not mistake sector metadata for verified industry evidence',()=>{
