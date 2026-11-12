@@ -139,17 +139,25 @@ export function classifySectorMember(sectorId:string,stock:StockConstituent,
   return { stock, tier: 'proxy', reason: 'Unclassified entry in an explicitly curated basket; needs verification', reviewStatus: 'provisional' };
 }
 
-// The exact owner-approved Brokers & Depositories composition in GitHub issue
-// #39 includes GROWW, absent from the original prebuilt theme file.
-// Preserve that explicit editorial choice. Price/market cap are intentionally
-// unknown here (zero is the existing empty-data sentinel); only validated
-// daily market prices can contribute to rotation signals.
+/**
+ * A newly owner-approved NSE ticker becomes a permanent curated theme member.
+ * Keep the append-only GitHub review audit as the roster source of truth: no
+ * separate hardcoded stock-list patch or private Screener export is required.
+ *
+ * These zero-valued fields are UNKNOWN placeholders, never market observations.
+ * Rotation and charts consume only separately validated daily Yahoo prices.
+ */
 const SOURCE_BASKETS: SectorIndexData[] = PREBUILT_SECTOR_INDICES.map(sector => {
   const stocks = sector.stocks.map(stock => resolveStock(stock, sector.id));
-  if (sector.id === 'brokers-depositories' && !stocks.some(s => s.ticker === 'GROWW')) {
+  const known = new Set(stocks.map(stock => stock.ticker));
+  const latestApproval = [...COMMITTED_THEME_REVIEWS.reviews].reverse()
+    .find(review => review.themeId === sector.id);
+  for (const assignment of latestApproval?.assignments || []) {
+    if (known.has(assignment.ticker)) continue;
+    known.add(assignment.ticker);
     stocks.push({
-      ticker: 'GROWW',
-      name: 'Billionbrains Garage Ventures Limited (Groww)',
+      ticker: assignment.ticker,
+      name: assignment.ticker + ' (NSE — owner-added)',
       price: 0,
       change1D: 0,
       change1W: 0,
@@ -157,7 +165,7 @@ const SOURCE_BASKETS: SectorIndexData[] = PREBUILT_SECTOR_INDICES.map(sector => 
       pe: 0,
       volume: 0,
       logoBg: '#1d4ed8',
-      logoText: 'GR',
+      logoText: assignment.ticker.slice(0, 2),
     });
   }
   return { ...sector, stocks, companiesCount: stocks.length };
