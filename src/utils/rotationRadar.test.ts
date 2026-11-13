@@ -126,9 +126,11 @@ describe('Rotation Radar: cross-theme early transition and honest validation',()
     const market=syntheticMarket();
     const report=computeRotationRadar(market);
     assert.equal(report.forwardCheck.label,'exploratory-in-sample-membership');
-    assert.ok(report.forwardCheck.sampleDates>=1);
-    assert.ok(report.forwardCheck.evaluatedThemes>=1);
-    assert.ok(report.forwardCheck.baselineHitPct!==null);
+    // This synthetic fixture is dated before the first owner approval in November.
+    // Historical backtests must NOT backdate later editorial decisions.
+    assert.equal(report.forwardCheck.sampleDates,0);
+    assert.equal(report.forwardCheck.evaluatedThemes,0);
+    assert.equal(report.forwardCheck.baselineHitPct,null);
     // A signal at the latest session has no observable future close yet,
     // so its outcome must NOT appear as a forward-validated event.
     assert.equal(report.forwardCheck.signalEvents,0);
