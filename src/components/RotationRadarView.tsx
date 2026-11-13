@@ -312,7 +312,8 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
 
       <ThemeCompositionReviewPanel reviews={themeReviews} activeThemeId={active?.themeId||null}
         activeRadarPulse={active} onSelectTheme={selectThemeForReview}
-        refreshReviews={refreshThemeReviews} refreshError={themeReviewError}/>
+        refreshReviews={refreshThemeReviews} refreshError={themeReviewError}
+        marketSnapshot={marketSnapshot}/>
 
       <section className="rounded-2xl bg-white border border-[#b1ada1]/30 p-4 sm:p-5 space-y-3">
         <h3 className="text-base font-extrabold flex items-center gap-2">
