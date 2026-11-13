@@ -952,6 +952,47 @@
       "reviewedAt": "2026-11-13T04:47:08.820Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 55
+    },
+    {
+      "themeId": "gold-loan",
+      "assignments": [
+        {
+          "ticker": "BAJFINANCE",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "CHOLAFIN",
+          "tier": "core"
+        },
+        {
+          "ticker": "IIFL",
+          "tier": "core"
+        },
+        {
+          "ticker": "MANAPPURAM",
+          "tier": "core"
+        },
+        {
+          "ticker": "MUTHOOTCAP",
+          "tier": "core"
+        },
+        {
+          "ticker": "MUTHOOTFIN",
+          "tier": "core"
+        },
+        {
+          "ticker": "SPANDANA",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "SURYODAY",
+          "tier": "adjacent"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-13T04:56:04.157Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 56
     }
   ]
 }
