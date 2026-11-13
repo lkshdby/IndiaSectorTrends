@@ -915,6 +915,43 @@
       "reviewedAt": "2026-11-13T04:44:44.430Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 54
+    },
+    {
+      "themeId": "amc-mutual-funds",
+      "assignments": [
+        {
+          "ticker": "ABSLAMC",
+          "tier": "core"
+        },
+        {
+          "ticker": "CAMS",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "HDFCAMC",
+          "tier": "core"
+        },
+        {
+          "ticker": "KFINTECH",
+          "tier": "excluded"
+        },
+        {
+          "ticker": "NAM-INDIA",
+          "tier": "core"
+        },
+        {
+          "ticker": "SBIFUNDS",
+          "tier": "core"
+        },
+        {
+          "ticker": "UTIAMC",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-13T04:47:08.820Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 55
     }
   ]
 }
