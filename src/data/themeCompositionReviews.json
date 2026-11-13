@@ -870,6 +870,51 @@
       "reviewedAt": "2026-11-13T04:43:11.647Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 53
+    },
+    {
+      "themeId": "fintech-payments-insurtech",
+      "assignments": [
+        {
+          "ticker": "AFFLE",
+          "tier": "proxy"
+        },
+        {
+          "ticker": "CMSINFO",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "FINOPB",
+          "tier": "core"
+        },
+        {
+          "ticker": "JIOFIN",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "MOBIKWIK",
+          "tier": "core"
+        },
+        {
+          "ticker": "MONEYVIEW",
+          "tier": "core"
+        },
+        {
+          "ticker": "PAYTM",
+          "tier": "core"
+        },
+        {
+          "ticker": "PINELABS",
+          "tier": "core"
+        },
+        {
+          "ticker": "POLICYBZR",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-13T04:44:44.430Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 54
     }
   ]
 }
