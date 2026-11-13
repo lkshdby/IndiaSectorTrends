@@ -482,10 +482,6 @@
       "themeId": "brokers-depositories",
       "assignments": [
         {
-          "ticker": "GROWW",
-          "tier": "core"
-        },
-        {
           "ticker": "5PAISA",
           "tier": "core"
         },
@@ -503,6 +499,10 @@
         },
         {
           "ticker": "GEOJITFSL",
+          "tier": "core"
+        },
+        {
+          "ticker": "GROWW",
           "tier": "core"
         },
         {
@@ -829,6 +829,47 @@
       "reviewedAt": "2026-11-11T11:43:13.004Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 46
+    },
+    {
+      "themeId": "data-centers-ai-cloud",
+      "assignments": [
+        {
+          "ticker": "ANANTRAJ",
+          "tier": "core"
+        },
+        {
+          "ticker": "AURIONPRO",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "BBOX",
+          "tier": "core"
+        },
+        {
+          "ticker": "E2E",
+          "tier": "core"
+        },
+        {
+          "ticker": "ESDS",
+          "tier": "core"
+        },
+        {
+          "ticker": "NETWEB",
+          "tier": "core"
+        },
+        {
+          "ticker": "TANLA",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "TECHNOE",
+          "tier": "adjacent"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-13T04:43:11.647Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 53
     }
   ]
 }
