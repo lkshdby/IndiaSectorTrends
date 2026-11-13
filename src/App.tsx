@@ -15,6 +15,13 @@ export default function App() {
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [workspace, setWorkspace] = useState<'themes' | 'industries' | 'radar'>('radar');
+  // A navigation event, not just a selected id: clicking the same Radar theme
+  // again must re-open its own chart even if Themes was previously visited.
+  const [themeChartRequest, setThemeChartRequest] = useState<{themeId: string; sequence: number} | null>(null);
+  const openThemeChart = (themeId: string) => {
+    setThemeChartRequest(previous => ({themeId, sequence: (previous?.sequence ?? 0) + 1}));
+    setWorkspace('themes');
+  };
   const [marketSnapshot, setMarketSnapshot] = useState<BrowserMarketSnapshot | null>(null);
   const [snapshotLoadError, setSnapshotLoadError] = useState<string | null>(null);
   const loadSequence = useRef(0);
@@ -119,14 +126,14 @@ export default function App() {
         </nav>
         <main className="w-full px-3 sm:px-5 lg:px-6 py-4 flex-1 flex flex-col min-h-0">
           <div className={workspace === 'themes' ? 'block' : 'hidden'} aria-hidden={workspace !== 'themes'}>
-            <IndexTrackerView onShowToast={showToast} marketSnapshot={marketSnapshot} />
+            <IndexTrackerView onShowToast={showToast} marketSnapshot={marketSnapshot} themeChartRequest={themeChartRequest} />
           </div>
           {workspace === 'industries' && (
             <IndustryDiscoveryView marketSnapshot={marketSnapshot} onOpenThemes={() => setWorkspace('themes')} />
           )}
           {workspace === 'radar' && (
             <RotationRadarView marketSnapshot={marketSnapshot}
-              onOpenThemes={() => setWorkspace('themes')}
+              onOpenThemes={openThemeChart}
               onOpenIndustries={() => setWorkspace('industries')}/>
           )}
         </main>
