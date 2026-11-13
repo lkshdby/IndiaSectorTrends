@@ -16,7 +16,12 @@ describe('core indices and adjacent opportunity universe', () => {
     assert.ok(!diagnostics.stocks.some(s => s.ticker === 'SURYODAY'));
     const amc = CORE_SECTOR_INDICES.find(x => x.id === 'amc-mutual-funds')!;
     assert.ok(!amc.stocks.some(s => s.ticker === 'CAMS' || s.ticker === 'KFINTECH'));
-    assert.deepEqual(getSectorOpportunityMembers('amc-mutual-funds').map(x => x.stock.ticker), ['CAMS', 'KFINTECH']);
+    const current=THEMATIC_SECTOR_INDICES.find(s=>s.id==='amc-mutual-funds')!;
+    const editorialOpportunities=current.stocks.filter(stock=>
+      ['adjacent','proxy'].includes(classifySectorMember('amc-mutual-funds',stock).tier)
+    ).map(stock=>stock.ticker);
+    assert.deepEqual(getSectorOpportunityMembers('amc-mutual-funds').map(x=>x.stock.ticker),
+      editorialOpportunities,'Opportunities must respect latest owner-approved tiers');
   });
   it('uses TMCV for commercial vehicles without reusing passenger-car prices', () => {
     const commercial = CORE_SECTOR_INDICES.find(x => x.id === 'commercial-vehicles')!;

@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { MonitoringApprovalPanel } from './MonitoringApprovalPanel';
+import { clearScreenerResearchPool,loadScreenerResearchPool,parseScreenerResearchPool,saveScreenerResearchPool,type ScreenerResearchPool } from '../utils/screenerResearchPool';
 import { IndustryCoveragePanel } from './IndustryCoveragePanel';
 import { PrivateIndustryImportPanel } from './PrivateIndustryImportPanel';
 import { joinPrivateIndustryAssignments, loadPrivateIndustryEvidence, type PrivateIndustryAssignments } from '../utils/privateIndustryEvidence';
@@ -42,6 +44,24 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
   const [selectedName, setSelectedName] = useState('Computers - Software & Consulting');
   const [heatmapSort, setHeatmapSort] = useState<HeatmapSort>('acceleration');
   const [heatmapFilter, setHeatmapFilter] = useState<HeatmapFilter>('all');
+  const [monitorPool,setMonitorPool]=useState<ScreenerResearchPool|null>(()=>loadScreenerResearchPool());
+  const [monitorThemeId,setMonitorThemeId]=useState('data-centers-ai-cloud');
+  const [monitorMinCap,setMonitorMinCap]=useState(1000);
+  const [monitorMessage,setMonitorMessage]=useState('');
+  const [monitorError,setMonitorError]=useState('');
+  const importMonitoringPool=async(event:React.ChangeEvent<HTMLInputElement>)=>{
+    const file=event.target.files?.[0];
+    if(!file)return;
+    setMonitorError('');setMonitorMessage('');
+    try{
+      if(file.size>8_000_000)throw new Error('CSV exceeds 8 MB');
+      const parsed=parseScreenerResearchPool(await file.text(),new Date().toISOString().slice(0,10));
+      saveScreenerResearchPool(parsed);
+      setMonitorPool(parsed);
+      setMonitorMessage(parsed.companies.length+' NSE-coded industry peers retained on this browser.');
+    }catch(error){setMonitorError(error instanceof Error?error.message:'Could not import CSV');}
+    finally{event.target.value='';}
+  };
   const [privateAssignments, setPrivateAssignments] = useState<PrivateIndustryAssignments>(
     () => loadPrivateIndustryEvidence()?.assignments || new Map(),
   );
@@ -346,6 +366,53 @@ export function IndustryDiscoveryView({ marketSnapshot, onOpenThemes }: Props) {
           ) : <p className="text-sm text-[#08090a]/60">Select an industry to inspect its evidence.</p>}
         </aside>
       </div>
+      <details className="rounded-2xl border border-[#b1ada1]/30 bg-white p-4 sm:p-5 space-y-3">
+        <summary className="text-sm sm:text-base font-extrabold cursor-pointer">
+          NSE stock monitoring & industry-peer research
+          <span className="font-normal text-xs text-[#08090a]/55"> · formerly under Stock Leaders</span>
+        </summary>
+        <p className="mt-3 text-xs text-[#08090a]/65">
+          Import a permitted Screener industry export privately on this browser and approve additional NSE symbols
+          for the existing daily price collection. Confirmed industry mappings can also be reused
+          as theme candidates from the Rotation Radar composition editor.
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <label className="min-h-10 px-3 flex items-center rounded-lg bg-[#08090a] text-white font-bold text-xs cursor-pointer">
+            {monitorPool?'Replace browser-local Screener CSV':'Import Screener industry CSV'}
+            <input type="file" accept=".csv,text/csv" onChange={importMonitoringPool}
+              aria-label="Import industry research peers CSV" className="sr-only"/>
+          </label>
+          {monitorPool&&<button type="button"
+            onClick={()=>{clearScreenerResearchPool();setMonitorPool(null);setMonitorMessage('Browser-local research pool cleared.');}}
+            className="min-h-10 px-3 rounded-lg border border-[#b1ada1]/35 text-xs font-bold">
+            Clear local research pool
+          </button>}
+          <span className="text-xs text-[#08090a]/60">
+            {monitorPool?monitorPool.companies.length+' industry peers available':'No private research pool imported'}
+          </span>
+        </div>
+        {monitorMessage&&<p role="status" className="text-xs text-emerald-800">{monitorMessage}</p>}
+        {monitorError&&<p role="alert" className="text-xs text-rose-800">{monitorError}</p>}
+        {monitorPool&&<div className="mt-2 space-y-2">
+          <div className="grid sm:grid-cols-2 gap-2">
+            <label className="text-xs font-semibold">
+              Theme for peer discovery
+              <select value={monitorThemeId} onChange={e=>setMonitorThemeId(e.target.value)}
+                className="block mt-1 w-full min-h-10 px-2 border rounded-lg bg-white">
+                {THEMATIC_SECTOR_INDICES.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}
+              </select>
+            </label>
+            <label className="text-xs font-semibold">
+              Minimum market cap in import (₹ cr)
+              <input type="number" min={0} step={100} value={monitorMinCap}
+                onChange={e=>setMonitorMinCap(Math.max(0,Number(e.target.value)||0))}
+                className="block mt-1 w-full min-h-10 px-2 border rounded-lg"/>
+            </label>
+          </div>
+          <MonitoringApprovalPanel pool={monitorPool} themeId={monitorThemeId}
+            minCap={monitorMinCap} classifications={trustedAssignments} snapshot={marketSnapshot}/>
+        </div>}
+      </details>
       <p className="text-xs leading-relaxed text-[#08090a]/55">
         Prices are cached daily closes, not live intraday quotes. Industry indices are uninvestable price-return composites with static estimated market caps.
         Underlying classifications are sparse and dated. No inference of institutional buying, business exposure, or investment advice is implied.

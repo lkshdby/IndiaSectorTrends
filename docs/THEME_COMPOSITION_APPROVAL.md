@@ -20,3 +20,30 @@ You can still approve an unchanged roster or modify its Core, Adjacent, Proxy, o
 The immutable prospective signal diary remains unchanged. Historical signals are never backdated with new memberships.
 
 Editorial approval does **not** verify independent segment revenue exposure. The default eligible rotation rule still requires at least five core stocks and at least 75% exact-date historical price coverage. Adding an irrelevant stock merely to clear a threshold reduces research quality.
+
+## Shared Sector Rotation classifications — no duplicate stock approval work
+
+The separate **Stock Leaders** workspace has been retired. Its browser-local Screener
+industry-peer import and optional ticker-only monitoring approvals now live under
+**Basic Industries → NSE stock monitoring & industry-peer research**.
+Existing GitHub-approved monitor tickers and market histories were not changed.
+
+In **Rotation Radar → Review theme composition**, expand **Reuse confirmed Sector Rotation
+stocks for this theme**. The picker compares confirmed basic-industry classifications against
+the approved Core companies' basic industries; it excludes current theme constituents.
+It displays available source links, whether the same ticker is already saved in the
+market snapshot, and any other theme where it appears. Imported browser-local Screener
+peers are optionally searchable, but are labeled as unverified industry peers.
+By default each suggestion enters the *draft* as **Adjacent**, not Core.
+You can change any draft role, then submit up to five additions together through the
+existing owner-authenticated GitHub approval issue. No candidate is auto-approved.
+
+The **Pure-Play Core / Broader Ecosystem** switch in Rotation Radar's selected-theme
+investigation compares same-date observed returns on existing Core vs Core+Adjacent+Proxy
+stock cohorts. This comparison uses the same verified price snapshot as Sector Rotation.
+**It is a research preview only**: the Radar phase rules, five-stock minimum,
+price-data thresholds, and point-in-time signal diary remain tied to the Core basket.
+
+Industry match alone does not establish direct segment revenue exposure. Some themes
+span multiple basic industries, so the picker is deliberately a candidate finder, not
+a complete or authoritative list of thematic beneficiaries.
