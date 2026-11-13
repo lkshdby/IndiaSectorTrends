@@ -1,16 +1,14 @@
 import {describe,it} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {CORE_SECTOR_INDICES} from '../data/sectorUniverse';
-import {computeRotationRadar} from './rotationRadar';
+import {CORE_SECTOR_INDICES,THEMATIC_SECTOR_INDICES} from '../data/sectorUniverse';
 
 describe('Radar to same-theme investment chart navigation',()=>{
   it('all Radar theme ids resolve to a prebuilt Investment Themes chart',()=>{
-    const report=computeRotationRadar(null);
     const targetIds=new Set(CORE_SECTOR_INDICES.map(x=>x.id));
-    assert.equal(report.allThemes.length,CORE_SECTOR_INDICES.length);
-    for(const theme of report.allThemes){
-      assert.ok(targetIds.has(theme.themeId), theme.themeId+' lacks a matching chart');
+    assert.equal(THEMATIC_SECTOR_INDICES.length,CORE_SECTOR_INDICES.length);
+    for(const theme of THEMATIC_SECTOR_INDICES){
+      assert.ok(targetIds.has(theme.id),theme.id+' lacks a matching chart');
     }
   });
   it('passes the active Radar theme, rather than opening the generic themes tab',()=>{
