@@ -1038,6 +1038,51 @@
       "reviewedAt": "2026-11-13T09:57:50.228Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 59
+    },
+    {
+      "themeId": "quick-commerce-consumer-tech",
+      "assignments": [
+        {
+          "ticker": "ETERNAL",
+          "tier": "core"
+        },
+        {
+          "ticker": "FIRSTCRY",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "HONASA",
+          "tier": "adjacent"
+        },
+        {
+          "ticker": "MEESHO",
+          "tier": "core"
+        },
+        {
+          "ticker": "NAUKRI",
+          "tier": "excluded"
+        },
+        {
+          "ticker": "NYKAA",
+          "tier": "core"
+        },
+        {
+          "ticker": "SWIGGY",
+          "tier": "core"
+        },
+        {
+          "ticker": "URBANCO",
+          "tier": "core"
+        },
+        {
+          "ticker": "ZAGGLE",
+          "tier": "excluded"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-13T10:52:26.038Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 60
     }
   ]
 }
