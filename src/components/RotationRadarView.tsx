@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowDownRight, ArrowUpRight, Activity, Compass, Info, Layers3, ShieldCheck, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 import { computeRotationRadar, type RotationPhase, type ThemeRotationPulse } from '../utils/rotationRadar';
+import { compareThemeScope } from '../utils/themeScopeComparison';
 import { ThemeCompositionReviewPanel } from './ThemeCompositionReviewPanel';
 import { fetchThemeReviews, loadRememberedThemeReviews, mergeThemeReviewBooks, rememberThemeReviews, type ThemeReviewBook } from '../utils/themeCompositionReviews';
 import { fetchRotationDiary, summarizeRadarDiary, type RadarDiary } from '../utils/rotationDiary';
@@ -77,6 +78,7 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
     [marketSnapshot, classifications,themeReviews]);
   const [focus, setFocus] = useState<'early'|'leaders'|'cooling'|'all'>('early');
   const [selectedId, setSelectedId] = useState('');
+  const [scopeView,setScopeView]=useState<'pure'|'ecosystem'>('pure');
   const [search, setSearch] = useState('');
   const [diary, setDiary] = useState<RadarDiary | null>(null);
   const [diaryError, setDiaryError] = useState<string | null>(null);
@@ -95,6 +97,9 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
     return rows.filter(p => (p.themeName + ' ' + p.category).toLowerCase().includes(search.toLowerCase()));
   }, [radar, focus, search]);
   const active = radar.allThemes.find(p=>p.themeId===selectedId) || display[0] || null;
+  const scopeReport = useMemo(() => compareThemeScope(marketSnapshot,active?.themeId||'',themeReviews),
+    [marketSnapshot,active?.themeId,themeReviews]);
+  const scope=scopeView==='pure'?scopeReport?.purePlay:scopeReport?.ecosystem;
   // The review selector and Radar must refer to the SAME theme.
   const selectThemeForReview=(themeId:string)=>{
     setFocus('all');
@@ -255,6 +260,37 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
                   </div>
                 ))}
               </div>
+              {scopeReport&&<div className="rounded-xl border border-[#b1ada1]/30 p-3 space-y-2">
+                <p className="text-xs font-extrabold">Investment-theme scope comparison</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={()=>setScopeView('pure')} aria-pressed={scopeView==='pure'}
+                    className={'p-2 text-xs rounded-lg border font-bold '+(scopeView==='pure'?'bg-blue-50 border-blue-300':'bg-white border-[#b1ada1]/25')}>
+                    Pure-Play Core · {scopeReport.purePlay.total}
+                  </button>
+                  <button type="button" onClick={()=>setScopeView('ecosystem')} aria-pressed={scopeView==='ecosystem'}
+                    className={'p-2 text-xs rounded-lg border font-bold '+(scopeView==='ecosystem'?'bg-blue-50 border-blue-300':'bg-white border-[#b1ada1]/25')}>
+                    Broader Ecosystem · {scopeReport.ecosystem.total}
+                  </button>
+                </div>
+                <p className="text-[11px] text-[#08090a]/65">
+                  {scopeView==='pure'?'Only approved Core businesses. This scope drives the official Rotation Radar signals.':
+                  'Core + Adjacent + Proxy, as already classified. Observational preview only; does not change official Radar signals, historical diary or alerts.'}
+                </p>
+                {scope&&<div className="grid grid-cols-2 gap-2">
+                  <div className="bg-[#f4f3ee] p-2 rounded-lg text-xs">
+                    <p className="text-[#08090a]/55">5D vs NIFTY 500</p>
+                    <p className={'font-mono font-extrabold '+tone(scope.relative5)}>{num(scope.relative5,' pp')}</p>
+                  </div>
+                  <div className="bg-[#f4f3ee] p-2 rounded-lg text-xs">
+                    <p className="text-[#08090a]/55">21D vs NIFTY 500</p>
+                    <p className={'font-mono font-extrabold '+tone(scope.relative21)}>{num(scope.relative21,' pp')}</p>
+                  </div>
+                  <p className="col-span-2 text-[11px] text-[#08090a]/60">
+                    {scope.valid}/{scope.total} stocks with aligned closing histories ({scope.coveragePct}%).
+                    {scope.missing.length?' Missing: '+scope.missing.join(', '):''}
+                  </p>
+                </div>}
+              </div>}
               <div className="rounded-xl bg-[#f4f3ee] border border-[#b1ada1]/25 p-3 text-xs">
                 <p className="font-bold flex gap-1.5 items-center"><ShieldCheck className="w-4 h-4"/> Evidence quality</p>
                 <p className="mt-1 text-[#08090a]/70">{active.validCount} of {active.total} core companies had matching observed prices at all required dates; {active.coveragePct}% coverage.
