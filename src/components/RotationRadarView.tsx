@@ -10,7 +10,7 @@ import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
 
 interface Props {
   marketSnapshot: BrowserMarketSnapshot | null;
-  onOpenThemes: () => void;
+  onOpenThemes: (themeId: string) => void;
   onOpenIndustries: () => void;
 }
 const PHASE_STYLE: Record<RotationPhase, string> = {
@@ -335,7 +335,7 @@ export function RotationRadarView({ marketSnapshot, onOpenThemes, onOpenIndustri
                   ))}
                 </div>
               </div>
-              <button type="button" onClick={onOpenThemes}
+              <button type="button" onClick={() => onOpenThemes(active.themeId)}
                 className="w-full min-h-10 flex items-center justify-center gap-2 border rounded-lg text-sm font-bold hover:bg-[#f4f3ee]">
                 <Activity className="w-4 h-4"/> Explore complete theme chart
               </button>

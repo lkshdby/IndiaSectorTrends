@@ -61,6 +61,7 @@ import type { BrowserMarketSnapshot } from '../utils/marketSnapshotClient';
 interface IndexTrackerViewProps {
   onShowToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
   marketSnapshot: BrowserMarketSnapshot | null;
+  themeChartRequest?: {themeId: string; sequence: number} | null;
 }
 
 // Curated colors for multi-stock co-movement overlay lines
@@ -88,7 +89,7 @@ const BENCHMARK_COLORS: Record<string, string> = {
   nifty500: '#4f46e5', // Deep Indigo
 };
 
-export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast, marketSnapshot }) => {
+export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast, marketSnapshot, themeChartRequest }) => {
   const [activeTab, setActiveTab] = useState<'prebuilt' | 'myIndex' | 'tracked'>('prebuilt');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -105,6 +106,39 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
   const [selectedStockTicker, setSelectedStockTicker] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState<TimeframePeriod>('3M');
   const [viewProofMode, setViewProofMode] = useState<'overlay' | 'composite' | 'rotation'>('overlay');
+  const themeChartRef = useRef<HTMLDivElement>(null);
+  const pendingChartScroll = useRef<number | null>(null);
+
+  // The chart view stays mounted while its workspace is hidden. A Radar
+  // navigation request must explicitly select the same theme and clear any
+  // previous custom-index, stock, category, or search selection.
+  useEffect(() => {
+    if (!themeChartRequest) return;
+    const id = themeChartRequest.themeId;
+    if (!CORE_SECTOR_INDICES.some(theme => theme.id === id)) return;
+    pendingChartScroll.current = themeChartRequest.sequence;
+    setActiveTab('prebuilt');
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setSelectedSectorId(id);
+    setSelectedStockTicker(null);
+    setViewProofMode('overlay');
+    setExpandedSectors(previous => ({...previous, [id]: true}));
+  }, [themeChartRequest]);
+
+  // Wait until React has selected the requested theme before scrolling to
+  // its actual chart (particularly important on mobile below the sidebar).
+  useEffect(() => {
+    if (!themeChartRequest ||
+        pendingChartScroll.current !== themeChartRequest.sequence ||
+        selectedSectorId !== themeChartRequest.themeId ||
+        activeTab !== 'prebuilt' || selectedStockTicker !== null) return;
+    pendingChartScroll.current = null;
+    const frame = window.requestAnimationFrame(() => {
+      themeChartRef.current?.scrollIntoView({behavior: 'smooth', block: 'start'});
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [themeChartRequest, selectedSectorId, activeTab, selectedStockTicker]);
 
   // Benchmark overlay state (e.g. NIFTY 50 enabled by default for immediate comparison)
   const [activeBenchmarkOverlays, setActiveBenchmarkOverlays] = useState<Record<string, boolean>>({
@@ -1628,7 +1662,7 @@ export const IndexTrackerView: React.FC<IndexTrackerViewProps> = ({ onShowToast,
         )}
 
         {/* Main Chart Canvas */}
-        <div className="p-4 sm:p-6 space-y-6">
+        <div ref={themeChartRef} className="p-4 sm:p-6 space-y-6 scroll-mt-20">
           {viewProofMode === 'overlay' ? (
             // ================= MULTI-STOCK OVERLAY WITH BENCHMARK ANCHORS =================
             <div className="bg-white p-5 rounded-[22px] border border-[#b1ada1]/30 shadow-xs space-y-3">

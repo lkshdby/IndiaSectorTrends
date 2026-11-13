@@ -59,6 +59,8 @@ jobs:
         run: npx tsx --test src/utils/industryHeatmap.test.ts
       - name: Research rotation radar and forward validation tests
         run: npx tsx --test src/utils/rotationRadar.test.ts
+      - name: Radar to same-theme chart navigation tests
+        run: npx tsx --test src/utils/themeChartNavigation.test.ts
       - name: Owner thematic composition audit tests
         run: npx tsx --test src/utils/themeCompositionReviews.test.ts
       - name: Point-in-time rotation diary and forward outcome tests
