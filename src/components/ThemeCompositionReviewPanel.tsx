@@ -3,6 +3,10 @@ import {CheckCircle2,ExternalLink,Plus,RefreshCw,ShieldCheck,X} from 'lucide-rea
 import {THEMATIC_SECTOR_INDICES,classifySectorMember} from '../data/sectorUniverse';
 import type {ThemeRotationPulse} from '../utils/rotationRadar';
 import {normalizeMonitorSymbol} from '../utils/priceMonitoring';
+import {joinPrivateIndustryAssignments,loadPrivateIndustryEvidence} from '../utils/privateIndustryEvidence';
+import {loadScreenerResearchPool} from '../utils/screenerResearchPool';
+import {suggestSharedIndustryThemeCandidates} from '../utils/sharedIndustryThemeCandidates';
+import type {BrowserMarketSnapshot} from '../utils/marketSnapshotClient';
 import {
   buildThemeReviewIssueUrl,mostRecentThemeReview,
   type CompositionAssignment,type CompositionTier,type ThemeReviewBook
@@ -15,11 +19,12 @@ interface Props {
   onSelectTheme:(themeId:string)=>void;
   refreshReviews:()=>Promise<void>;
   refreshError:string|null;
+  marketSnapshot:BrowserMarketSnapshot|null;
 }
 const roles:CompositionTier[]=['core','adjacent','proxy','excluded'];
 
 export function ThemeCompositionReviewPanel({
-  reviews,activeThemeId,activeRadarPulse,onSelectTheme,refreshReviews,refreshError
+  reviews,activeThemeId,activeRadarPulse,onSelectTheme,refreshReviews,refreshError,marketSnapshot
 }:Props){
   const firstUnreviewed=THEMATIC_SECTOR_INDICES.find(s=>s.stocks.some(st=>
     classifySectorMember(s.id,st,reviews).reviewStatus==='provisional'));
@@ -27,6 +32,11 @@ export function ThemeCompositionReviewPanel({
   const [draft,setDraft]=useState<CompositionAssignment[]>([]);
   const [note,setNote]=useState('');
   const [tickerInput,setTickerInput]=useState('');
+  const [candidateQuery,setCandidateQuery]=useState('');
+  const [candidateView,setCandidateView]=useState<'confirmed'|'all'>('confirmed');
+  const [privateAssignments]=useState(()=>loadPrivateIndustryEvidence()?.assignments||new Map());
+  const [researchPool]=useState(()=>loadScreenerResearchPool());
+  const classifications=useMemo(()=>joinPrivateIndustryAssignments(privateAssignments),[privateAssignments]);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState(false);
   useEffect(()=>{if(activeThemeId)setThemeId(activeThemeId);},[activeThemeId]);
@@ -39,10 +49,32 @@ export function ThemeCompositionReviewPanel({
     })).sort((a,b)=>a.ticker.localeCompare(b.ticker)));
     setNote('');
     setTickerInput('');
+    setCandidateQuery('');
     setError('');
   },[theme,reviews]);
   const coreCount=draft.filter(x=>x.tier==='core').length;
   const newMembers=draft.filter(x=>!theme.stocks.some(stock=>stock.ticker===x.ticker));
+  const candidates=useMemo(()=>suggestSharedIndustryThemeCandidates(
+    theme.id,classifications,marketSnapshot,researchPool,reviews
+  ),[theme.id,classifications,marketSnapshot,researchPool,reviews]);
+  const filteredCandidates=candidates.filter(x=>
+    (candidateView==='all'||x.source==='verified-industry') &&
+    !draft.some(row=>row.ticker===x.ticker) &&
+    (x.ticker+' '+x.name+' '+x.industry).toLowerCase().includes(candidateQuery.toLowerCase())
+  );
+  const addCandidates=(tickers:readonly string[])=>{
+    const selected=candidates.filter(x=>tickers.includes(x.ticker) &&
+      !draft.some(row=>row.ticker===x.ticker));
+    if(!selected.length)return;
+    if(newMembers.length+selected.length>5){
+      setError('One GitHub approval can contain at most five new NSE tickers. Select fewer candidates.');
+      return;
+    }
+    setDraft(rows=>[...rows,...selected.map(x=>({
+      ticker:x.ticker,tier:x.suggestedTier
+    }))].sort((a,b)=>a.ticker.localeCompare(b.ticker)));
+    setError('');
+  };
   const addTicker=()=>{
     const input=tickerInput.trim().toUpperCase();
     const ticker=normalizeMonitorSymbol(input.endsWith('.NS')?input.slice(0,-3):input);
@@ -135,6 +167,70 @@ export function ThemeCompositionReviewPanel({
         Pending approval: {newMembers.map(x=>x.ticker).join(', ')}
       </p>}
     </div>
+    <details className="rounded-xl border border-[#b1ada1]/30 bg-white p-3 space-y-2">
+      <summary className="cursor-pointer text-xs sm:text-sm font-extrabold">
+        Reuse confirmed Sector Rotation stocks for this theme
+        <span className="font-normal text-[#08090a]/60"> · {candidates.filter(x=>x.source==='verified-industry').length} confirmed industry matches · {candidates.length} total suggestions</span>
+      </summary>
+      <p className="mt-2 text-xs text-[#08090a]/65">
+        Matches the confirmed basic industry of an existing Core company.
+        A matching industry does not establish a company's thematic business exposure.
+        Suggestions default to <strong>Adjacent</strong>; change a role to Core only after verifying its business fit.
+        No stock is added or approved automatically.
+      </p>
+      <div className="mt-2 flex flex-wrap items-end gap-2">
+        <label className="flex-1 min-w-[160px] text-xs font-semibold">
+          Search confirmed candidates
+          <input value={candidateQuery} onChange={e=>setCandidateQuery(e.target.value)}
+            placeholder="Search NSE symbol, company or industry"
+            className="block mt-1 w-full min-h-10 px-3 rounded-lg border border-[#b1ada1]/35 text-xs"/>
+        </label>
+        <label className="text-xs font-semibold">
+          Candidate source
+          <select value={candidateView} onChange={e=>setCandidateView(e.target.value as 'confirmed'|'all')}
+            className="block mt-1 min-h-10 rounded-lg border border-[#b1ada1]/35 px-2 text-xs">
+            <option value="confirmed">Confirmed industry mappings</option>
+            <option value="all">Include browser-local Screener peers</option>
+          </select>
+        </label>
+        <button type="button" disabled={!filteredCandidates.length||newMembers.length>=5}
+          onClick={()=>addCandidates(filteredCandidates.slice(0,Math.max(0,5-newMembers.length)).map(x=>x.ticker))}
+          className="min-h-10 px-3 rounded-lg border border-blue-300 text-blue-900 font-bold text-xs disabled:opacity-40">
+          Add up to {Math.max(0,5-newMembers.length)} suggestions
+        </button>
+      </div>
+      <div className="mt-2 max-h-64 overflow-y-auto space-y-1.5">
+        {filteredCandidates.slice(0,40).map(x=>(
+          <div key={x.ticker} className="rounded-lg border border-[#b1ada1]/20 p-2 flex flex-wrap gap-2 items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-extrabold">{x.ticker}
+                <span className="font-normal text-[#08090a]/65"> · {x.name}</span>
+              </p>
+              <p className="text-[11px] text-[#08090a]/60">{x.industry} · {x.sourceLabel}
+                {x.hasSavedPrices?' · Saved prices available':' · Price sync required'}
+                {x.otherThemes.length?' · Already tracked in '+x.otherThemes.slice(0,2).join(', '):''}
+              </p>
+              {x.provenance&&<a href={x.provenance} target="_blank" rel="noopener noreferrer"
+                className="text-[11px] text-blue-700 underline">Industry classification source</a>}
+            </div>
+            <button type="button" onClick={()=>addCandidates([x.ticker])} disabled={newMembers.length>=5||busy}
+              className="rounded-lg border border-blue-300 min-h-9 px-3 font-bold text-xs text-blue-800 disabled:opacity-40">
+              Add · Adjacent
+            </button>
+          </div>
+        ))}
+        {filteredCandidates.length>40&&<p className="text-xs text-[#08090a]/55">
+          Showing first 40 of {filteredCandidates.length} suggestions. Search to narrow the list.
+        </p>}
+        {!filteredCandidates.length&&<p className="text-xs text-[#08090a]/55 py-3">
+          No matching unselected stocks. Verify industry mappings under Basic Industries, or add an NSE ticker manually above.
+        </p>}
+      </div>
+      <p className="text-[11px] text-[#08090a]/55">
+        Already monitored stocks reuse the same saved market prices. New approved NSE symbols enter
+        the existing collection workflow. A new composition is committed only after you submit the owner-only GitHub issue.
+      </p>
+    </details>
     <div className="grid sm:grid-cols-2 gap-2">
       {draft.map(member=>{
         const stock=theme.stocks.find(x=>x.ticker===member.ticker);
@@ -144,7 +240,8 @@ export function ThemeCompositionReviewPanel({
           <span className="min-w-0">
             <strong className="text-xs">{member.ticker}</strong>
             <span className="block text-[11px] text-[#08090a]/60">
-              {stock?.name||'New NSE symbol · pending owner and price verification'}
+              {stock?.name||candidates.find(x=>x.ticker===member.ticker)?.name||
+                'New NSE symbol · pending owner and price verification'}
             </span>
           </span>
           <div className="flex gap-2 items-center">
