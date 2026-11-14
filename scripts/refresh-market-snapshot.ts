@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { runFullUniverseSync } from '../server/marketSync';
 import { CORE_SECTOR_INDICES, THEMATIC_SECTOR_INDICES } from '../src/data/sectorUniverse';
-import { validateAndRepairStock } from '../src/utils/priceQuality';
+import { validateAndRepairStock, type PriceHistoryRecord } from '../src/utils/priceQuality';
 import { assessObservedSessionCoverage, hasObservedSession, isNseWeekend, latestObservedTradingDate } from '../src/utils/marketSessionFreshness';
 
 /** GitHub Actions collects 3 times per IST calendar day. It never
@@ -41,8 +41,8 @@ async function main() {
   // HTTP fetchedAt is only a diagnostic. It must not invalidate prices when
   // the exchange has been closed or Yahoo temporarily serves older bars.
   const referenceTradingDate = latestObservedTradingDate(snapshot.benchmarks?.nifty500?.history);
-  const sessionCoverage = assessObservedSessionCoverage(
-    expected, snapshot.stocks || {}, referenceTradingDate,
+  const sessionCoverage = assessObservedSessionCoverage<PriceHistoryRecord>(
+    expected, (snapshot.stocks || {}) as Record<string, PriceHistoryRecord>, referenceTradingDate,
     stock => Boolean(validateAndRepairStock(stock).record),
   );
   const currentSessionTickers = sessionCoverage.eligibleTickers;
