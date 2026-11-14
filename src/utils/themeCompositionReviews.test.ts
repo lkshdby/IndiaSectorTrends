@@ -66,8 +66,12 @@ test('all 21 owner-authored theme approvals are baked into the application',()=>
   const recorded=COMMITTED_THEME_REVIEWS.reviews.map(r=>r.githubIssue).sort((a,b)=>a-b);
   assert.ok(issueNumbers.every(n=>recorded.includes(n)),
     'All 21 original owner approvals must remain after new ticker additions');
-  const rechecked=COMMITTED_THEME_REVIEWS.reviews;
-  for(const review of rechecked){
+  // Reviews are append-only. Only the newest approval sets a theme's current
+  // roles; older approvals must remain in the audit, not overwrite the latest.
+  const latestByTheme=new Map(COMMITTED_THEME_REVIEWS.reviews.map(review=>[
+    review.themeId,review
+  ]));
+  for(const review of latestByTheme.values()){
     const theme=THEMATIC_SECTOR_BY_ID.get(review.themeId);
     assert.ok(theme,'Missing theme '+review.themeId);
     const current=theme.stocks.map(x=>x.ticker).sort();
