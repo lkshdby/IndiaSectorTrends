@@ -41,7 +41,8 @@ describe('zero-config automatic market collection policy', () => {
 
   it('keeps previous snapshot on a failed collection', () => {
     const script = readFileSync('scripts/refresh-market-snapshot.ts', 'utf8');
-    assert.ok(script.includes('ratio < 0.90'));
+    assert.ok(script.includes('sessionRatio < 0.90'), 'quality is measured against latest observed market closes, not merely this run\'s HTTP downloads');
+    assert.ok(script.includes('isNseWeekend(new Date())'), 'scheduled/manual weekend refresh must no-op without replacing verified Friday closes');
     assert.ok(script.includes('emptyCoreBaskets.length'));
     assert.ok(script.includes('invalidBenchmarks.length'));
     assert.ok(workflow.includes('git add src/data/verifiedLiveMarketData.json'));
