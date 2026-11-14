@@ -34,3 +34,46 @@ export function hasObservedSession(
   const observed = latestObservedTradingDate(history);
   return referenceDate !== null && observed !== null && observed >= referenceDate;
 }
+
+/**
+ * NSE and BSE have no normal cash-equity session on Saturday or Sunday.
+ * Evaluate in IST, not GitHub runner UTC (the 02:00/04:00 IST jobs execute
+ * during the previous UTC calendar date).
+ */
+export function isNseWeekend(at: Date): boolean {
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata', weekday: 'short',
+  }).format(at);
+  return weekday === 'Sat' || weekday === 'Sun';
+}
+
+/**
+ * Separate successful HTTP pulls from verified exchange-session coverage.
+ * Retained, validated bars from the last successful run are still valid market
+ * data when Yahoo serves an older bar on a non-trading day.
+ */
+export function assessObservedSessionCoverage<T extends {
+  rawHistory?: readonly DatedObservation[] | null
+}>(
+  tickers: readonly string[],
+  stocks: Readonly<Record<string, T | undefined>>,
+  referenceDate: string | null,
+  isValid: (stock: T) => boolean,
+): { eligibleTickers: string[]; missingTickers: string[]; coverageRatio: number } {
+  const eligibleTickers: string[] = [];
+  const missingTickers: string[] = [];
+  for (const ticker of [...new Set(tickers)]) {
+    const record = stocks[ticker];
+    if (record && isValid(record) && hasObservedSession(record.rawHistory, referenceDate)) {
+      eligibleTickers.push(ticker);
+    } else {
+      missingTickers.push(ticker);
+    }
+  }
+  return {
+    eligibleTickers,
+    missingTickers,
+    coverageRatio: eligibleTickers.length + missingTickers.length > 0
+      ? eligibleTickers.length / (eligibleTickers.length + missingTickers.length) : 0,
+  };
+}
