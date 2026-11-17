@@ -22,7 +22,7 @@
             "MILKYMIST",
             "PARAGMILK"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 0.87
         },
         {
           "themeId": "jewellery-luxury-watches",
@@ -42,7 +42,7 @@
             "THANGAMAYL",
             "TITAN"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -0.46
         },
         {
           "themeId": "consumer-durables",
@@ -61,7 +61,7 @@
             "ORIENTELEC",
             "VGUARD"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -1.05
         },
         {
           "themeId": "solar-renewable",
@@ -80,7 +80,7 @@
             "SWSOLAR",
             "WAAREEENER"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -4.54
         },
         {
           "themeId": "packaging-materials",
@@ -100,7 +100,7 @@
             "TCPLPACK",
             "UFLEX"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 2.81
         },
         {
           "themeId": "commercial-vehicles",
@@ -119,7 +119,7 @@
             "OLECTRA",
             "TMCV"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -2.11
         },
         {
           "themeId": "passenger-cars-ev",
@@ -137,7 +137,7 @@
             "MARUTI",
             "TATAMOTORS"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -2.27
         },
         {
           "themeId": "ceramics-sanitaryware",
@@ -156,7 +156,7 @@
             "KAJARIACER",
             "SOMANYCERA"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 0.33
         },
         {
           "themeId": "alcoholic-beverages-breweries",
@@ -176,7 +176,7 @@
             "UBL",
             "UNITDSPR"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 1.94
         },
         {
           "themeId": "retail-qsr",
@@ -194,7 +194,7 @@
             "SAPPHIRE",
             "WESTLIFE"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -0.12
         },
         {
           "themeId": "chemicals-speciality",
@@ -216,7 +216,7 @@
             "TATACHEM",
             "VINATIORGA"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 2
         },
         {
           "themeId": "sugar-biofuels",
@@ -236,7 +236,7 @@
             "RENUKA",
             "TRIVENI"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -0.89
         },
         {
           "themeId": "cables-wires",
@@ -257,7 +257,7 @@
             "RRKABEL",
             "SUPREMEIND"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -1.89
         },
         {
           "themeId": "non-ferrous-metals",
@@ -276,7 +276,7 @@
             "NATIONALUM",
             "VEDL"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -3.48
         },
         {
           "themeId": "psu-banks",
@@ -297,7 +297,7 @@
             "SBIN",
             "UNIONBANK"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 5.82
         },
         {
           "themeId": "railways",
@@ -318,7 +318,7 @@
             "TEXRAIL",
             "TITAGARH"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 0.22
         },
         {
           "themeId": "pharma-api-cdmo",
@@ -337,7 +337,7 @@
             "SUVENPHAR",
             "SYNGENE"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -4.01
         },
         {
           "themeId": "hospitals",
@@ -362,7 +362,7 @@
             "KOVAI",
             "MANIPALHOS"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 2.58
         },
         {
           "themeId": "logistics-ports",
@@ -383,7 +383,7 @@
             "TCIEXP",
             "VRLLOG"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 0.33
         },
         {
           "themeId": "fertilisers",
@@ -404,7 +404,7 @@
             "PARADEEP",
             "RCF"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 2.48
         },
         {
           "themeId": "water-recycling-circular",
@@ -423,7 +423,7 @@
             "IONEXCHANG",
             "WABAG"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -2.73
         },
         {
           "themeId": "agro-chemicals",
@@ -443,7 +443,7 @@
             "SUMICHEM",
             "UPL"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -0.31
         },
         {
           "themeId": "auto-components",
@@ -466,7 +466,7 @@
             "SUPRAJIT",
             "UNOMINDA"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 0.89
         },
         {
           "themeId": "diagnostics",
@@ -484,7 +484,7 @@
             "THYROCARE",
             "VIJAYA"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 0.58
         },
         {
           "themeId": "retail-apparel",
@@ -503,7 +503,7 @@
             "PAGEIND",
             "TRENT"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -3.79
         },
         {
           "themeId": "mining-coal",
@@ -522,7 +522,7 @@
             "NMDC",
             "SANDUMA"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -2.92
         },
         {
           "themeId": "heavy-engineering",
@@ -544,7 +544,7 @@
             "SIEMENS",
             "THERMAX"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": -0.69
         },
         {
           "themeId": "shipping-dredging",
@@ -562,7 +562,7 @@
             "SCI",
             "SEAMECLTD"
           ],
-          "forwardExcess5": null
+          "forwardExcess5": 0.43
         }
       ]
     },
@@ -2155,6 +2155,766 @@
             "RBA",
             "SAPPHIRE",
             "WESTLIFE"
+          ],
+          "forwardExcess5": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-17",
+      "firstRecordedAt": "2026-11-17T04:46:12.705Z",
+      "sourceSnapshotAt": "2026-11-17T04:46:12.075Z",
+      "themes": [
+        {
+          "themeId": "data-centers-ai-cloud",
+          "themeName": "Data Centers, AI Compute & Cloud Infra",
+          "phase": "Early turn",
+          "rs5": 4.75,
+          "rs21": -22.52,
+          "acceleration": 13.44,
+          "breadth5": 100,
+          "coveragePct": 100,
+          "members": [
+            "ANANTRAJ",
+            "BBOX",
+            "E2E",
+            "ESDS",
+            "NETWEB"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "fintech-payments-insurtech",
+          "themeName": "Fintech, Digital Payments & Insurtech",
+          "phase": "Early turn",
+          "rs5": 5.96,
+          "rs21": -6.02,
+          "acceleration": 9.52,
+          "breadth5": 100,
+          "coveragePct": 100,
+          "members": [
+            "FINOPB",
+            "MOBIKWIK",
+            "MONEYVIEW",
+            "PAYTM",
+            "PINELABS",
+            "POLICYBZR"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "fertilisers",
+          "themeName": "Fertilisers & Soil Nutrients",
+          "phase": "Early turn",
+          "rs5": 2.48,
+          "rs21": -7.72,
+          "acceleration": 5.62,
+          "breadth5": 62.5,
+          "coveragePct": 100,
+          "members": [
+            "CHAMBLFERT",
+            "COROMANDEL",
+            "DEEPAKFERT",
+            "FACT",
+            "GNFC",
+            "GSFC",
+            "PARADEEP",
+            "RCF"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "packaging-materials",
+          "themeName": "Packaging - Flexible, Paper, Plastic & Glass",
+          "phase": "Early turn",
+          "rs5": 2.81,
+          "rs21": -5.78,
+          "acceleration": 5.42,
+          "breadth5": 100,
+          "coveragePct": 100,
+          "members": [
+            "AGI",
+            "EPL",
+            "HUHTAMAKI",
+            "MOLDTKPAC",
+            "POLYPLEX",
+            "TCPLPACK",
+            "UFLEX"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "chemicals-speciality",
+          "themeName": "Speciality Chemicals & Fluorochemicals",
+          "phase": "Early turn",
+          "rs5": 2,
+          "rs21": -8.83,
+          "acceleration": 5.4,
+          "breadth5": 77.78,
+          "coveragePct": 100,
+          "members": [
+            "AARTIIND",
+            "ATUL",
+            "CLEAN",
+            "DEEPAKNTR",
+            "FINEORG",
+            "NAVINFLUOR",
+            "SRF",
+            "TATACHEM",
+            "VINATIORGA"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "alcoholic-beverages-breweries",
+          "themeName": "Alcoholic Beverages, Spirits & Breweries",
+          "phase": "Early turn",
+          "rs5": 1.94,
+          "rs21": -7.51,
+          "acceleration": 4.81,
+          "breadth5": 71.43,
+          "coveragePct": 100,
+          "members": [
+            "ABDL",
+            "GLOBUSSPR",
+            "RADICO",
+            "SULA",
+            "TI",
+            "UBL",
+            "UNITDSPR"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "amc-mutual-funds",
+          "themeName": "Asset Management Companies (AMCs)",
+          "phase": "Early turn",
+          "rs5": 1.65,
+          "rs21": -7,
+          "acceleration": 4.32,
+          "breadth5": 100,
+          "coveragePct": 100,
+          "members": [
+            "ABSLAMC",
+            "HDFCAMC",
+            "NAM-INDIA",
+            "SBIFUNDS",
+            "UTIAMC"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "psu-banks",
+          "themeName": "PSU Banking Index",
+          "phase": "Broad leader",
+          "rs5": 5.82,
+          "rs21": 12,
+          "acceleration": 4.22,
+          "breadth5": 100,
+          "coveragePct": 100,
+          "members": [
+            "BANKBARODA",
+            "BANKINDIA",
+            "CANBK",
+            "INDIANB",
+            "MAHABANK",
+            "PNB",
+            "SBIN",
+            "UNIONBANK"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "sugar-biofuels",
+          "themeName": "Sugar, Biofuels & Ethanol",
+          "phase": "Still lagging",
+          "rs5": -0.89,
+          "rs21": -16.16,
+          "acceleration": 3.94,
+          "breadth5": 42.86,
+          "coveragePct": 100,
+          "members": [
+            "BALRAMCHIN",
+            "DALMIASUG",
+            "DWARKESH",
+            "EIDPARRY",
+            "PRAJIND",
+            "RENUKA",
+            "TRIVENI"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "ceramics-sanitaryware",
+          "themeName": "Ceramics, Sanitaryware, Woodpanel & Tiles",
+          "phase": "Early turn",
+          "rs5": 0.33,
+          "rs21": -10.6,
+          "acceleration": 3.71,
+          "breadth5": 66.67,
+          "coveragePct": 100,
+          "members": [
+            "CENTURYPLY",
+            "CERA",
+            "GREENPANEL",
+            "GREENPLY",
+            "KAJARIACER",
+            "SOMANYCERA"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "shipping-dredging",
+          "themeName": "Shipping, Offshore Vessels & Dredging",
+          "phase": "Still lagging",
+          "rs5": 0.43,
+          "rs21": -10.06,
+          "acceleration": 3.63,
+          "breadth5": 40,
+          "coveragePct": 100,
+          "members": [
+            "DREDGECORP",
+            "ESSARSHPNG",
+            "GE-SHIPPING",
+            "SCI",
+            "SEAMECLTD"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "dairy-value-added-food",
+          "themeName": "Dairy & Value-Added Milk Products",
+          "phase": "Early turn",
+          "rs5": 0.87,
+          "rs21": -7.76,
+          "acceleration": 3.57,
+          "breadth5": 80,
+          "coveragePct": 100,
+          "members": [
+            "DODLA",
+            "HATSUN",
+            "HERITGFOOD",
+            "MILKYMIST",
+            "PARAGMILK"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "quick-commerce-consumer-tech",
+          "themeName": "Quick Commerce, Food Delivery & Consumer Tech",
+          "phase": "Still lagging",
+          "rs5": 1.94,
+          "rs21": -2.15,
+          "acceleration": 3.31,
+          "breadth5": 80,
+          "coveragePct": 100,
+          "members": [
+            "ETERNAL",
+            "MEESHO",
+            "NYKAA",
+            "SWIGGY",
+            "URBANCO"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "heavy-engineering",
+          "themeName": "Heavy Engineering, Industrial Capital Goods & Automation",
+          "phase": "Still lagging",
+          "rs5": -0.69,
+          "rs21": -12.93,
+          "acceleration": 3.19,
+          "breadth5": 44.44,
+          "coveragePct": 100,
+          "members": [
+            "ABB",
+            "AIAENG",
+            "BHEL",
+            "CUMMINSIND",
+            "ELECON",
+            "LT",
+            "PRAJIND",
+            "SIEMENS",
+            "THERMAX"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "private-banks",
+          "themeName": "Private Sector Banking",
+          "phase": "Broad leader",
+          "rs5": 2.52,
+          "rs21": 1.18,
+          "acceleration": 2.97,
+          "breadth5": 100,
+          "coveragePct": 100,
+          "members": [
+            "AXISBANK",
+            "FEDERALBNK",
+            "HDFCBANK",
+            "ICICIBANK",
+            "IDFCFIRSTB",
+            "INDUSINDBK",
+            "KARURVYSYA",
+            "KOTAKBANK",
+            "RBLBANK"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "hospitals",
+          "themeName": "Hospitals & Multi-Specialty Healthcare Chains",
+          "phase": "Broad leader",
+          "rs5": 2.58,
+          "rs21": 1.66,
+          "acceleration": 2.9,
+          "breadth5": 75,
+          "coveragePct": 100,
+          "members": [
+            "APOLLOHOSP",
+            "ARTEMISMED",
+            "ASTERDM",
+            "FORTIS",
+            "GPTHEALTH",
+            "HCG",
+            "INDRAMEDCO",
+            "JLHL",
+            "KIMS",
+            "KMCSHIL",
+            "KOVAI",
+            "MANIPALHOS"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "insurance-life-general",
+          "themeName": "Insurance - Life, General & Health",
+          "phase": "Early turn",
+          "rs5": 0.81,
+          "rs21": -5.71,
+          "acceleration": 2.84,
+          "breadth5": 85.71,
+          "coveragePct": 88,
+          "members": [
+            "GODIGIT",
+            "HDFCLIFE",
+            "ICICIGI",
+            "LICI",
+            "NIVABUPA",
+            "SBILIFE",
+            "STARHEALTH"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "agro-chemicals",
+          "themeName": "Agro Chemicals & Crop Protection",
+          "phase": "Still lagging",
+          "rs5": -0.31,
+          "rs21": -10.45,
+          "acceleration": 2.83,
+          "breadth5": 71.43,
+          "coveragePct": 100,
+          "members": [
+            "BAYERCROP",
+            "BHARATRAS",
+            "DHANUKA",
+            "RALLIS",
+            "SHARDACROP",
+            "SUMICHEM",
+            "UPL"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "cables-wires",
+          "themeName": "Cables, Wires & Piping Infrastructure",
+          "phase": "Still lagging",
+          "rs5": -1.89,
+          "rs21": -16.34,
+          "acceleration": 2.8,
+          "breadth5": 12.5,
+          "coveragePct": 100,
+          "members": [
+            "ASTRAL",
+            "FINCABLES",
+            "FINPIPE",
+            "KEI",
+            "POLYCAB",
+            "PRINCEPIPE",
+            "RRKABEL",
+            "SUPREMEIND"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "railways",
+          "themeName": "Railways, Rolling Stock & Signaling Infra",
+          "phase": "Still lagging",
+          "rs5": 0.22,
+          "rs21": -7.39,
+          "acceleration": 2.54,
+          "breadth5": 62.5,
+          "coveragePct": 100,
+          "members": [
+            "BEML",
+            "IRCON",
+            "JUPITERWAG",
+            "RAILTEL",
+            "RITES",
+            "RVNL",
+            "TEXRAIL",
+            "TITAGARH"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "brokers-depositories",
+          "themeName": "Stock Brokers, Exchanges & Depositories",
+          "phase": "Broad leader",
+          "rs5": 1.81,
+          "rs21": 1.53,
+          "acceleration": 2,
+          "breadth5": 66.67,
+          "coveragePct": 100,
+          "members": [
+            "5PAISA",
+            "ANGELONE",
+            "BSE",
+            "CDSL",
+            "GEOJITFSL",
+            "GROWW",
+            "IIFLCAPS",
+            "MCX",
+            "MOTILALOFS"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "tyres-rubber-carbon",
+          "themeName": "Tyres, Rubber & Carbon Black",
+          "phase": "Still lagging",
+          "rs5": 0.58,
+          "rs21": -2.38,
+          "acceleration": 1.53,
+          "breadth5": 66.67,
+          "coveragePct": 100,
+          "members": [
+            "APOLLOTYRE",
+            "BALKRISIND",
+            "CEATLTD",
+            "JKTYRE",
+            "MRF",
+            "PCBL"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "diagnostics",
+          "themeName": "Diagnostics, Pathlabs & Imaging Chains",
+          "phase": "Still lagging",
+          "rs5": 0.58,
+          "rs21": -2.49,
+          "acceleration": 1.49,
+          "breadth5": 40,
+          "coveragePct": 100,
+          "members": [
+            "KRSNAA",
+            "LALPATHLAB",
+            "METROPOLIS",
+            "THYROCARE",
+            "VIJAYA"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "consumer-durables",
+          "themeName": "Consumer Durables, Appliances & FMEG",
+          "phase": "Still lagging",
+          "rs5": -1.05,
+          "rs21": -8.06,
+          "acceleration": 1.11,
+          "breadth5": 50,
+          "coveragePct": 100,
+          "members": [
+            "BAJAJELEC",
+            "CROMPTON",
+            "HAVELLS",
+            "IFBIND",
+            "ORIENTELEC",
+            "VGUARD"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "auto-components",
+          "themeName": "Auto Components, Forgings & Ancillaries",
+          "phase": "Broad leader",
+          "rs5": 0.89,
+          "rs21": 0.38,
+          "acceleration": 1.1,
+          "breadth5": 70,
+          "coveragePct": 100,
+          "members": [
+            "BOSCHLTD",
+            "CRAFTSMAN",
+            "ENDURANCE",
+            "GABRIEL",
+            "MOTHERSON",
+            "SANSERA",
+            "SCHAEFFLER",
+            "SONACOMS",
+            "SUPRAJIT",
+            "UNOMINDA"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "water-recycling-circular",
+          "themeName": "Water Treatment, Waste & Circular Economy",
+          "phase": "Still lagging",
+          "rs5": -2.73,
+          "rs21": -14.71,
+          "acceleration": 1.05,
+          "breadth5": 33.33,
+          "coveragePct": 100,
+          "members": [
+            "AWHCL",
+            "EMSLIMITED",
+            "GANECOS",
+            "GRAVITA",
+            "IONEXCHANG",
+            "WABAG"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "logistics-ports",
+          "themeName": "Logistics, Ports & Multimodal Supply Chain",
+          "phase": "Still lagging",
+          "rs5": 0.33,
+          "rs21": -1.33,
+          "acceleration": 0.88,
+          "breadth5": 50,
+          "coveragePct": 100,
+          "members": [
+            "ADANIPORTS",
+            "BLUEDART",
+            "CONCOR",
+            "DELHIVERY",
+            "GPPL",
+            "JSWINFRA",
+            "TCIEXP",
+            "VRLLOG"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "jewellery-luxury-watches",
+          "themeName": "Jewellery, Gold Retail & Luxury Watches",
+          "phase": "Still lagging",
+          "rs5": -0.46,
+          "rs21": -4.15,
+          "acceleration": 0.75,
+          "breadth5": 42.86,
+          "coveragePct": 100,
+          "members": [
+            "ETHOSLTD",
+            "KALYANKJIL",
+            "PNGJL",
+            "SENCO",
+            "SKYGOLD",
+            "THANGAMAYL",
+            "TITAN"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "cement-products",
+          "themeName": "Cement & Clinker Manufacturers",
+          "phase": "Still lagging",
+          "rs5": -0.03,
+          "rs21": -1.25,
+          "acceleration": 0.35,
+          "breadth5": 62.5,
+          "coveragePct": 100,
+          "members": [
+            "AMBUJACEM",
+            "BIRLACORPN",
+            "DALBHARAT",
+            "JKCEMENT",
+            "NUVOCO",
+            "RAMCOCEM",
+            "SHREECEM",
+            "ULTRACEMCO"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "retail-qsr",
+          "themeName": "Retail - QSR & Restaurant Chains",
+          "phase": "Still lagging",
+          "rs5": -0.12,
+          "rs21": -1.19,
+          "acceleration": 0.21,
+          "breadth5": 80,
+          "coveragePct": 100,
+          "members": [
+            "DEVYANI",
+            "JUBLFOOD",
+            "RBA",
+            "SAPPHIRE",
+            "WESTLIFE"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "mining-coal",
+          "themeName": "Mining, Iron Ore & Coal",
+          "phase": "Still lagging",
+          "rs5": -2.92,
+          "rs21": -12,
+          "acceleration": -0.1,
+          "breadth5": 16.67,
+          "coveragePct": 100,
+          "members": [
+            "COALINDIA",
+            "KIOCL",
+            "LLOYDSME",
+            "MOIL",
+            "NMDC",
+            "SANDUMA"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "retail-apparel",
+          "themeName": "Retail - Apparel, Department & Fashion",
+          "phase": "Still lagging",
+          "rs5": -3.79,
+          "rs21": -13.46,
+          "acceleration": -0.74,
+          "breadth5": 33.33,
+          "coveragePct": 100,
+          "members": [
+            "ABFRL",
+            "ARVIND",
+            "KKCL",
+            "MANYAVAR",
+            "PAGEIND",
+            "TRENT"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "gold-loan",
+          "themeName": "Gold Loan & Specialized NBFCs",
+          "phase": "Still lagging",
+          "rs5": -1.53,
+          "rs21": -3.78,
+          "acceleration": -0.8,
+          "breadth5": 60,
+          "coveragePct": 100,
+          "members": [
+            "CHOLAFIN",
+            "IIFL",
+            "MANAPPURAM",
+            "MUTHOOTCAP",
+            "MUTHOOTFIN"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "solar-renewable",
+          "themeName": "Solar, Wind & Renewable Energy Equipment",
+          "phase": "Still lagging",
+          "rs5": -4.54,
+          "rs21": -15.37,
+          "acceleration": -1.17,
+          "breadth5": 33.33,
+          "coveragePct": 100,
+          "members": [
+            "BORORENEW",
+            "INOXWIND",
+            "PREMIERENE",
+            "SUZLON",
+            "SWSOLAR",
+            "WAAREEENER"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "commercial-vehicles",
+          "themeName": "Commercial Vehicles, Trucks & Buses",
+          "phase": "Still lagging",
+          "rs5": -2.11,
+          "rs21": -3.48,
+          "acceleration": -1.68,
+          "breadth5": 50,
+          "coveragePct": 100,
+          "members": [
+            "ASHOKLEY",
+            "EICHERMOT",
+            "FORCEMOT",
+            "JBMA",
+            "OLECTRA",
+            "TMCV"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "non-ferrous-metals",
+          "themeName": "Non-Ferrous Metals (Aluminium, Zinc, Copper)",
+          "phase": "Still lagging",
+          "rs5": -3.48,
+          "rs21": -6.35,
+          "acceleration": -2.67,
+          "breadth5": 16.67,
+          "coveragePct": 100,
+          "members": [
+            "GRAVITA",
+            "HINDALCO",
+            "HINDCOPPER",
+            "HINDZINC",
+            "NATIONALUM",
+            "VEDL"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "passenger-cars-ev",
+          "themeName": "Passenger Vehicles & SUV Leaders",
+          "phase": "Losing steam",
+          "rs5": -2.27,
+          "rs21": 0.27,
+          "acceleration": -3.02,
+          "breadth5": 60,
+          "coveragePct": 100,
+          "members": [
+            "FORCE",
+            "HYUNDAI",
+            "M&M",
+            "MARUTI",
+            "TATAMOTORS"
+          ],
+          "forwardExcess5": null
+        },
+        {
+          "themeId": "pharma-api-cdmo",
+          "themeName": "Pharma API, CRAMS & CDMO",
+          "phase": "Still lagging",
+          "rs5": -4.01,
+          "rs21": -0.28,
+          "acceleration": -5.14,
+          "breadth5": 16.67,
+          "coveragePct": 100,
+          "members": [
+            "BLUEJET",
+            "DIVISLAB",
+            "LAURUSLABS",
+            "NEULANDLAB",
+            "SUVENPHAR",
+            "SYNGENE"
           ],
           "forwardExcess5": null
         }
