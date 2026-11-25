@@ -1120,6 +1120,39 @@
       "reviewedAt": "2026-11-25T13:52:30.419Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 62
+    },
+    {
+      "themeId": "it-largecap",
+      "assignments": [
+        {
+          "ticker": "HCLTECH",
+          "tier": "core"
+        },
+        {
+          "ticker": "INFY",
+          "tier": "core"
+        },
+        {
+          "ticker": "LTIM",
+          "tier": "core"
+        },
+        {
+          "ticker": "TCS",
+          "tier": "core"
+        },
+        {
+          "ticker": "TECHM",
+          "tier": "core"
+        },
+        {
+          "ticker": "WIPRO",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-25T13:53:01.619Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 63
     }
   ]
 }
