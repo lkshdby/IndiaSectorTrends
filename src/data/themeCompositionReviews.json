@@ -1153,6 +1153,47 @@
       "reviewedAt": "2026-11-25T13:53:01.619Z",
       "reviewedBy": "lkshdby",
       "githubIssue": 63
+    },
+    {
+      "themeId": "fmcg-personal-care",
+      "assignments": [
+        {
+          "ticker": "COLPAL",
+          "tier": "core"
+        },
+        {
+          "ticker": "DABUR",
+          "tier": "core"
+        },
+        {
+          "ticker": "EMAMILTD",
+          "tier": "core"
+        },
+        {
+          "ticker": "GODREJCP",
+          "tier": "core"
+        },
+        {
+          "ticker": "HINDUNILVR",
+          "tier": "core"
+        },
+        {
+          "ticker": "ITC",
+          "tier": "core"
+        },
+        {
+          "ticker": "JYOTHYLAB",
+          "tier": "core"
+        },
+        {
+          "ticker": "MARICO",
+          "tier": "core"
+        }
+      ],
+      "note": "",
+      "reviewedAt": "2026-11-25T13:53:37.001Z",
+      "reviewedBy": "lkshdby",
+      "githubIssue": 64
     }
   ]
 }
